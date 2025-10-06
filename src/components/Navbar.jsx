@@ -5,13 +5,14 @@ import { useState, useEffect } from "react";
 import { FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
+import Logo from "assets/trivixa-fix-size-brand-logo.png";
 
 function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  
+
   // Close mobile menu when authentication state changes
   useEffect(() => {
     setIsOpen(false);
@@ -49,10 +50,16 @@ function Navbar() {
         scrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto py-2 px-2">
         <div className="flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold text-gray-800">
-            Portfolio
+            <Image
+              src={Logo}
+              alt="Logo"
+              width={70}
+              height={70}
+              className="rounded-sm"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -62,9 +69,10 @@ function Navbar() {
                 <Link
                   key={item.name}
                   href={item.path}
-                  className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white transition-colors duration-200 font-medium"
+                  className="text-black transition-colors duration-200 font-medium group relative"
                 >
                   {item.name}
+                  <span className="absolute left-1/2 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-transparent via-[#0B2545] to-transparent rounded-full transition-all duration-300 ease-out group-hover:w-full group-hover:left-0"></span>
                 </Link>
               ))}
             </nav>
@@ -73,7 +81,7 @@ function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center space-x-2 focus:outline-none"
+                  className="flex items-center space-x-2 focus:outline-none cursor-pointer"
                 >
                   {user.photo ? (
                     <Image
@@ -84,27 +92,33 @@ function Navbar() {
                       className="rounded-full"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                      <FiUser className="text-blue-600 dark:text-blue-300" />
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center ">
+                      <span className="text-blue-700 dark:text-blue-300 font-semibold bg-[#0B2545] rounded-full">
+                        {user?.name
+                          ? user.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()
+                              .slice(0, 2) // only first 2 initials
+                          : "U"}
+                      </span>
                     </div>
                   )}
-                  <span className="text-gray-700 dark:text-gray-300 font-medium">
-                    {user?.name ? user.name.split(" ")[0] : 'User'}
-                  </span>
                 </button>
 
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     <Link
                       href="/dashboard"
-                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="block px-4 py-2 text-sm text-black hover:bg-gray-100"
                       onClick={() => setIsProfileOpen(false)}
                     >
                       Dashboard
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+                      className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
                     >
                       <FiLogOut size={14} />
                       <span>Logout</span>
@@ -114,11 +128,11 @@ function Navbar() {
               </div>
             ) : (
               <>
-                <div className="border-l border-gray-300 dark:border-gray-600 h-6"></div>
+                <div className="border-l border-gray-300 h-6"></div>
                 <nav className="flex items-center space-x-4">
                   <Link
                     href="/login"
-                    className="px-4 py-2 rounded-md text-sm font-medium text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
+                    className="px-4 py-2 rounded-md text-sm font-medium text-black border border-blue-600 hover:bg-blue-50 transition-colors duration-200"
                   >
                     Login
                   </Link>
@@ -139,24 +153,25 @@ function Navbar() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden mt-4 pb-4">
+          <div className="md:hidden mt-3 pb-4 bg-white max-w-[200px] border rounded border-[#0B2545] border-[3px] p-2">
             <nav className="flex flex-col space-y-3">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.path}
-                  className="block py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"
+                  className="block p-2 text-black hover:bg-gray-100 rounded-md transition-colors duration-200"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
                 </Link>
               ))}
 
+              <hr className="bg-[#0B2545] h-[1px]" />
               {user ? (
                 <>
                   <Link
                     href="/dashboard"
-                    className="block py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"
+                    className="block p-2 text-black hover:bg-gray-100 rounded-md transition-colors duration-200"
                     onClick={() => setIsOpen(false)}
                   >
                     Dashboard
@@ -166,7 +181,7 @@ function Navbar() {
                       handleLogout();
                       setIsOpen(false);
                     }}
-                    className="w-full text-left py-2 px-4 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors duration-200 flex items-center space-x-2"
+                    className="w-full text-left p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200 flex items-center space-x-2"
                   >
                     <FiLogOut size={16} />
                     <span>Logout</span>
@@ -176,7 +191,7 @@ function Navbar() {
                 <>
                   <Link
                     href="/login"
-                    className="block py-2 px-4 text-blue-600 dark:text-blue-400 font-medium border border-blue-600 dark:border-blue-400 text-center rounded-md mt-2"
+                    className="block p-2 text-black font-medium border border-blue-600 text-center rounded-md"
                     onClick={() => setIsOpen(false)}
                   >
                     Login

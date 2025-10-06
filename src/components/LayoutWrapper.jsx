@@ -22,7 +22,7 @@ export default function LayoutWrapper({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
       {!isAuthPage && <Navbar />}
-      <main className={`flex-grow ${!isAuthPage ? 'pt-24' : ''}`}>
+      <main className={`flex-grow ${!isAuthPage ? 'pt-12' : ''}`}>
         {children}
       </main>
       {!isAuthPage && <Footer />}
