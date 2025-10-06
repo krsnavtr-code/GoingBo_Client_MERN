@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-export default function Footer() {
+const Footer = () => {
   const currentYear = new Date().getFullYear();
   
   const socialLinks = [
@@ -38,7 +38,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Your Name</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Krishna Avtar</h2>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
               Web Developer & Problem Solver
             </p>
@@ -65,7 +65,7 @@ export default function Footer() {
         
         <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            © {currentYear} Your Name. All rights reserved.
+            © {currentYear} TRIVIXA. All rights reserved.
           </p>
           
           <div className="mt-4 md:mt-0 flex space-x-6">
@@ -81,3 +81,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default Footer;

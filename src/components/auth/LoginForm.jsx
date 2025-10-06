@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AuthForm() {
   const [mode, setMode] = useState("login"); // "login" or "signup"
@@ -13,6 +14,7 @@ export default function AuthForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login, signup } = useAuth();
 
   const toggleMode = () => {
     setMode(mode === "login" ? "signup" : "login");
@@ -28,25 +30,37 @@ export default function AuthForm() {
     setIsLoading(true);
     setError("");
 
-    if (mode === "signup" && password !== confirmPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
+    if (mode === "signup") {
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        setIsLoading(false);
+        return;
+      }
+      if (password.length < 8) {
+        setError("Password must be at least 8 characters long");
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
-      // Simulated API call
-      await new Promise((res) => setTimeout(res, 1000));
-
       if (mode === "login") {
-        // TODO: Replace with real login logic
-        router.push("/dashboard");
+        const result = await login(email, password);
+        if (result.success) {
+          router.push("/");
+        } else {
+          setError(result.error || "Invalid credentials");
+        }
       } else {
-        // TODO: Replace with real signup logic
-        router.push("/welcome");
+        const result = await signup(name, email, password, confirmPassword);
+        if (result.success) {
+          router.push("/");
+        } else {
+          setError(result.error || "Registration failed. Please try again.");
+        }
       }
     } catch (error) {
-      setError("Something went wrong. Please try again.");
+      setError(error.message || "Something went wrong. Please try again.");
       console.error("Auth error:", error);
     } finally {
       setIsLoading(false);
