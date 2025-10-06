@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import LayoutWrapper from "@/components/LayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,16 +16,19 @@ export const metadata = {
   title: "My Portfolio | Web Developer",
   description: "Welcome to my personal portfolio showcasing my projects and skills as a web developer",
   keywords: ["portfolio", "web development", "developer", "projects"],
-  author: "Your Name",
+  author: "Krishna Avtar",
 };
 
+// This is a server component that wraps the client LayoutWrapper
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-gray-900`}
       >
-        {children}
+        <LayoutWrapper>
+          {children}
+        </LayoutWrapper>
       </body>
     </html>
   );
