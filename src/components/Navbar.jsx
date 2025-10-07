@@ -110,11 +110,12 @@ function Navbar() {
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     <Link
-                      href="/dashboard"
-                      className="block px-4 py-2 text-sm text-black hover:bg-gray-100"
+                      href="/me"
+                      className="block px-4 py-2 text-sm text-black hover:bg-gray-100 flex items-center gap-2"
                       onClick={() => setIsProfileOpen(false)}
                     >
-                      Dashboard
+                      <FiUser size={14} />
+                      Profile
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -170,11 +171,12 @@ function Navbar() {
               {user ? (
                 <>
                   <Link
-                    href="/dashboard"
-                    className="block p-2 text-black hover:bg-gray-100 rounded-md transition-colors duration-200"
+                    href="/me"
+                    className="block p-2 text-black hover:bg-gray-100 rounded-md transition-colors duration-200 flex items-center gap-2"
                     onClick={() => setIsOpen(false)}
                   >
-                    Dashboard
+                    <FiUser size={16} />
+                    Profile
                   </Link>
                   <button
                     onClick={() => {

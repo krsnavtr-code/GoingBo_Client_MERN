@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ✅ Allow your LAN IP for mobile testing
+  allowedDevOrigins: ['http://0.0.0.0:3000'],
   reactStrictMode: true,
   images: {
     domains: ['localhost'],

@@ -102,6 +102,10 @@ export const authAPI = {
   
   getCurrentUser: async () => {
     return fetchAPI('/users/me', 'GET');
+  },
+  
+  updateProfile: async (profileData) => {
+    return fetchAPI('/users/me', 'PATCH', profileData);
   }
 };
 

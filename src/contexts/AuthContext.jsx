@@ -98,6 +98,23 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const response = await authAPI.updateProfile(profileData);
+      if (response && response.status === 'success' && response.data && response.data.user) {
+        setUser(response.data.user);
+        return { success: true };
+      }
+      throw new Error('Failed to update profile');
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Failed to update profile. Please try again.' 
+      };
+    }
+  };
+
   const isAuthenticated = !!user;
 
   const value = {
@@ -106,6 +123,7 @@ export function AuthProvider({ children }) {
     login,
     signup,
     logout,
+    updateProfile,
     isAuthenticated,
   };
 
