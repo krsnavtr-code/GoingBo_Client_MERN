@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { FiMenu, FiX, FiUser, FiLogOut } from "react-icons/fi";
+import { FiMenu, FiX, FiUser, FiLogOut, FiLogIn } from "react-icons/fi";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import Logo from "assets/trivixa-fix-size-brand-logo.png";
@@ -133,9 +133,10 @@ function Navbar() {
                 <nav className="flex items-center space-x-4">
                   <Link
                     href="/login"
-                    className="px-4 py-2 rounded-md text-sm font-medium text-black border border-blue-600 hover:bg-blue-50 transition-colors duration-200"
+                    className="flex items-center px-4 py-1 rounded-lg text-sm font-medium text-black border border-gray-400 hover:bg-gray-100 transition-colors duration-200"
                   >
                     Login
+                    <FiLogIn size={16} />
                   </Link>
                 </nav>
               </>
@@ -167,7 +168,7 @@ function Navbar() {
                 </Link>
               ))}
 
-              <hr className="bg-[#0B2545] h-[1px]" />
+              <hr className="bg-[var(--logo-bg-color)] h-[1px]" />
               {user ? (
                 <>
                   <Link
@@ -193,10 +194,11 @@ function Navbar() {
                 <>
                   <Link
                     href="/login"
-                    className="block p-2 text-black font-medium border border-blue-600 text-center rounded-md"
+                    className="block w-max p-2 text-black font-medium text-center rounded-md flex items-center gap-1"
                     onClick={() => setIsOpen(false)}
                   >
                     Login
+                    <FiLogIn size={16} />
                   </Link>
                 </>
               )}
