@@ -6,6 +6,7 @@ import { FiMenu, FiX, FiUser, FiLogOut, FiLogIn } from "react-icons/fi";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import Logo from "assets/trivixa-fix-size-brand-logo.png";
+import ThemeToggle from "./ThemeToggle";
 
 function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -47,7 +48,9 @@ function Navbar() {
   return (
     <header
       className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
+        scrolled
+          ? "bg-[var(--container-color-in)] backdrop-blur-md shadow-sm"
+          : "bg-[var(--container-color)]"
       }`}
     >
       <div className="container mx-auto py-2 px-2">
@@ -69,13 +72,15 @@ function Navbar() {
                 <Link
                   key={item.name}
                   href={item.path}
-                  className="text-black transition-colors duration-200 font-medium group relative"
+                  className="transition-colors duration-50 font-medium group relative"
                 >
                   {item.name}
                   <span className="absolute left-1/2 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-transparent via-[#0B2545] to-transparent rounded-full transition-all duration-300 ease-out group-hover:w-full group-hover:left-0"></span>
                 </Link>
               ))}
             </nav>
+
+            <ThemeToggle />
 
             {user ? (
               <div className="relative">
@@ -111,7 +116,7 @@ function Navbar() {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     <Link
                       href="/me"
-                      className="block px-4 py-2 text-sm text-black hover:bg-gray-100 flex items-center gap-2"
+                      className="block px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
                       onClick={() => setIsProfileOpen(false)}
                     >
                       <FiUser size={14} />
@@ -129,83 +134,83 @@ function Navbar() {
               </div>
             ) : (
               <>
-                <div className="border-l border-gray-300 h-6"></div>
-                <nav className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
                   <Link
                     href="/login"
-                    className="flex items-center px-4 py-1 rounded-lg text-sm font-medium text-black border border-gray-400 hover:bg-gray-100 transition-colors duration-200"
+                    className="flex items-center px-4 py-1 rounded-lg text-sm font-medium border border-gray-400 hover:bg-[var(--container-color-in)] transition-colors duration-50"
                   >
                     Login
                     <FiLogIn size={16} />
                   </Link>
-                </nav>
+                </div>
               </>
             )}
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden text-gray-700 focus:outline-none"
+            className="md:hidden text-[var(--text-color)] focus:outline-none"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
             {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
         </div>
+      </div>
 
-        {/* Mobile Navigation */}
-        {isOpen && (
-          <div className="md:hidden mt-3 pb-4 bg-white max-w-[200px] border rounded border-[#0B2545] border-[3px] p-2">
-            <nav className="flex flex-col space-y-3">
-              {navItems.map((item) => (
+      {/* Mobile Navigation */}
+      {isOpen && (
+        <div className="md:hidden bg-[var(--container-color-in)] mt-3 pb-4 max-w-[200px] border rounded border-[#0B2545] border-[3px] p-2">
+          <nav className="flex flex-col space-y-3">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.path}
+                className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+
+            <hr className="bg-[var(--logo-bg-color)] h-[1px]" />
+            <ThemeToggle />
+            {user ? (
+              <>
                 <Link
-                  key={item.name}
-                  href={item.path}
-                  className="block p-2 text-black hover:bg-gray-100 rounded-md transition-colors duration-200"
+                  href="/me"
+                  className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200 flex items-center gap-2"
                   onClick={() => setIsOpen(false)}
                 >
-                  {item.name}
+                  <FiUser size={16} />
+                  Profile
                 </Link>
-              ))}
-
-              <hr className="bg-[var(--logo-bg-color)] h-[1px]" />
-              {user ? (
-                <>
-                  <Link
-                    href="/me"
-                    className="block p-2 text-black hover:bg-gray-100 rounded-md transition-colors duration-200 flex items-center gap-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <FiUser size={16} />
-                    Profile
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsOpen(false);
-                    }}
-                    className="w-full text-left p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200 flex items-center space-x-2"
-                  >
-                    <FiLogOut size={16} />
-                    <span>Logout</span>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="block w-max p-2 text-black font-medium text-center rounded-md flex items-center gap-1"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Login
-                    <FiLogIn size={16} />
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        )}
-      </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                  className="w-full text-left p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <FiLogOut size={16} />
+                  <span>Logout</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="block w-max p-2 font-medium text-center rounded-md flex items-center gap-1"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Login
+                  <FiLogIn size={16} />
+                </Link>
+              </>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

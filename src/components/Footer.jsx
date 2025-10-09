@@ -34,12 +34,12 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-gray-300">
+    <footer className="bg-[var(--container-color-in)]">
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0">
-            <h2 className="text-2xl font-bold text-black">Krishna Avtar</h2>
-            <p className="mt-2 text-gray-800">Web Developer & Problem Solver</p>
+            <h2 className="text-2xl font-bold text-text-light">Krishna Avtar</h2>
+            <p className="mt-2 text-text-light">Web Developer & Problem Solver</p>
           </div>
 
           <div className="flex space-x-6">
@@ -49,7 +49,7 @@ const Footer = () => {
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-black hover:text-gray-700 transition-colors"
+                className="text-text-light hover:text-text transition-colors"
                 aria-label={item.name}
               >
                 <span className="sr-only">{item.name}</span>
@@ -67,20 +67,20 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-gray-800">
+          <p className="text-sm text-text-light">
             © {currentYear} TRIVIXA. All rights reserved.
           </p>
 
           <div className="mt-4 md:mt-0 flex space-x-6">
             <Link
               href="/privacy"
-              className="text-sm text-gray-800 hover:text-gray-700 transition-colors"
+              className="text-sm text-text-light hover:text-text transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-sm text-gray-800 hover:text-gray-700 transition-colors"
+              className="text-sm text-text-light hover:text-text transition-colors"
             >
               Terms of Service
             </Link>
