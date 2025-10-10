@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { FiMenu, FiX, FiUser, FiLogOut, FiLogIn } from "react-icons/fi";
+import { FiMenu, FiX, FiUser, FiLogOut, FiLogIn, FiSettings } from "react-icons/fi";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import Logo from "assets/trivixa-fix-size-brand-logo.png";
@@ -122,6 +122,17 @@ function Navbar() {
                       <FiUser size={14} />
                       Profile
                     </Link>
+                    {/* Admin panel button - only show if user is admin */}
+                    {user?.role === "admin" && (
+                      <Link
+                        href="/admin"
+                        className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200 flex items-center gap-2"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <FiSettings size={16} />
+                        <span>Admin Panel</span>
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
@@ -185,6 +196,19 @@ function Navbar() {
                   <FiUser size={16} />
                   Profile
                 </Link>
+
+                {/* Admin panel button - only show if user is admin */}
+                {user?.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200 flex items-center gap-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <FiSettings size={16} />
+                    <span>Admin Panel</span>
+                  </Link>
+                )}
+
                 <button
                   onClick={() => {
                     handleLogout();
