@@ -124,7 +124,7 @@ export default function ForgotPassword() {
                     Forgot your password?
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
-                    Enter your email and we'll send you an OTP to reset your password.
+                    Enter your email and we&apos;ll send you an OTP to reset your password.
                 </p>
             </div>
 
@@ -174,7 +174,7 @@ export default function ForgotPassword() {
                 </h2>
                 <div className="mt-2 text-center">
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                        We've sent a 6-digit OTP to {email}
+                        We&apos;ve sent a 6-digit OTP to {email}
                     </p>
                     <div className="mt-2">
                         {canResendOTP ? (
@@ -184,7 +184,7 @@ export default function ForgotPassword() {
                                 className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none cursor-pointer"
                                 disabled={isLoading}
                             >
-                                Didn't receive code? Resend OTP
+                                Didn&apos;t receive code? Resend OTP
                             </button>
                         ) : (
                             <p className="text-sm text-gray-500 dark:text-gray-400 cursor-pointer">

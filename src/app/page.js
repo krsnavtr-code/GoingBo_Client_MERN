@@ -1,9 +1,9 @@
 'use client';
 
-import Home from '@/pages/Home';
+import Banner from '@/components/Banner';
 
 export default function Page() {
   return (
-    <Home />
+    <Banner />
   );
 }

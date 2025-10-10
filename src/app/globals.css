@@ -9,10 +9,11 @@
 
   /* Container */
   --container-color: #ffffff;
-  --container-color-in: #F8FAFC;
+  --container-color-in: #e1eaf3;
 
   /* Text */
   --text-color: #000000;
+  --text-color-light: #3c3c3c;
 }
 
 /* Dark theme */
@@ -27,6 +28,7 @@
 
   /* Text */
   --text-color: #ffffff;
+  --text-color-light: #c0c0c0;
 }
 
 /* Base styles */
