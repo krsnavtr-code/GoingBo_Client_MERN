@@ -47,17 +47,17 @@ const DashboardStats = () => {
   return (
     <div className="grid grid-cols-1 gap-5 mt-6 sm:grid-cols-2 lg:grid-cols-3">
       {/* Total Users Card */}
-      <div className="overflow-hidden bg-white rounded-lg shadow">
+      <div className="overflow-hidden bg-[var(--container-color-in)] rounded-lg shadow">
         <div className="p-5">
           <div className="flex items-center">
-            <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 text-indigo-500 bg-indigo-100 rounded-md">
+            <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 text-[var(--text-color)] bg-[var(--container-color)] rounded-md">
               <FiUsers className="w-6 h-6" />
             </div>
             <div className="ml-5">
-              <p className="text-sm font-medium text-gray-500 truncate">
+              <p className="text-sm font-medium text-[var(--text-color)] truncate">
                 Total Users
               </p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-[var(--text-color)]">
                 {stats.totalUsers.toLocaleString()}
               </p>
             </div>
@@ -66,17 +66,17 @@ const DashboardStats = () => {
       </div>
 
       {/* Active Users Card */}
-      <div className="overflow-hidden bg-white rounded-lg shadow">
+      <div className="overflow-hidden bg-[var(--container-color-in)] rounded-lg shadow">
         <div className="p-5">
           <div className="flex items-center">
-            <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 text-green-500 bg-green-100 rounded-md">
+            <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 text-[var(--text-color)] bg-[var(--container-color)] rounded-md">
               <FiUserCheck className="w-6 h-6" />
             </div>
             <div className="ml-5">
-              <p className="text-sm font-medium text-gray-500 truncate">
+              <p className="text-sm font-medium text-[var(--text-color)] truncate">
                 Active Users
               </p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-[var(--text-color)]">
                 {stats.activeUsers.toLocaleString()}
               </p>
             </div>
@@ -85,17 +85,17 @@ const DashboardStats = () => {
       </div>
 
       {/* Admins Card */}
-      <div className="overflow-hidden bg-white rounded-lg shadow">
+      <div className="overflow-hidden bg-[var(--container-color-in)] rounded-lg shadow">
         <div className="p-5">
           <div className="flex items-center">
-            <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 text-purple-500 bg-purple-100 rounded-md">
+            <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 text-[var(--text-color)] bg-[var(--container-color)] rounded-md">
               <FiUserX className="w-6 h-6" />
             </div>
             <div className="ml-5">
-              <p className="text-sm font-medium text-gray-500 truncate">
+              <p className="text-sm font-medium text-[var(--text-color)] truncate">
                 Administrators
               </p>
-              <p className="text-2xl font-semibold text-gray-900">
+              <p className="text-2xl font-semibold text-[var(--text-color)]">
                 {stats.admins.toLocaleString()}
               </p>
             </div>
@@ -104,10 +104,10 @@ const DashboardStats = () => {
       </div>
 
       {/* Recent Activity Section */}
-      <div className="p-6 bg-white rounded-lg shadow sm:col-span-2 lg:col-span-3">
-        <h2 className="text-lg font-medium text-gray-900">Recent Activity</h2>
+      <div className="p-6 bg-[var(--container-color-in)] rounded-lg shadow sm:col-span-2 lg:col-span-3">
+        <h2 className="text-lg font-medium text-[var(--text-color)]">Recent Activity</h2>
         <div className="mt-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-[var(--text-color)]">
             Recent user activities and system events will be displayed here.
           </p>
           {/* Add your activity feed component here */}

@@ -103,7 +103,7 @@ const AdminDashboard = () => {
                 <ThemeToggle />
               </div>
               {/* Go to User */}
-              <Link href="/" className="block px-2 hover:bg-[var(--container-color)] rounded-md transition-colors duration-200 flex items-center gap-1">
+              <Link href="/" className="block px-2 hover:bg-[var(--container-color)] text-red-600 rounded-md transition-colors duration-200 flex items-center gap-1">
                 <FiHome size={16} />
                 Visit User Panel
               </Link>

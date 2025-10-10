@@ -94,8 +94,8 @@ export default function ProfileManagement() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+    <div className="bg-[var(--container-color-in)] rounded-lg shadow p-6">
+      <h2 className="text-2xl font-bold mb-6 text-[var(--text-color)]">
         Profile Management
       </h2>
 
@@ -109,14 +109,14 @@ export default function ProfileManagement() {
                   <img 
                     src={formData.image} 
                     alt="Profile Preview" 
-                    className="h-16 w-16 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                    className="h-16 w-16 rounded-full object-cover border-2 border-[var(--container-color)]"
                     onError={(e) => {
                       e.target.src = 'https://via.placeholder.com/64';
-                      e.target.className = 'h-16 w-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500';
+                      e.target.className = 'h-16 w-16 rounded-full bg-[var(--container-color)] flex items-center justify-center text-[var(--text-color)]';
                     }}
                   />
                 ) : (
-                  <div className="h-16 w-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500">
+                  <div className="h-16 w-16 rounded-full bg-[var(--container-color)] flex items-center justify-center text-[var(--text-color)]">
                     <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -126,7 +126,7 @@ export default function ProfileManagement() {
               <div className="flex-1">
                 <label
                   htmlFor="image"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-[var(--text-color)] mb-1"
                 >
                   Avatar URL
                 </label>
@@ -137,12 +137,12 @@ export default function ProfileManagement() {
                   value={formData.image}
                   onChange={handleChange}
                   placeholder="https://example.com/avatar.jpg"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-[var(--container-color)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--container-color)] text-[var(--text-color)]"
                 />
               </div>
             </div>
             {formData.image && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-[var(--text-color)]">
                 Live preview of your avatar
               </p>
             )}
@@ -152,7 +152,7 @@ export default function ProfileManagement() {
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--text-color)] mb-1"
             >
               Full Name
             </label>
@@ -163,7 +163,7 @@ export default function ProfileManagement() {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-[var(--container-color)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--container-color)] text-[var(--text-color)]"
             />
           </div>
 
@@ -171,7 +171,7 @@ export default function ProfileManagement() {
           <div>
             <label
               htmlFor="role"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--text-color)] mb-1"
             >
               Job Title
             </label>
@@ -182,7 +182,7 @@ export default function ProfileManagement() {
               value={formData.role}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-[var(--container-color)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--container-color)] text-[var(--text-color)]"
             />
           </div>
 
@@ -190,7 +190,7 @@ export default function ProfileManagement() {
           <div>
             <label
               htmlFor="experience"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--text-color)] mb-1"
             >
               Years of Experience
             </label>
@@ -203,7 +203,7 @@ export default function ProfileManagement() {
               step="0.1"
               min="0"
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-[var(--container-color)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--container-color)] text-[var(--text-color)]"
             />
           </div>
 
@@ -211,7 +211,7 @@ export default function ProfileManagement() {
           <div>
             <label
               htmlFor="projects"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--text-color)] mb-1"
             >
               Projects Completed
             </label>
@@ -223,7 +223,7 @@ export default function ProfileManagement() {
               onChange={handleChange}
               min="0"
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-[var(--container-color)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--container-color)] text-[var(--text-color)]"
             />
           </div>
 
@@ -231,7 +231,7 @@ export default function ProfileManagement() {
           <div>
             <label
               htmlFor="cvPdf"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--text-color)] mb-1"
             >
               CV/Resume URL
             </label>
@@ -241,7 +241,7 @@ export default function ProfileManagement() {
               name="cvPdf"
               value={formData.cvPdf}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-[var(--container-color)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--container-color)] text-[var(--text-color)]"
             />
           </div>
 
@@ -249,7 +249,7 @@ export default function ProfileManagement() {
           <div className="md:col-span-2">
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--text-color)] mb-1"
             >
               Main Description
             </label>
@@ -260,7 +260,7 @@ export default function ProfileManagement() {
               onChange={handleChange}
               rows={3}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-[var(--container-color)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--container-color)] text-[var(--text-color)]"
             />
           </div>
 
@@ -268,7 +268,7 @@ export default function ProfileManagement() {
           <div className="md:col-span-2">
             <label
               htmlFor="sortDescription"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--text-color)] mb-1"
             >
               Short Description
             </label>
@@ -279,7 +279,7 @@ export default function ProfileManagement() {
               value={formData.sortDescription}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-2 border border-[var(--container-color)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--container-color)] text-[var(--text-color)]"
             />
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function ProfileManagement() {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            className="px-6 py-2 bg-[var(--logo-bg-color)] text-[var(--logo-color)] font-medium rounded-md hover:bg-[var(--logo-color)] hover:text-[var(--logo-bg-color)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
           >
             Save Changes
           </button>

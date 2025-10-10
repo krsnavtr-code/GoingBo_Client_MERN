@@ -159,8 +159,8 @@ const UserManagement = () => {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="sm:flex sm:items-center">
           <div className="sm:flex-auto">
-            <h2 className="text-lg font-medium text-gray-900">Users</h2>
-            <p className="mt-2 text-sm text-gray-700">
+            <h2 className="text-lg font-medium text-[var(--text-color)]">Users</h2>
+            <p className="mt-2 text-sm text-[var(--text-color)]">
               A list of all the users in your application including their name, email and role.
             </p>
           </div>
@@ -170,19 +170,19 @@ const UserManagement = () => {
           <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
               <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-[var(--container-color-in)]">
+                  <thead className="bg-[var(--container-color)]">
                     <tr>
-                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-[var(--text-color)] sm:pl-6">
                         Name
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-[var(--text-color)]">
                         Email
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-[var(--text-color)]">
                         Role
                       </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-[var(--text-color)]">
                         Status
                       </th>
                       <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -190,42 +190,42 @@ const UserManagement = () => {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="divide-y divide-[var(--container-color)] bg-[var(--container-color-in)]">
                     {users.map((user) => (
                       <tr key={user._id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-[var(--text-color)] sm:pl-6">
                           {editingUser === user._id ? (
                             <input
                               type="text"
                               name="name"
                               value={formData.name}
                               onChange={handleInputChange}
-                              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                              className="block w-full px-2 py-1 rounded-sm bg-[var(--container-color)] shadow-sm focus:border-[var(--container-color)] focus:ring-[var(--container-color)] sm:text-sm"
                             />
                           ) : (
                             user.name
                           )}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-[var(--text-color)]">
                           {editingUser === user._id ? (
                             <input
                               type="email"
                               name="email"
                               value={formData.email}
                               onChange={handleInputChange}
-                              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                              className="block w-full px-2 py-1 rounded-sm bg-[var(--container-color)] shadow-sm focus:border-[var(--container-color)] focus:ring-[var(--container-color)] sm:text-sm"
                             />
                           ) : (
                             user.email
                           )}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-[var(--text-color)]">
                           {editingUser === user._id ? (
                             <select
                               name="role"
                               value={formData.role}
                               onChange={handleInputChange}
-                              className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                              className="block w-full rounded-sm py-2 pl-3 pr-10 text-base bg-[var(--container-color)] focus:border-[var(--container-color)] focus:outline-none focus:ring-[var(--container-color)] sm:text-sm"
                             >
                               <option value="user">User</option>
                               <option value="admin">Admin</option>
@@ -256,13 +256,13 @@ const UserManagement = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleUpdateUser(user._id)}
-                                className="text-indigo-600 hover:text-indigo-900"
+                                className="text-[var(--text-color)] hover:text-red-600 bg-[var(--container-color)] px-1 rounded"
                               >
                                 Save
                               </button>
                               <button
                                 onClick={handleCancelEdit}
-                                className="text-gray-600 hover:text-gray-900"
+                                className="text-[var(--text-color)] hover:text-red-600 bg-[var(--container-color)] px-1 rounded"
                               >
                                 Cancel
                               </button>
