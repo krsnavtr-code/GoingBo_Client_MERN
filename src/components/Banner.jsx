@@ -1,18 +1,63 @@
 import React from "react";
-import { FiGithub, FiLinkedin, FiMail, FiDownload } from "react-icons/fi";
-import { SiGo, SiNodedotjs } from "react-icons/si";
-import { FaPython } from "react-icons/fa";
+import { SiMongodb, SiExpress, SiReact, SiNodedotjs, SiNextdotjs, SiMysql } from "react-icons/si";
+
 import { motion } from "framer-motion";
 import { Button } from "./ui";
+import { useEffect, useState } from "react";
 
 const Banner = () => {
+  const [user, setUser] = useState({
+    image: "/avatar.png",
+    role: "Software Engineer – Web Development",
+    name: "Krishna Avtar",
+    description: "Making The Impossible Possible. Using 1's and 0's.",
+    sortDescription: "Problem solving is what makes me unique.",
+    experience: "2.5",
+    projects: "203",
+    cvPdf: "/resume.pdf",
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("/api/profile", {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch profile");
+        }
+
+        const data = await res.json();
+        if (data) {
+          setUser({
+            image: data.image || "/avatar.png",
+            role: data.role || "",
+            name: data.name || "",
+            description: data.description || "",
+            sortDescription: data.sortDescription || "",
+            experience: data.experience?.toString() || "0",
+            projects: data.projects?.toString() || "0",
+            cvPdf: data.cvPdf || "#",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3,
+        staggerChildren: 0.1,
       },
     },
   };
@@ -28,18 +73,16 @@ const Banner = () => {
     },
   };
 
-  const user = {
-    image: "/avatar.png",
-    name: "Krishna Avtar",
-    role: "Software Engineer – Web Development",
-    description: "Making The Impossible Possible. Using 1’s and 0’s.",
-    description2: "Problem solving is what makes me unique.",
-    experience: "7",
-    projects: "203",
-  };
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
-    <section className="min-h-screen flex flex-col md:flex-row items-center justify-center px-6 md:px-16 py-16">
+    <section className="max-w-[1650px] mx-auto flex flex-col md:flex-row items-center justify-center px-6 md:px-16 py-16 mt-16 lg:mt-0">
       {/* LEFT SIDE */}
       <motion.div
         className="flex-1 text-center md:text-left"
@@ -55,7 +98,7 @@ const Banner = () => {
         </motion.span>
 
         <motion.h1
-          className="text-4xl md:text-6xl font-bold mb-4 leading-tight"
+          className="text-4xl font-bold mb-4 leading-tight"
           variants={itemVariants}
         >
           {user.description}
@@ -65,7 +108,7 @@ const Banner = () => {
           className="text-lg mb-10 text-[var(--text-color-light)]"
           variants={itemVariants}
         >
-          {user.description2}
+          {user.sortDescription}
         </motion.p>
 
         <motion.div
@@ -74,64 +117,106 @@ const Banner = () => {
         >
           <div>
             <h2 className="text-4xl font-bold">{user.experience}</h2>
-            <p className="text-sm text-[var(--text-color-light)]">Years of Experience</p>
+            <p className="text-sm text-[var(--text-color-light)]">
+              Years of Experience
+            </p>
           </div>
           <div>
             <h2 className="text-4xl font-bold">{user.projects}</h2>
-            <p className="text-sm text-[var(--text-color-light)]">Projects / Contributions</p>
+            <p className="text-sm text-[var(--text-color-light)]">
+              Projects / Contributions
+            </p>
           </div>
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Button
-            as="a"
-            href="/resume.pdf"
-            download
-            variant="secondary"
-          >
+          <Button as="a" href={user.cvPdf} download variant="secondary">
             View CV
           </Button>
         </motion.div>
       </motion.div>
 
-      {/* RIGHT SIDE */}
+      {/* RIGHT SIDE - Hidden on small and medium screens */}
       <motion.div
-        className="flex-1 mt-16 md:mt-0 relative flex justify-center items-center"
+        className="hidden lg:flex flex-1 mt-16 lg:mt-0 relative justify-center items-center"
+        style={{ minWidth: "500px", maxWidth: "501px" }}
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
         {/* Background Circle */}
-        <div className="w-64 h-64 md:w-80 md:h-80 bg-orange-600 rounded-full absolute"></div>
+        <div className="w-64 h-64 lg:w-80 lg:h-80 bg-[var(--logo-bg-color)] rounded-full absolute"></div>
 
         {/* Profile Image */}
-        <motion.img
-          src={user.image}
-          alt="profile"
-          className="relative w-56 md:w-72 rounded-full z-10"
+        <motion.div
+          className="relative w-56 lg:w-78 rounded-full z-10"
           variants={itemVariants}
-        />
+        >
+          <motion.img
+            src={user.image}
+            alt="profile"
+            className="relative w-56 lg:w-78 rounded-full z-10"
+            variants={itemVariants}
+          />
+          <motion.h1
+            className="text-4xl text-center leading-tight font-bold text-white z-20"
+            style={{
+              textShadow:
+                "0 0 10px #3b82f6, 0 0 20px #3b82f6, 0 0 30px #3b82f6",
+            }}
+            variants={itemVariants}
+          >
+            {user.name}
+          </motion.h1>
+        </motion.div>
 
         {/* Tech Icons */}
         <motion.div
-          className="absolute top-10 right-10 bg-[#2a2a2a] p-3 rounded-full text-cyan-400 text-3xl shadow-lg"
+          className="absolute z-10 bg-[#2a2a2a] p-1 rounded-full text-cyan-400 text-6xl shadow-lg hover:scale-110 transition duration-300 ease-in-out"
+          style={{ top: "-9%", right: "35%" }}
           variants={itemVariants}
         >
-          <SiGo />
+          <SiNextdotjs />
         </motion.div>
 
         <motion.div
-          className="absolute bottom-12 left-10 bg-[#2a2a2a] p-3 rounded-full text-yellow-400 text-3xl shadow-lg"
+          className="absolute z-10 bg-[#2a2a2a] p-1 rounded-full text-cyan-400 text-7xl shadow-lg hover:scale-110 transition duration-300 ease-in-out"
           variants={itemVariants}
+          style={{ top: "0%", left: "23%" }}
         >
-          <FaPython />
+          <SiMongodb />
         </motion.div>
 
         <motion.div
-          className="absolute bottom-0 right-16 bg-[#2a2a2a] p-3 rounded-full text-green-500 text-3xl shadow-lg"
+          className="absolute z-10 bg-[#2a2a2a] p-1 rounded-full text-yellow-400 text-5xl shadow-lg hover:scale-110 transition duration-300 ease-in-out"
+          variants={itemVariants}
+          style={{ bottom: "15%", left: "17%" }}
+        >
+          <SiExpress />
+        </motion.div>
+
+        <motion.div
+          className="absolute z-10 bg-[#2a2a2a] p-1 rounded-full text-green-500 text-3xl shadow-lg hover:scale-110 transition duration-300 ease-in-out"
+          variants={itemVariants}
+          style={{ bottom: "12%", right: "22%" }}
+        >
+          <SiReact />
+        </motion.div>
+
+        <motion.div
+          className="absolute z-10 bg-[#2a2a2a] p-1 rounded-full text-green-500 text-2xl shadow-lg hover:scale-110 transition duration-300 ease-in-out"
+          style={{ top: "19%", right: "20%" }}
           variants={itemVariants}
         >
           <SiNodedotjs />
+        </motion.div>
+
+        <motion.div
+          className="absolute z-1 bg-[#2a2a2a] p-1 rounded-full text-cyan-400 text-4xl shadow-lg hover:scale-110 transition duration-300 ease-in-out"
+          style={{ bottom: "-5%", left: "39%" }}
+          variants={itemVariants}
+        >
+          <SiMysql />
         </motion.div>
       </motion.div>
     </section>

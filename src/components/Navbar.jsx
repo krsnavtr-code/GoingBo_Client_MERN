@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { FiMenu, FiX, FiUser, FiLogOut, FiLogIn, FiSettings } from "react-icons/fi";
+import {
+  FiMenu,
+  FiX,
+  FiUser,
+  FiLogOut,
+  FiLogIn,
+  FiSettings,
+} from "react-icons/fi";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import Logo from "assets/trivixa-fix-size-brand-logo.png";
@@ -28,7 +35,11 @@ function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Store admin after check it if admin
+  const isAdmin = user?.role === "admin";
+
   const navItems = [
+    { name: "Admin", path: "/admin", hidden: !isAdmin },
     { name: "Home", path: "/" },
     { name: "About", path: "#about" },
     { name: "Projects", path: "#projects" },
@@ -68,16 +79,19 @@ function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <nav className="flex space-x-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.path}
-                  className="transition-colors duration-50 font-medium group relative"
-                >
-                  {item.name}
-                  <span className="absolute left-1/2 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-transparent via-[#0B2545] to-transparent rounded-full transition-all duration-300 ease-out group-hover:w-full group-hover:left-0"></span>
-                </Link>
-              ))}
+              {navItems.map(
+                (item) =>
+                  !item.hidden && (
+                    <Link
+                      key={item.name}
+                      href={item.path}
+                      className="transition-colors duration-50 font-medium group relative"
+                    >
+                      {item.name}
+                      <span className="absolute left-1/2 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-transparent via-[var(--logo-bg-color)] to-transparent rounded-full transition-all duration-300 ease-out group-hover:w-full group-hover:left-0"></span>
+                    </Link>
+                  )
+              )}
             </nav>
 
             <ThemeToggle />
@@ -113,29 +127,18 @@ function Navbar() {
                 </button>
 
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-[var(--container-color-in)] rounded-md shadow-lg py-1 z-50">
                     <Link
                       href="/me"
-                      className="block px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                      className="block px-4 py-2 text-sm hover:bg-[var(--container-color)] flex items-center gap-2"
                       onClick={() => setIsProfileOpen(false)}
                     >
                       <FiUser size={14} />
                       Profile
                     </Link>
-                    {/* Admin panel button - only show if user is admin */}
-                    {user?.role === "admin" && (
-                      <Link
-                        href="/admin"
-                        className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200 flex items-center gap-2"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <FiSettings size={16} />
-                        <span>Admin Panel</span>
-                      </Link>
-                    )}
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
+                      className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-[var(--container-color)] flex items-center space-x-2 cursor-pointer"
                     >
                       <FiLogOut size={14} />
                       <span>Logout</span>
@@ -148,7 +151,7 @@ function Navbar() {
                 <div className="flex items-center space-x-2">
                   <Link
                     href="/login"
-                    className="flex items-center px-4 py-1 rounded-lg text-sm font-medium border border-gray-400 hover:bg-[var(--container-color-in)] transition-colors duration-50"
+                    className="flex items-center px-4 py-1 rounded-lg text-sm font-medium border border-gray-400 hover:bg-[var(--container-color)] transition-colors duration-50"
                   >
                     Login
                     <FiLogIn size={16} />
@@ -173,16 +176,19 @@ function Navbar() {
       {isOpen && (
         <div className="md:hidden bg-[var(--container-color-in)] mt-3 pb-4 max-w-[200px] border rounded border-[#0B2545] border-[3px] p-2">
           <nav className="flex flex-col space-y-3">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.path}
-                className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200"
-                onClick={() => setIsOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map(
+              (item) =>
+                !item.hidden && (
+                  <Link
+                    key={item.name}
+                    href={item.path}
+                    className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                )
+            )}
 
             <hr className="bg-[var(--logo-bg-color)] h-[1px]" />
             <ThemeToggle />
@@ -196,18 +202,6 @@ function Navbar() {
                   <FiUser size={16} />
                   Profile
                 </Link>
-
-                {/* Admin panel button - only show if user is admin */}
-                {user?.role === "admin" && (
-                  <Link
-                    href="/admin"
-                    className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200 flex items-center gap-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <FiSettings size={16} />
-                    <span>Admin Panel</span>
-                  </Link>
-                )}
 
                 <button
                   onClick={() => {

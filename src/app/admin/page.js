@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { FiUsers, FiPieChart, FiSettings, FiLogOut } from 'react-icons/fi';
+import { FiUsers, FiPieChart, FiSettings, FiLogOut, FiHome, FiUser } from 'react-icons/fi';
 import DashboardStats from '@/components/admin/DashboardStats';
 import UserManagement from '@/components/admin/UserManagement';
+import ProfileManagement from '@/components/admin/ProfileManagement';
 import { toast } from 'react-hot-toast';
+import ThemeToggle from '@/components/ThemeToggle';
+import Link from 'next/link';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -20,24 +22,24 @@ const AdminDashboard = () => {
         const res = await fetch('/api/v1/users/me', {
           credentials: 'include',
         });
-        
+
         if (!res.ok) {
           throw new Error('Not authorized');
         }
-        
+
         const data = await res.json();
-        
+
         if (data.data.user.role !== 'admin') {
           throw new Error('Access denied. Admins only.');
         }
-        
+
         setUser(data.data.user);
       } catch (error) {
         toast.error(error.message || 'Please log in as admin');
         router.push('/login');
       }
     };
-    
+
     checkAdmin();
   }, [router]);
 
@@ -47,7 +49,7 @@ const AdminDashboard = () => {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (res.ok) {
         router.push('/login');
       }
@@ -65,67 +67,79 @@ const AdminDashboard = () => {
     );
   }
 
+  // Navigation items
+  const navItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: <FiPieChart className="w-5 h-5 mr-3" />,
+    },
+    {
+      id: 'profile',
+      label: 'Profile',
+      icon: <FiUser className="w-5 h-5 mr-3" />,
+    },
+    {
+      id: 'users',
+      label: 'All Users',
+      icon: <FiUsers className="w-5 h-5 mr-3" />,
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: <FiSettings className="w-5 h-5 mr-3" />,
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       {/* Sidebar */}
-      <div className="flex h-screen overflow-hidden bg-white">
+      <div className="flex h-screen overflow-hidden">
         <div className="hidden md:flex md:flex-shrink-0">
-          <div className="flex flex-col w-64">
-            <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-indigo-700">
+          <div className="flex flex-col w-48">
+            <div className="flex flex-col flex-grow pt-1 overflow-y-auto bg-[var(--container-color-in)]">
               <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
+                <h1 className="text-lg font-bold text-[var(--text-color)]">Admin Panel </h1>
+                <ThemeToggle />
               </div>
-              <div className="flex flex-col flex-grow px-4 mt-5">
-                <nav className="flex-1 space-y-2">
-                  <button
-                    onClick={() => setActiveTab('dashboard')}
-                    className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md ${
-                      activeTab === 'dashboard'
-                        ? 'bg-indigo-800 text-white'
-                        : 'text-indigo-100 hover:bg-indigo-600 hover:bg-opacity-75'
-                    }`}
-                  >
-                    <FiPieChart className="w-5 h-5 mr-3" />
-                    Dashboard
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('users')}
-                    className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md ${
-                      activeTab === 'users'
-                        ? 'bg-indigo-800 text-white'
-                        : 'text-indigo-100 hover:bg-indigo-600 hover:bg-opacity-75'
-                    }`}
-                  >
-                    <FiUsers className="w-5 h-5 mr-3" />
-                    Users
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('settings')}
-                    className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-md ${
-                      activeTab === 'settings'
-                        ? 'bg-indigo-800 text-white'
-                        : 'text-indigo-100 hover:bg-indigo-600 hover:bg-opacity-75'
-                    }`}
-                  >
-                    <FiSettings className="w-5 h-5 mr-3" />
-                    Settings
-                  </button>
+              {/* Go to User */}
+              <Link href="/" className="block px-2 hover:bg-[var(--container-color)] rounded-md transition-colors duration-200 flex items-center gap-1">
+                <FiHome size={16} />
+                Visit User Panel
+              </Link>
+              <hr className="mx-2" />
+              <div className="flex flex-col flex-grow px-2 mt-2">
+                <nav className="flex-1 space-y-1">
+                  {navItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`flex items-center w-full px-2 py-1 text-sm font-medium rounded-md cursor-pointer ${activeTab === item.id
+                        ? 'bg-[var(--logo-bg-color)] text-[var(--logo-color)]'
+                        : 'text-[var(--text-color)] hover:bg-[var(--container-color-in)] hover:bg-opacity-75'
+                        }`}
+                    >
+                      {item.icon}
+                      {item.label}
+                    </button>
+                  ))}
                 </nav>
               </div>
-              <div className="p-4 border-t border-indigo-800">
+              <hr className="mx-2" />
+              <div className="py-2">
                 <div className="flex items-center">
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-white">{user.name}</p>
-                    <p className="text-xs font-medium text-indigo-200">
+                    <p className="text-xs font-medium text-[var(--text-color)]">{user.name}</p>
+                    <p className="font-medium text-[var(--text-color)]" style={{ fontSize: '8px' }}>
                       {user.email}
                     </p>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="ml-auto text-indigo-200 hover:text-white"
+                    className="ml-auto text-red-600 hover:text-red-800 cursor-pointer mr-2"
                     title="Logout"
                   >
-                    <FiLogOut className="w-5 h-5" />
+                    <FiLogOut className="w-7 h-7" />
                   </button>
                 </div>
               </div>
@@ -138,8 +152,9 @@ const AdminDashboard = () => {
           <main className="relative flex-1 overflow-y-auto focus:outline-none">
             <div className="py-6">
               <div className="px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
-                <h1 className="text-2xl font-semibold text-gray-900">
+                <h1 className="text-lg font-semibold text-[var(--text-color)]">
                   {activeTab === 'dashboard' && 'Dashboard'}
+                  {activeTab === 'profile' && 'Profile Management'}
                   {activeTab === 'users' && 'User Management'}
                   {activeTab === 'settings' && 'Settings'}
                 </h1>
@@ -147,11 +162,12 @@ const AdminDashboard = () => {
               <div className="px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
                 <div className="py-4">
                   {activeTab === 'dashboard' && <DashboardStats />}
+                  {activeTab === 'profile' && <ProfileManagement />}
                   {activeTab === 'users' && <UserManagement />}
                   {activeTab === 'settings' && (
-                    <div className="p-6 bg-white rounded-lg shadow">
+                    <div className="p-6 bg-[var(--container-color-in)] rounded-lg shadow">
                       <h2 className="mb-4 text-lg font-medium">Admin Settings</h2>
-                      <p className="text-gray-600">
+                      <p className="text-[var(--text-color)]">
                         Settings content will go here.
                       </p>
                     </div>
