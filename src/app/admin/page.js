@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUsers, FiPieChart, FiSettings, FiLogOut, FiHome, FiUser } from 'react-icons/fi';
+import { FiUsers, FiPieChart, FiSettings, FiLogOut, FiHome, FiUser, FiImage } from 'react-icons/fi';
 import DashboardStats from '@/components/admin/DashboardStats';
 import UserManagement from '@/components/admin/UserManagement';
 import ProfileManagement from '@/components/admin/ProfileManagement';
+import MediaManagement from '@/components/admin/MediaGallery';
 import { toast } from 'react-hot-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import Link from 'next/link';
@@ -85,6 +86,11 @@ const AdminDashboard = () => {
       icon: <FiUsers className="w-5 h-5 mr-3" />,
     },
     {
+      id: 'media',
+      label: 'Media',
+      icon: <FiImage className="w-5 h-5 mr-3" />,
+    },
+    {
       id: 'settings',
       label: 'Settings',
       icon: <FiSettings className="w-5 h-5 mr-3" />,
@@ -156,6 +162,7 @@ const AdminDashboard = () => {
                   {activeTab === 'dashboard' && 'Dashboard'}
                   {activeTab === 'profile' && 'Profile Management'}
                   {activeTab === 'users' && 'User Management'}
+                  {activeTab === 'media' && 'Media Management'}
                   {activeTab === 'settings' && 'Settings'}
                 </h1>
               </div>
@@ -164,6 +171,7 @@ const AdminDashboard = () => {
                   {activeTab === 'dashboard' && <DashboardStats />}
                   {activeTab === 'profile' && <ProfileManagement />}
                   {activeTab === 'users' && <UserManagement />}
+                  {activeTab === 'media' && <MediaManagement />}
                   {activeTab === 'settings' && (
                     <div className="p-6 bg-[var(--container-color-in)] rounded-lg shadow">
                       <h2 className="mb-4 text-lg font-medium">Admin Settings</h2>
