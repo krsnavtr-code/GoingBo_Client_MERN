@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { FiUpload, FiImage, FiVideo, FiFile, FiTrash2, FiX, FiLoader, FiDownload, FiCopy } from "react-icons/fi";
+import {
+  FiUpload,
+  FiImage,
+  FiVideo,
+  FiFile,
+  FiTrash2,
+  FiX,
+  FiLoader,
+  FiDownload,
+  FiCopy,
+} from "react-icons/fi";
 import { toast } from "react-hot-toast";
 
 const MediaGallery = () => {
@@ -10,7 +20,9 @@ const MediaGallery = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+  const dropRef = useRef(null);
 
   // Fetch all media files
   useEffect(() => {
@@ -50,20 +62,57 @@ const MediaGallery = () => {
     }
   };
 
-  // Handle file selection
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
+  // Handle drag events
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.target === dropRef.current) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // Handle dropped files
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+      processFiles(droppedFiles);
+    }
+  };
+
+  // Process selected files
+  const processFiles = (fileList) => {
+    const selectedFiles = Array.from(fileList);
     const newFiles = selectedFiles.map((file) => ({
       file,
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
-      type: file.type.split("/")[0],
+      type: file.type.split("/")[0] || "file",
       size: file.size,
       url: URL.createObjectURL(file),
       isNew: true,
     }));
 
     setFiles((prevFiles) => [...newFiles, ...prevFiles]);
+  };
+
+  // Handle file selection
+  const handleFileChange = (e) => {
+    processFiles(e.target.files);
   };
 
   // Handle file upload
@@ -93,7 +142,7 @@ const MediaGallery = () => {
 
       await Promise.all(uploadPromises);
       toast.success("Files uploaded successfully!");
-      
+
       // Refresh the media list
       const response = await fetch("/api/v1/admin/media", {
         credentials: "include",
@@ -132,15 +181,15 @@ const MediaGallery = () => {
 
   const handleDownload = async (id) => {
     try {
-      const file = files.find(f => f._id === id || f.id === id);
-      if (!file) throw new Error('File not found');
+      const file = files.find((f) => f._id === id || f.id === id);
+      if (!file) throw new Error("File not found");
 
       // If it's a new file that hasn't been uploaded yet
       if (file.file) {
         const url = URL.createObjectURL(file.file);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = file.name || 'download';
+        a.download = file.name || "download";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -149,50 +198,58 @@ const MediaGallery = () => {
       }
 
       // For files already on the server
-      const fileUrl = file.url || `${process.env.NEXT_PUBLIC_API_URL}${file.path}`;
+      const fileUrl =
+        file.url || `${process.env.NEXT_PUBLIC_API_URL}${file.path}`;
       const response = await fetch(fileUrl);
-      if (!response.ok) throw new Error('Failed to download file');
-      
+      if (!response.ok) throw new Error("Failed to download file");
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = file.name || file.filename || 'download';
+      a.download = file.name || file.filename || "download";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      
-      toast.success('Download started');
+
+      toast.success("Download started");
     } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download file');
+      console.error("Download error:", error);
+      toast.error("Failed to download file");
     }
   };
 
   // Filter files based on search and active tab
   const filteredFiles = files.filter((file) => {
-    const fileName = file.name || '';
+    const fileName = file.name || "";
     // Handle both server and client file type formats
-    const fileType = file.type || (file.mimetype ? file.mimetype.split('/')[0] : '');
-    
-    const matchesSearch = fileName.toString().toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = 
-      activeTab === "all" || 
+    const fileType =
+      file.type || (file.mimetype ? file.mimetype.split("/")[0] : "");
+
+    const matchesSearch = fileName
+      .toString()
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesTab =
+      activeTab === "all" ||
       (activeTab === "image" && fileType?.startsWith?.("image")) ||
       (activeTab === "video" && fileType?.startsWith?.("video")) ||
-      (activeTab === "other" && fileType && !fileType.startsWith("image") && !fileType.startsWith("video"));
-    
+      (activeTab === "other" &&
+        fileType &&
+        !fileType.startsWith("image") &&
+        !fileType.startsWith("video"));
+
     return matchesSearch && matchesTab;
   });
 
   // Format file size
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   return (
@@ -250,6 +307,32 @@ const MediaGallery = () => {
               </button>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Drop Zone */}
+      <div
+        ref={dropRef}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        className={`border-2 border-dashed rounded-lg p-3 text-center mb-6 transition-colors ${
+          isDragging
+            ? "border-[var(--text-color)] bg-[var(--container-color-in)]"
+            : "border-[var(--container-color-in)] hover:border-[var(--text-color)] hover:bg-[var(--container-color-in)]"
+        }`}
+      >
+        <div className="flex flex-col items-center justify-center space-y-2">
+          <FiUpload className="text-lg text-[var(--text-color)]" />
+          <p className="text-[var(--text-color)]">
+            {isDragging
+              ? "Drop files here"
+              : "Drag and drop files here or click to browse"}
+          </p>
+          <p className="text-sm text-[var(--text-color)]">
+            Supports images, videos, and other media files
+          </p>
         </div>
       </div>
 
@@ -459,7 +542,9 @@ const MediaGallery = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[var(--text-color)]">File Original Name:</p>
+                  <p className="text-[var(--text-color)]">
+                    File Original Name:
+                  </p>
                   <p className="font-medium truncate">
                     {selectedFile.originalname}
                   </p>
@@ -478,9 +563,7 @@ const MediaGallery = () => {
                 </div>
                 <div>
                   <p className="text-[var(--text-color)]">File Path:</p>
-                  <p className="font-medium">
-                    {selectedFile.path}
-                  </p>
+                  <p className="font-medium">{selectedFile.path}</p>
                 </div>
                 <div>
                   <p className="text-[var(--text-color)]">Uploaded:</p>
