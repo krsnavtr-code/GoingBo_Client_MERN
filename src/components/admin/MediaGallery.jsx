@@ -1,18 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import {
-  FiUpload,
-  FiImage,
-  FiVideo,
-  FiFile,
-  FiTrash2,
-  FiX,
-  FiLoader,
-  FiDownload,
-  FiCopy,
+import { 
+  FiUpload, 
+  FiImage, 
+  FiVideo, 
+  FiFile, 
+  FiTrash2, 
+  FiX, 
+  FiLoader, 
+  FiDownload, 
+  FiCopy, 
+  FiTag,
+  FiChevronDown
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
+
+const AVAILABLE_TAGS = ["Brand", "Home", "Gallery"];
 
 const MediaGallery = () => {
   const [files, setFiles] = useState([]);
@@ -20,9 +24,12 @@ const MediaGallery = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [editingTags, setEditingTags] = useState(null);
   const fileInputRef = useRef(null);
   const dropRef = useRef(null);
+  const tagMenuRef = useRef(null);
 
   // Fetch all media files
   useEffect(() => {
@@ -115,6 +122,48 @@ const MediaGallery = () => {
     processFiles(e.target.files);
   };
 
+  // Toggle tag for a file
+  const toggleTag = (fileId, tag) => {
+    setFiles(prevFiles => 
+      prevFiles.map(file => {
+        if (file.id === fileId || file._id === fileId) {
+          const newTags = file.tags?.includes(tag)
+            ? file.tags.filter(t => t !== tag)
+            : [...(file.tags || []), tag];
+          
+          // If this is an existing file (not new), update on server
+          if (file._id) {
+            updateFileTags(file._id, newTags);
+          }
+          
+          return { ...file, tags: newTags };
+        }
+        return file;
+      })
+    );
+  };
+
+  // Update file tags on server
+  const updateFileTags = async (fileId, tags) => {
+    try {
+      const response = await fetch(`/api/v1/admin/media/${fileId}/tags`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tags }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update tags');
+      }
+    } catch (error) {
+      console.error('Error updating tags:', error);
+      toast.error('Failed to update tags');
+    }
+  };
+
   // Handle file upload
   const handleUpload = async () => {
     const newFiles = files.filter((file) => file.isNew);
@@ -126,6 +175,9 @@ const MediaGallery = () => {
       const uploadPromises = newFiles.map(async (fileObj) => {
         const formData = new FormData();
         formData.append("file", fileObj.file);
+        if (fileObj.tags?.length) {
+          formData.append("tags", JSON.stringify(fileObj.tags));
+        }
 
         const response = await fetch(`/api/v1/admin/media`, {
           method: "POST",
@@ -144,14 +196,10 @@ const MediaGallery = () => {
       toast.success("Files uploaded successfully!");
 
       // Refresh the media list
-      const response = await fetch("/api/v1/admin/media", {
-        credentials: "include",
-      });
-      const { data } = await response.json();
-      setFiles(data.media || []);
+      await fetchMedia();
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error(error.message || "Failed to upload files");
+      toast.error("Failed to upload files");
     } finally {
       setIsUploading(false);
     }
@@ -220,17 +268,17 @@ const MediaGallery = () => {
     }
   };
 
-  // Filter files based on search and active tab
+  // Filter files based on search, active tab, and tags
   const filteredFiles = files.filter((file) => {
     const fileName = file.name || "";
-    // Handle both server and client file type formats
-    const fileType =
-      file.type || (file.mimetype ? file.mimetype.split("/")[0] : "");
+    const fileType = file.type || (file.mimetype ? file.mimetype.split("/")[0] : "");
+    const fileTags = file.tags || [];
 
     const matchesSearch = fileName
       .toString()
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+      
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "image" && fileType?.startsWith?.("image")) ||
@@ -239,8 +287,10 @@ const MediaGallery = () => {
         fileType &&
         !fileType.startsWith("image") &&
         !fileType.startsWith("video"));
+        
+    const matchesTag = !tagFilter || fileTags.includes(tagFilter);
 
-    return matchesSearch && matchesTab;
+    return matchesSearch && matchesTab && matchesTag;
   });
 
   // Format file size
@@ -252,13 +302,51 @@ const MediaGallery = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  // Close tag dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tagMenuRef.current && !tagMenuRef.current.contains(event.target)) {
+        setEditingTags(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Render tag with pill style
+  const renderTag = (tag, fileId) => (
+    <span 
+      key={tag} 
+      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1"
+      onClick={(e) => {
+        e.stopPropagation();
+        setTagFilter(tag);
+      }}
+    >
+      {tag}
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleTag(fileId, tag);
+        }}
+        className="ml-1.5 text-blue-500 hover:text-blue-700"
+      >
+        &times;
+      </button>
+    </span>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="w-full sm:w-auto">
           <h2 className="text-2xl font-bold">Media Library</h2>
           <p className="text-sm text-[var(--text-color)]">
-            {files.length} {files.length === 1 ? "item" : "items"}
+            {filteredFiles.length} of {files.length} {files.length === 1 ? "item" : "items"}
+            {tagFilter && ` filtered by tag: ${tagFilter}`}
           </p>
         </div>
 
@@ -270,6 +358,45 @@ const MediaGallery = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+
+          {/* Tag filter dropdown */}
+          <div className="relative" ref={tagMenuRef}>
+            <button
+              onClick={() => setEditingTags(editingTags === 'filter' ? null : 'filter')}
+              className="flex items-center gap-2 px-4 py-2 border rounded-md bg-[var(--container-color-in)] text-[var(--text-color)] hover:bg-[var(--container-color)]"
+            >
+              <FiTag />
+              <span>Tags</span>
+              <FiChevronDown className={`transition-transform ${editingTags === 'filter' ? 'transform rotate-180' : ''}`} />
+            </button>
+            {editingTags === 'filter' && (
+              <div className="absolute right-0 mt-1 w-48 bg-[var(--container-color-in)] rounded-md shadow-lg z-10 border border-[var(--border-color)]">
+                <div className="p-2">
+                  <div 
+                    className="px-4 py-2 text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded cursor-pointer"
+                    onClick={() => {
+                      setTagFilter('');
+                      setEditingTags(null);
+                    }}
+                  >
+                    All Files
+                  </div>
+                  {AVAILABLE_TAGS.map(tag => (
+                    <div 
+                      key={tag}
+                      className={`px-4 py-2 text-sm ${tagFilter === tag ? 'bg-[var(--container-color)] font-medium' : 'text-[var(--text-color)]'} hover:bg-[var(--container-color)] rounded cursor-pointer`}
+                      onClick={() => {
+                        setTagFilter(tagFilter === tag ? '' : tag);
+                        setEditingTags(null);
+                      }}
+                    >
+                      {tag}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="flex gap-2">
             <button
@@ -371,7 +498,7 @@ const MediaGallery = () => {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredFiles.map((file) => (
-            <div key={file._id || file.id} className="group relative">
+            <div key={file._id || file.id} className="group relative h-[00px]">
               <div className="aspect-square bg-[var(--container-color-in)] rounded-md overflow-hidden">
                 {file.type?.startsWith("image") ||
                 file.mimetype?.startsWith("image") ? (
@@ -408,28 +535,28 @@ const MediaGallery = () => {
                 <div className="absolute inset-0 bg-transparent bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <button
                     onClick={() => setSelectedFile(file)}
-                    className="p-2 bg-[var(--container-color-in)] bg-opacity-90 rounded-full hover:bg-opacity-100 cursor-pointer"
+                    className="p-2 bg-[var(--container-color-in)] border-[var(--text-color)] border-[1px] bg-opacity-90 rounded-full hover:bg-opacity-100 cursor-pointer"
                     title="View"
                   >
                     <FiImage className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDownload(file._id || file.id)}
-                    className="p-2 bg-[var(--container-color-in)] bg-opacity-90 rounded-full hover:bg-opacity-100 text-[var(--text-color)] cursor-pointer"
+                    className="p-2 bg-[var(--container-color-in)] border-[var(--text-color)] border-[1px] bg-opacity-90 rounded-full hover:bg-opacity-100 cursor-pointer"
                     title="Download"
                   >
                     <FiDownload className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => navigator.clipboard.writeText(file.url)}
-                    className="p-2 bg-[var(--container-color-in)] bg-opacity-90 rounded-full hover:bg-opacity-100 text-[var(--text-color)] cursor-pointer"
+                    className="p-2 bg-[var(--container-color-in)] border-[var(--text-color)] border-[1px] bg-opacity-90 rounded-full hover:bg-opacity-100 cursor-pointer"
                     title="Copy URL"
                   >
                     <FiCopy className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(file._id || file.id)}
-                    className="p-2 bg-[var(--container-color-in)] bg-opacity-90 rounded-full hover:bg-opacity-100 text-[var(--text-color)] cursor-pointer"
+                    className="p-2 bg-[var(--container-color-in)] border-[var(--text-color)] border-[1px] bg-opacity-90 rounded-full hover:bg-opacity-100 cursor-pointer"
                     title="Delete"
                   >
                     <FiTrash2 className="h-4 w-4" />
@@ -439,7 +566,50 @@ const MediaGallery = () => {
               <div className="mt-2 text-xs text-[var(--text-color)] truncate">
                 {file.originalname}
               </div>
-              <div className="text-xs text-[var(--text-color)]">
+              <div className="flex flex-wrap mt-1">
+                {file.tags?.map(tag => renderTag(tag, file.id || file._id))}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingTags(editingTags === file.id ? null : (file.id || file._id));
+                  }}
+                  className="text-xs text-gray-500 hover:text-blue-500 flex items-center"
+                >
+                  <FiTag className="mr-1" />
+                  {file.tags?.length ? 'Edit' : 'Add Tag'}
+                </button>
+              </div>
+              
+              {/* Tag dropdown */}
+              {editingTags === (file.id || file._id) && (
+                <div 
+                  ref={tagMenuRef}
+                  className="absolute z-10 mt-1 w-48 bg-[var(--container-color-in)] rounded-md shadow-lg border border-[var(--border-color)]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-2">
+                    {AVAILABLE_TAGS.map(tag => (
+                      <div 
+                        key={tag}
+                        className="flex items-center px-4 py-2 text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded cursor-pointer"
+                        onClick={() => {
+                          toggleTag(file.id || file._id, tag);
+                        }}
+                      >
+                        <input 
+                          type="checkbox" 
+                          checked={!!file.tags?.includes(tag)}
+                          readOnly
+                          className="mr-2 rounded border-[var(--border-color)] text-blue-600 focus:ring-blue-500"
+                        />
+                        {tag}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="text-xs text-[var(--text-color)] mt-1">
                 {formatFileSize(file.size)}
               </div>
             </div>
