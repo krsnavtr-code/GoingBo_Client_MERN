@@ -14,6 +14,11 @@
   /* Text */
   --text-color: #000000;
   --text-color-light: #3c3c3c;
+
+  /* Button */
+  --button-bg-color: #0b2545;
+  --button-hover-color: #2a3747;
+  --button-color: #ffffff;
 }
 
 /* Dark theme */
@@ -29,6 +34,11 @@
   /* Text */
   --text-color: #ffffff;
   --text-color-light: #c0c0c0;
+
+  /* Button */
+  --button-bg-color: #ffffff;
+  --button-hover-color: #e1eaf3;
+  --button-color: #0b2545;
 }
 
 /* Base styles */
