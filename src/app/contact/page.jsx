@@ -65,19 +65,19 @@ const Contact = () => {
     <div className="max-w-4xl mx-auto px-4 py-12">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">Get In Touch</h1>
-        <p className="text-gray-600 dark:text-gray-300">
+        <p className="text-[var(--text-color)]">
           Have a question or want to work together? Fill out the form below and I'll get back to
           you as soon as possible.
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8">
+      <div className="bg-[var(--container-color-in)] rounded-lg shadow-lg p-6 md:p-8">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[var(--text-color)]">
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Name <span className="text-red-500">*</span>
               </label>
@@ -87,8 +87,8 @@ const Contact = () => {
                 {...register('name')}
                 className={`w-full px-4 py-2 rounded-lg border ${
                   errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
-                placeholder="Your name"
+                } bg-[var(--container-color)] text-[var(--text-color)]`}
+                placeholder="Full Name"
                 disabled={isSubmitting}
               />
               {errors.name && (
@@ -101,7 +101,7 @@ const Contact = () => {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium mb-1"
               >
                 Email <span className="text-red-500">*</span>
               </label>
@@ -111,7 +111,7 @@ const Contact = () => {
                 {...register('email')}
                 className={`w-full px-4 py-2 rounded-lg border ${
                   errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
+                } bg-[var(--container-color)] text-[var(--text-color)]`}
                 placeholder="your.email@example.com"
                 disabled={isSubmitting}
               />
@@ -126,7 +126,7 @@ const Contact = () => {
           <div>
             <label
               htmlFor="subject"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Subject <span className="text-red-500">*</span>
             </label>
@@ -136,7 +136,7 @@ const Contact = () => {
               {...register('subject')}
               className={`w-full px-4 py-2 rounded-lg border ${
                 errors.subject ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
+              } bg-[var(--container-color)] text-[var(--text-color)]`}
               placeholder="How can I help you?"
               disabled={isSubmitting}
             />
@@ -150,7 +150,7 @@ const Contact = () => {
           <div>
             <label
               htmlFor="message"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium mb-1"
             >
               Message <span className="text-red-500">*</span>
             </label>
@@ -160,7 +160,7 @@ const Contact = () => {
               {...register('message')}
               className={`w-full px-4 py-2 rounded-lg border ${
                 errors.message ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white`}
+              } bg-[var(--container-color)] text-[var(--text-color)]`}
               placeholder="Your message here..."
               disabled={isSubmitting}
             />
@@ -175,14 +175,14 @@ const Contact = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
+              className={`px-6 py-3 cursor-pointer bg-[var(--button-bg-color)] text-[var(--button-color)] font-medium rounded-lg hover:bg-[var(--button-hover-color)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
                 isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
               }`}
             >
               {isSubmitting ? (
                 <span className="flex items-center">
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-[var(--button-color)]"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -212,11 +212,11 @@ const Contact = () => {
       </div>
 
       <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <div className="w-12 h-12 mx-auto bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
+        <div className="p-6 bg-[var(--container-color-in)] text-[var(--text-color)] rounded-lg shadow-md">
+          <div className="w-12 h-12 mx-auto bg-[var(--container-color)] rounded-full flex items-center justify-center mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-blue-600 dark:text-blue-400"
+              className="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -229,15 +229,15 @@ const Contact = () => {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">Email</h3>
-          <p className="text-gray-600 dark:text-gray-300">krishna.trivixa@zohomail.in</p>
+          <h3 className="text-lg font-medium mb-1">Email</h3>
+          <p className="">krishna.trivixa@zohomail.in</p>
         </div>
 
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <div className="w-12 h-12 mx-auto bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
+        <div className="p-6 bg-[var(--container-color-in)] text-[var(--text-color)] rounded-lg shadow-md">
+          <div className="w-12 h-12 mx-auto bg-[var(--container-color)] rounded-full flex items-center justify-center mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-green-600 dark:text-green-400"
+              className="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -250,15 +250,15 @@ const Contact = () => {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">Phone</h3>
-          <p className="text-gray-600 dark:text-gray-300">+91 1234567890</p>
+          <h3 className="text-lg font-medium mb-1">Phone</h3>
+          <p className="">+91 9084407615</p>
         </div>
 
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <div className="w-12 h-12 mx-auto bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mb-4">
+        <div className="p-6 bg-[var(--container-color-in)] text-[var(--text-color)] rounded-lg shadow-md">
+          <div className="w-12 h-12 mx-auto bg-[var(--container-color)] rounded-full flex items-center justify-center mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-purple-600 dark:text-purple-400"
+              className="h-6 w-6"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -277,8 +277,8 @@ const Contact = () => {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">Location</h3>
-          <p className="text-gray-600 dark:text-gray-300">Pune, India</p>
+          <h3 className="text-lg font-medium mb-1">Location</h3>
+          <p className="">Noida, India</p>
         </div>
       </div>
     </div>

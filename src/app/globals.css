@@ -9,7 +9,11 @@
 
   /* Container */
   --container-color: #ffffff;
-  --container-color-in: #e1eaf3;
+  /* --container-color-in: #bee2d6; */
+  /* --container-color-in: #d6d3f0; */
+  /* --container-color-in: #fedbe4; */
+  /* --container-color-in: #c1f1bd; */
+  --container-color-in: #d3d3d3;
 
   /* Text */
   --text-color: #000000;
@@ -37,7 +41,7 @@
 
   /* Button */
   --button-bg-color: #ffffff;
-  --button-hover-color: #e1eaf3;
+  --button-hover-color: #d3d3d3;
   --button-color: #0b2545;
 }
 
