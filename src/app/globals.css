@@ -29,7 +29,7 @@
   --logo-color: #0b2545;
   /* Container */
   --container-color: #0b2545;
-  --container-color-in: #1E3A5F;
+  --container-color-in: #1e3a5f;
 
   /* Text */
   --text-color: #ffffff;
@@ -70,8 +70,7 @@ body {
   background: var(--logo-bg-color-light);
 }
 
-/* Selection styles */
 ::selection {
-  background-color: rgba(var(--logo-bg-color), 0.2);
-  color: var(--logo-color);
+  color: black;
+  background-color: rgba(0, 174, 239, 0.8);
 }
