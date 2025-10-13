@@ -12,6 +12,8 @@ const SkillsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentSkill, setCurrentSkill] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     category: "frontend",
@@ -21,7 +23,7 @@ const SkillsPage = () => {
   const router = useRouter();
 
   // Skill categories
-    const skillCategories = [
+  const skillCategories = [
     { value: "", label: "Select Category" },
     { value: "frontend", label: "Frontend" },
     { value: "backend", label: "Backend" },
@@ -30,6 +32,10 @@ const SkillsPage = () => {
     { value: "mobile", label: "Mobile" },
     { value: "other", label: "Other" },
   ];
+
+  const filteredSkills = skills.filter(
+    (skill) => !categoryFilter || skill.category === categoryFilter
+  );
 
   // Fetch skills
   const fetchSkills = async () => {
@@ -132,6 +138,20 @@ const SkillsPage = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Skills Management</h1>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 border rounded-md bg-[var(--container-color)] text-[var(--text-color)] focus:outline-none focus:ring-1"
+        >
+          <option value="">All Categories</option>
+          {skillCategories
+            .filter((cat) => cat.value !== "") // Exclude the "Select Category" option
+            .map((category) => (
+              <option key={category.value} value={category.value}>
+                {category.label}
+              </option>
+            ))}
+        </select>
         <button
           onClick={() => setIsModalOpen(true)}
           className="bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] text-[var(--button-color)] px-4 py-2 rounded-md flex items-center gap-2"
@@ -152,6 +172,9 @@ const SkillsPage = () => {
               <thead className="bg-[var(--container-color-in)] text-[var(--text-color)]">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Icon
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                     Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
@@ -166,24 +189,38 @@ const SkillsPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-[var(--container-color-in)] divide-y divide-gray-200">
-                {skills.map((skill) => (
+                {filteredSkills.map((skill) => (
                   <tr
                     key={skill._id}
                     className="hover:bg-[var(--container-color-in)]"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-[var(--container-color)] rounded-md">
-                          <span className="text-[var(--text-color)] text-lg">
-                            {skill.icon || "💻"}
-                          </span>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium">
-                            {skill.name}
-                          </div>
-                        </div>
+                      <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-[var(--container-color)] rounded-md">
+                        <span className="text-[var(--text-color)] text-lg">
+                          {skill.icon ? (
+                            <img
+                              src={
+                                skill.icon?.includes(
+                                  "process.env.NEXT_PUBLIC_API_URL"
+                                )
+                                  ? process.env.NEXT_PUBLIC_API_URL +
+                                    skill.icon.split('"')[1]
+                                  : skill.icon || "/avatar.png"
+                              }
+                              alt="icon"
+                              className="w-8 h-8 inline-block object-cover rounded-full"
+                              onError={(e) => {
+                                e.target.src = "/avatar.png";
+                              }}
+                            />
+                          ) : (
+                            "💻"
+                          )}
+                        </span>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium">{skill.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--container-color)] text-[var(--text-color)] capitalize">
