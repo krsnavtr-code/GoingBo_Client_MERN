@@ -2,14 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiUsers, FiPieChart, FiSettings, FiLogOut, FiHome, FiUser, FiImage } from 'react-icons/fi';
+import { toast } from 'react-hot-toast';
+import { FiUsers, FiPieChart, FiSettings, FiLogOut, FiHome, FiUser, FiImage, FiAward } from 'react-icons/fi';
 import DashboardStats from '@/components/admin/DashboardStats';
 import UserManagement from '@/components/admin/UserManagement';
 import ProfileManagement from '@/components/admin/ProfileManagement';
 import MediaManagement from '@/components/admin/MediaGallery';
-import { toast } from 'react-hot-toast';
 import ThemeToggle from '@/components/ThemeToggle';
 import Link from 'next/link';
+import SkillsPage from './skills/page';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -79,26 +80,37 @@ const AdminDashboard = () => {
       id: 'dashboard',
       label: 'Dashboard',
       icon: <FiPieChart className="w-3 h-3" />,
+      href: '/admin'
     },
     {
       id: 'profile',
       label: 'Profile',
       icon: <FiUser className="w-3 h-3" />,
+      href: '/admin/profile'
+    },
+    {
+      id: 'skills',
+      label: 'Skills',
+      icon: <FiAward className="w-3 h-3" />,
+      href: '/admin/skills'
     },
     {
       id: 'users',
       label: 'All Users',
       icon: <FiUsers className="w-3 h-3" />,
+      href: '/admin/users'
     },
     {
       id: 'media',
       label: 'Media',
       icon: <FiImage className="w-3 h-3" />,
+      href: '/admin/media'
     },
     {
       id: 'settings',
       label: 'Settings',
       icon: <FiSettings className="w-3 h-3" />,
+      href: '/admin/settings'
     },
   ];
 
@@ -224,6 +236,7 @@ const AdminDashboard = () => {
                 <h1 className="text-lg font-semibold text-[var(--text-color)]">
                   {activeTab === 'dashboard' && 'Dashboard'}
                   {activeTab === 'profile' && 'Profile Management'}
+                  {activeTab === 'skills' && 'Skills Management'}
                   {activeTab === 'users' && 'User Management'}
                   {activeTab === 'media' && 'Media Management'}
                   {activeTab === 'settings' && 'Settings'}
@@ -233,6 +246,7 @@ const AdminDashboard = () => {
                 <div className="py-2">
                   {activeTab === 'dashboard' && <DashboardStats />}
                   {activeTab === 'profile' && <ProfileManagement />}
+                  {activeTab === 'skills' && <SkillsPage />}
                   {activeTab === 'users' && <UserManagement />}
                   {activeTab === 'media' && <MediaManagement />}
                   {activeTab === 'settings' && (
