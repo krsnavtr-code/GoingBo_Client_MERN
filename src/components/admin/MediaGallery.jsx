@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { 
-  FiUpload, 
-  FiImage, 
-  FiVideo, 
-  FiFile, 
-  FiTrash2, 
-  FiX, 
-  FiLoader, 
-  FiDownload, 
-  FiCopy, 
+import {
+  FiUpload,
+  FiImage,
+  FiVideo,
+  FiFile,
+  FiTrash2,
+  FiX,
+  FiLoader,
+  FiDownload,
+  FiCopy,
   FiTag,
-  FiChevronDown
+  FiChevronDown,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 
@@ -124,18 +124,18 @@ const MediaGallery = () => {
 
   // Toggle tag for a file
   const toggleTag = (fileId, tag) => {
-    setFiles(prevFiles => 
-      prevFiles.map(file => {
+    setFiles((prevFiles) =>
+      prevFiles.map((file) => {
         if (file.id === fileId || file._id === fileId) {
           const newTags = file.tags?.includes(tag)
-            ? file.tags.filter(t => t !== tag)
+            ? file.tags.filter((t) => t !== tag)
             : [...(file.tags || []), tag];
-          
+
           // If this is an existing file (not new), update on server
           if (file._id) {
             updateFileTags(file._id, newTags);
           }
-          
+
           return { ...file, tags: newTags };
         }
         return file;
@@ -147,20 +147,20 @@ const MediaGallery = () => {
   const updateFileTags = async (fileId, tags) => {
     try {
       const response = await fetch(`/api/v1/admin/media/${fileId}/tags`, {
-        method: 'PATCH',
-        credentials: 'include',
+        method: "PATCH",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ tags }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update tags');
+        throw new Error("Failed to update tags");
       }
     } catch (error) {
-      console.error('Error updating tags:', error);
-      toast.error('Failed to update tags');
+      console.error("Error updating tags:", error);
+      toast.error("Failed to update tags");
     }
   };
 
@@ -271,23 +271,51 @@ const MediaGallery = () => {
   // Filter files based on search, active tab, and tags
   const filteredFiles = files.filter((file) => {
     const fileName = file.name || "";
-    const fileType = file.type || (file.mimetype ? file.mimetype.split("/")[0] : "");
+    const fileType =
+      file.type || (file.mimetype ? file.mimetype.split("/")[0] : "");
+    const fileExtension = fileName.split(".").pop().toLowerCase();
     const fileTags = file.tags || [];
 
     const matchesSearch = fileName
       .toString()
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-      
+
+    // File type detection
+    const isImage =
+      fileType?.startsWith?.("image") ||
+      ["jpg", "jpeg", "png", "gif", "webp"].includes(fileExtension);
+    const isVideo =
+      fileType?.startsWith?.("video") ||
+      ["mp4", "webm", "ogg"].includes(fileExtension);
+    const isPdf =
+      fileType === "pdf" ||
+      fileExtension === "pdf" ||
+      (file.mimetype && file.mimetype === "application/pdf");
+    const isCsv =
+      fileExtension === "csv" ||
+      (file.mimetype && file.mimetype === "text/csv");
+    const isHtml =
+      fileExtension === "html" ||
+      fileExtension === "htm" ||
+      (file.mimetype &&
+        (file.mimetype === "text/html" ||
+          file.mimetype === "application/xhtml+xml"));
+
     const matchesTab =
       activeTab === "all" ||
-      (activeTab === "image" && fileType?.startsWith?.("image")) ||
-      (activeTab === "video" && fileType?.startsWith?.("video")) ||
+      (activeTab === "image" && isImage) ||
+      (activeTab === "video" && isVideo) ||
+      (activeTab === "pdf" && isPdf) ||
+      (activeTab === "csv" && isCsv) ||
+      (activeTab === "html" && isHtml) ||
       (activeTab === "other" &&
         fileType &&
-        !fileType.startsWith("image") &&
-        !fileType.startsWith("video"));
-        
+        !isImage &&
+        !isVideo &&
+        !isPdf &&
+        (isCsv || isHtml || !["csv", "html", "htm"].includes(fileExtension)));
+
     const matchesTag = !tagFilter || fileTags.includes(tagFilter);
 
     return matchesSearch && matchesTab && matchesTag;
@@ -310,16 +338,16 @@ const MediaGallery = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   // Render tag with pill style
   const renderTag = (tag, fileId) => (
-    <span 
-      key={tag} 
+    <span
+      key={tag}
       className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1"
       onClick={(e) => {
         e.stopPropagation();
@@ -327,7 +355,7 @@ const MediaGallery = () => {
       }}
     >
       {tag}
-      <button 
+      <button
         onClick={(e) => {
           e.stopPropagation();
           toggleTag(fileId, tag);
@@ -345,7 +373,8 @@ const MediaGallery = () => {
         <div className="w-full sm:w-auto">
           <h2 className="text-2xl font-bold">Media Library</h2>
           <p className="text-sm text-[var(--text-color)]">
-            {filteredFiles.length} of {files.length} {files.length === 1 ? "item" : "items"}
+            {filteredFiles.length} of {files.length}{" "}
+            {files.length === 1 ? "item" : "items"}
             {tagFilter && ` filtered by tag: ${tagFilter}`}
           </p>
         </div>
@@ -362,31 +391,41 @@ const MediaGallery = () => {
           {/* Tag filter dropdown */}
           <div className="relative" ref={tagMenuRef}>
             <button
-              onClick={() => setEditingTags(editingTags === 'filter' ? null : 'filter')}
+              onClick={() =>
+                setEditingTags(editingTags === "filter" ? null : "filter")
+              }
               className="flex items-center gap-2 px-4 py-2 border rounded-md bg-[var(--container-color-in)] text-[var(--text-color)] hover:bg-[var(--container-color)]"
             >
               <FiTag />
               <span>Tags</span>
-              <FiChevronDown className={`transition-transform ${editingTags === 'filter' ? 'transform rotate-180' : ''}`} />
+              <FiChevronDown
+                className={`transition-transform ${
+                  editingTags === "filter" ? "transform rotate-180" : ""
+                }`}
+              />
             </button>
-            {editingTags === 'filter' && (
+            {editingTags === "filter" && (
               <div className="absolute right-0 mt-1 w-48 bg-[var(--container-color-in)] rounded-md shadow-lg z-10 border border-[var(--border-color)]">
                 <div className="p-2">
-                  <div 
+                  <div
                     className="px-4 py-2 text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded cursor-pointer"
                     onClick={() => {
-                      setTagFilter('');
+                      setTagFilter("");
                       setEditingTags(null);
                     }}
                   >
                     All Files
                   </div>
-                  {AVAILABLE_TAGS.map(tag => (
-                    <div 
+                  {AVAILABLE_TAGS.map((tag) => (
+                    <div
                       key={tag}
-                      className={`px-4 py-2 text-sm ${tagFilter === tag ? 'bg-[var(--container-color)] font-medium' : 'text-[var(--text-color)]'} hover:bg-[var(--container-color)] rounded cursor-pointer`}
+                      className={`px-4 py-2 text-sm ${
+                        tagFilter === tag
+                          ? "bg-[var(--container-color)] font-medium"
+                          : "text-[var(--text-color)]"
+                      } hover:bg-[var(--container-color)] rounded cursor-pointer`}
                       onClick={() => {
-                        setTagFilter(tagFilter === tag ? '' : tag);
+                        setTagFilter(tagFilter === tag ? "" : tag);
                         setEditingTags(null);
                       }}
                     >
@@ -466,19 +505,21 @@ const MediaGallery = () => {
       {/* Tabs */}
       <div className="border-b border-[var(--container-color-in)]">
         <nav className="-mb-px flex space-x-8">
-          {["all", "image", "video", "other"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`whitespace-nowrap py-4 px-1 border-b-3 font-medium text-sm ${
-                activeTab === tab
-                  ? "border-[var(--text-color)] text-[var(--text-color)]"
-                  : "border-transparent text-[var(--text-color)] hover:text-[var(--text-color)] hover:border-[var(--text-color)]"
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+          {["all", "image", "video", "pdf", "csv", "html", "other"].map(
+            (tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`whitespace-nowrap py-4 px-1 border-b-3 font-medium text-sm ${
+                  activeTab === tab
+                    ? "border-[var(--text-color)] text-[var(--text-color)]"
+                    : "border-transparent text-[var(--text-color)] hover:text-[var(--text-color)] hover:border-[var(--text-color)]"
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            )
+          )}
         </nav>
       </div>
 
@@ -496,7 +537,7 @@ const MediaGallery = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="h-[calc(100vh-200px)] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredFiles.map((file) => (
             <div key={file._id || file.id} className="group relative h-[00px]">
               <div className="aspect-square bg-[var(--container-color-in)] rounded-md overflow-hidden">
@@ -526,6 +567,14 @@ const MediaGallery = () => {
                       {file.originalname || "PDF Document"}
                     </span>
                   </div>
+                ) : file.type === "csv" || file.mimetype?.includes("csv") ? (
+                  <div className="w-full h-full flex items-center justify-center bg-[var(--container-color-in)]">
+                    <FiFile className="h-12 w-12 text-[var(--text-color)]" />
+                  </div>
+                ) : file.type === "html" || file.mimetype?.includes("html") ? (
+                  <div className="w-full h-full flex items-center justify-center bg-[var(--container-color-in)]">
+                    <FiFile className="h-12 w-12 text-[var(--text-color)]" />
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-[var(--container-color-in)]">
                     <FiFile className="h-12 w-12 text-[var(--text-color)]" />
@@ -548,7 +597,15 @@ const MediaGallery = () => {
                     <FiDownload className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => navigator.clipboard.writeText(file.url)}
+                    onClick={() => {
+                      const fileUrl = file.path
+                        ? `process.env.NEXT_PUBLIC_API_URL + "${file.path}"`
+                        : `"${file.url}"`;
+                      navigator.clipboard.writeText(fileUrl);
+                      toast.success(
+                        "URL with environment variable copied to clipboard!"
+                      );
+                    }}
                     className="p-2 bg-[var(--container-color-in)] border-[var(--text-color)] border-[1px] bg-opacity-90 rounded-full hover:bg-opacity-100 cursor-pointer"
                     title="Copy URL"
                   >
@@ -567,37 +624,39 @@ const MediaGallery = () => {
                 {file.originalname}
               </div>
               <div className="flex flex-wrap mt-1">
-                {file.tags?.map(tag => renderTag(tag, file.id || file._id))}
-                <button 
+                {file.tags?.map((tag) => renderTag(tag, file.id || file._id))}
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEditingTags(editingTags === file.id ? null : (file.id || file._id));
+                    setEditingTags(
+                      editingTags === file.id ? null : file.id || file._id
+                    );
                   }}
                   className="text-xs text-gray-500 hover:text-blue-500 flex items-center"
                 >
                   <FiTag className="mr-1" />
-                  {file.tags?.length ? 'Edit' : 'Add Tag'}
+                  {file.tags?.length ? "Edit" : "Add Tag"}
                 </button>
               </div>
-              
+
               {/* Tag dropdown */}
               {editingTags === (file.id || file._id) && (
-                <div 
+                <div
                   ref={tagMenuRef}
                   className="absolute z-10 mt-1 w-48 bg-[var(--container-color-in)] rounded-md shadow-lg border border-[var(--border-color)]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="p-2">
-                    {AVAILABLE_TAGS.map(tag => (
-                      <div 
+                    {AVAILABLE_TAGS.map((tag) => (
+                      <div
                         key={tag}
                         className="flex items-center px-4 py-2 text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded cursor-pointer"
                         onClick={() => {
                           toggleTag(file.id || file._id, tag);
                         }}
                       >
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={!!file.tags?.includes(tag)}
                           readOnly
                           className="mr-2 rounded border-[var(--border-color)] text-blue-600 focus:ring-blue-500"
@@ -608,7 +667,7 @@ const MediaGallery = () => {
                   </div>
                 </div>
               )}
-              
+
               <div className="text-xs text-[var(--text-color)] mt-1">
                 {formatFileSize(file.size)}
               </div>

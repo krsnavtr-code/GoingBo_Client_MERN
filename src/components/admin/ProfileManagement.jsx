@@ -107,7 +107,16 @@ export default function ProfileManagement() {
               <div className="flex-shrink-0">
                 {formData.image ? (
                   <img 
-                    src={formData.image} 
+                    src={(() => {
+                      // Handle both direct URLs and env variable format
+                      if (formData.image.includes('process.env.NEXT_PUBLIC_API_URL')) {
+                        // Extract the path part from format: process.env.NEXT_PUBLIC_API_URL + "/path"
+                        const pathMatch = formData.image.match(/\+\s*"([^"]+)"/);
+                        const path = pathMatch ? pathMatch[1] : '';
+                        return process.env.NEXT_PUBLIC_API_URL + path;
+                      }
+                      return formData.image;
+                    })()} 
                     alt="Profile Preview" 
                     className="h-16 w-16 rounded-full object-cover border-2 border-[var(--container-color)]"
                     onError={(e) => {
@@ -131,7 +140,7 @@ export default function ProfileManagement() {
                   Avatar URL
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   id="image"
                   name="image"
                   value={formData.image}
