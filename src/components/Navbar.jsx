@@ -41,10 +41,10 @@ function Navbar() {
   const navItems = [
     { name: "Admin", path: "/admin", hidden: !isAdmin },
     { name: "Home", path: "/" },
-    { name: "About", path: "#about" },
-    { name: "Projects", path: "#projects" },
-    { name: "Skills", path: "#skills" },
-    { name: "Contact", path: "#contact" },
+    { name: "About", path: "/about" },
+    { name: "Projects", path: "/projects" },
+    { name: "Skills", path: "/skills" },
+    { name: "Contact", path: "/contact" },
   ];
 
   const handleLogout = async () => {
