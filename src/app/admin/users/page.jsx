@@ -170,8 +170,8 @@ const UserManagement = () => {
           <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
               <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-[var(--container-color-in)]">
-                  <thead className="bg-[var(--container-color)]">
+                <table className="min-w-full divide-y divide-[var(--border-color)]">
+                  <thead className="bg-[var(--container-color-in)]">
                     <tr>
                       <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-[var(--text-color)] sm:pl-6">
                         Name
@@ -271,7 +271,7 @@ const UserManagement = () => {
                             <div className="flex items-center space-x-2">
                               <button
                                 onClick={() => toggleUserStatus(user._id, user.active !== false)}
-                                className="text-gray-400 hover:text-gray-500"
+                                className="text-[var(--text-color)] cursor-pointer"
                                 title={user.active !== false ? 'Deactivate user' : 'Activate user'}
                               >
                                 {user.active !== false ? (
@@ -282,14 +282,14 @@ const UserManagement = () => {
                               </button>
                               <button
                                 onClick={() => handleEditClick(user)}
-                                className="text-indigo-600 hover:text-indigo-900"
+                                className="text-[var(--text-color)] cursor-pointer"
                                 title="Edit user"
                               >
                                 <FiEdit2 className="h-5 w-5" />
                               </button>
                               <button
                                 onClick={() => handleDeleteUser(user._id)}
-                                className="text-red-600 hover:text-red-900"
+                                className="text-[var(--text-color)] cursor-pointer"
                                 title="Delete user"
                               >
                                 <FiTrash2 className="h-5 w-5" />

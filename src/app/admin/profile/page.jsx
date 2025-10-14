@@ -94,7 +94,7 @@ export default function ProfileManagement() {
   }
 
   return (
-    <div className="bg-[var(--container-color-in)] rounded-lg shadow p-6">
+    <div className="bg-[var(--container-color-in)] rounded-lg shadow p-6 border border-[var(--border-color)]">
       <h2 className="text-2xl font-bold mb-6 text-[var(--text-color)]">
         Profile Management
       </h2>

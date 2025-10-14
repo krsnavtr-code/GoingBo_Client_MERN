@@ -394,7 +394,7 @@ const MediaGallery = () => {
               onClick={() =>
                 setEditingTags(editingTags === "filter" ? null : "filter")
               }
-              className="flex items-center gap-2 px-4 py-2 border rounded-md bg-[var(--container-color-in)] text-[var(--text-color)] hover:bg-[var(--container-color)]"
+              className="flex cursor-pointer items-center gap-2 px-4 py-2 border rounded-md bg-[var(--container-color-in)] text-[var(--text-color)] hover:bg-[var(--container-color)]"
             >
               <FiTag />
               <span>Tags</span>
@@ -408,7 +408,7 @@ const MediaGallery = () => {
               <div className="absolute right-0 mt-1 w-48 bg-[var(--container-color-in)] rounded-md shadow-lg z-10 border border-[var(--border-color)]">
                 <div className="p-2">
                   <div
-                    className="px-4 py-2 text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded cursor-pointer"
+                    className="px-4 py-2 cursor-pointer text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded cursor-pointer"
                     onClick={() => {
                       setTagFilter("");
                       setEditingTags(null);
@@ -419,7 +419,7 @@ const MediaGallery = () => {
                   {AVAILABLE_TAGS.map((tag) => (
                     <div
                       key={tag}
-                      className={`px-4 py-2 text-sm ${
+                      className={`px-4 py-2 cursor-pointer text-sm ${
                         tagFilter === tag
                           ? "bg-[var(--container-color)] font-medium"
                           : "text-[var(--text-color)]"
@@ -485,8 +485,8 @@ const MediaGallery = () => {
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-lg p-3 text-center mb-6 transition-colors ${
           isDragging
-            ? "border-[var(--text-color)] bg-[var(--container-color-in)]"
-            : "border-[var(--container-color-in)] hover:border-[var(--text-color)] hover:bg-[var(--container-color-in)]"
+            ? "border-[var(--border-color)] bg-[var(--container-color-in)]"
+            : "border-[var(--border-color)] hover:border-[var(--text-color)] hover:bg-[var(--container-color-in)]"
         }`}
       >
         <div className="flex flex-col items-center justify-center space-y-2">
@@ -503,17 +503,17 @@ const MediaGallery = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-[var(--container-color-in)]">
+      <div className="border-b border-[var(--border-color-in)]">
         <nav className="-mb-px flex space-x-8">
           {["all", "image", "video", "pdf", "csv", "html", "other"].map(
             (tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`whitespace-nowrap py-4 px-1 border-b-3 font-medium text-sm ${
+                className={`whitespace-nowrap py-4 px-1 border-b-3 font-medium text-sm cursor-pointer ${
                   activeTab === tab
-                    ? "border-[var(--text-color)] text-[var(--text-color)]"
-                    : "border-transparent text-[var(--text-color)] hover:text-[var(--text-color)] hover:border-[var(--text-color)]"
+                    ? "border-[var(--border-color)] text-[var(--text-color)]"
+                    : "border-transparent text-[var(--text-color)] hover:text-[var(--text-color)] hover:border-[var(--border-color)]"
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -540,7 +540,7 @@ const MediaGallery = () => {
         <div className="h-[calc(100vh-200px)] grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredFiles.map((file) => (
             <div key={file._id || file.id} className="group relative h-[00px]">
-              <div className="aspect-square bg-[var(--container-color-in)] rounded-md overflow-hidden">
+              <div className="aspect-square bg-[var(--container-color-in)] rounded-md overflow-hidden border border-[var(--border-color)]">
                 {file.type?.startsWith("image") ||
                 file.mimetype?.startsWith("image") ? (
                   <img

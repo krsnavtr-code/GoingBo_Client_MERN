@@ -167,8 +167,8 @@ const SkillsPage = () => {
             <FaSpinner className="animate-spin text-2xl text-[var(--button-color)]" />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-[var(--container-color)]">
+          <div className="overflow-x-auto border border-[var(--border-color)]">
+            <table className="min-w-full divide-y divide-[var(--border-color)]">
               <thead className="bg-[var(--container-color-in)] text-[var(--text-color)]">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
@@ -188,7 +188,7 @@ const SkillsPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-[var(--container-color-in)] divide-y divide-gray-200">
+              <tbody className="bg-[var(--container-color-in)] divide-y divide-[var(--border-color)]">
                 {filteredSkills.map((skill) => (
                   <tr
                     key={skill._id}
@@ -220,7 +220,7 @@ const SkillsPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium">{skill.name}</div>
+                      <div className="text-sm font-medium">{skill.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--container-color)] text-[var(--text-color)] capitalize">
