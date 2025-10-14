@@ -51,36 +51,36 @@ export default function ContactListItem({ contact, onStatusUpdate }) {
   return (
     <li 
       key={contact._id}
-      className="hover:bg-gray-50 transition-colors"
+      className="hover:bg-[var(--container-color)] text-[var(--text-color)] transition-colors"
     >
-      <Link href={`/admin/contacts/${contact._id}`}>
+      <Link href={`/admin/contacts/${contact._id}`} as={`/admin/contacts/${contact._id}`}>
         <div className="px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-gray-100">
-                {statusIcons[currentStatus] || <FiMail className="h-5 w-5 text-gray-400" />}
+              <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full bg-[var(--button-bg-color)] text-[var(--button-color)]">
+                {statusIcons[currentStatus]}
               </div>
               <div className="ml-4">
                 <div className="flex items-center">
-                  <p className="text-sm font-medium text-gray-900">{contact.name}</p>
+                  <p className="text-sm font-medium">{contact.name}</p>
                   <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                     {currentStatus}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500">{contact.email}</p>
+                <p className="text-sm text-[var(--text-color-light)]">{contact.email}</p>
               </div>
             </div>
             <div className="flex items-center">
-              <div className="text-sm text-gray-500 mr-4 flex items-center">
+              <div className="text-sm text-[var(--text-color-light)] mr-4 flex items-center">
                 <FiClock className="mr-1 h-4 w-4" />
                 {formatDate(contact.createdAt)}
               </div>
-              <FiChevronRight className="h-5 w-5 text-gray-400" />
+              <FiChevronRight className="h-5 w-5 text-[var(--text-color-light)]" />
             </div>
           </div>
           {contact.subject && (
             <div className="mt-2">
-              <p className="text-sm text-gray-700 line-clamp-1">
+              <p className="text-sm text-[var(--text-color-light)] line-clamp-1">
                 <span className="font-medium">Subject:</span> {contact.subject}
               </p>
             </div>
@@ -88,11 +88,11 @@ export default function ContactListItem({ contact, onStatusUpdate }) {
         </div>
       </Link>
       
-      <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
+      <div className="px-4 py-2 bg-[var(--container-color-in)] flex justify-between items-center">
         <div className="relative">
           <button
             type="button"
-            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-[var(--button-color)] bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--button-bg-color)]"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -108,10 +108,10 @@ export default function ContactListItem({ contact, onStatusUpdate }) {
                 {statusOptions.map((option) => (
                   <button
                     key={option.value}
-                    className={`w-full text-left px-4 py-2 text-sm flex items-center ${
+                    className={`w-full text-left px-4 py-2 text-sm flex items-center cursor-pointer ${
                       currentStatus === option.value 
-                        ? 'bg-gray-100 text-gray-900' 
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-[var(--button-bg-color)] text-[var(--button-color)]' 
+                        : 'text-[var(--text-color)] bg-[var(--container-color-in)] hover:bg-[var(--button-bg-hover-color)] hover:text-[var(--button-color)]'
                     }`}
                     onClick={(e) => {
                       e.preventDefault();

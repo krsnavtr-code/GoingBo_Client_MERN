@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
   const { isAuthenticated, loading } = useAuth();
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password' || pathname === '/admin';
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password' || pathname.startsWith('/admin');
 
   // Don't render anything while loading
   if (loading) {

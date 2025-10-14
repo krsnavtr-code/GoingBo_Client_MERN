@@ -68,32 +68,24 @@ const ContactsPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col text-[var(--text-color)] md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold">Contact Submissions</h1>
-          <p className="text-gray-500">Manage and respond to contact form submissions</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link 
-            href="/admin/dashboard"
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium transition-colors"
-          >
-            Back to Dashboard
-          </Link>
+          <p className="text-[var(--text-color-light)]">Manage and respond to contact form submissions</p>
         </div>
       </div>
 
       {stats && <ContactStats stats={stats} />}
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-[var(--container-color-in)] rounded-lg shadow-sm border border-[var(--border-color)] overflow-hidden">
+        <div className="p-4 border-b border-[var(--border-color)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="relative w-full md:w-96">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FiSearch className="h-4 w-4 text-gray-400" />
+              <FiSearch className="h-4 w-4 text-[var(--text-color)]" />
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="block w-full pl-10 pr-3 py-2 border border-[var(--border-color)] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[var(--button-bg-color)] focus:border-transparent"
               placeholder="Search contacts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -101,9 +93,9 @@ const ContactsPage = () => {
           </div>
           
           <div className="flex items-center gap-2 w-full md:w-auto">
-            <FiFilter className="h-4 w-4 text-gray-400" />
+            <FiFilter className="h-4 w-4 text-[var(--text-color)]" />
             <select
-              className="border border-gray-200 rounded-md text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="border border-[var(--border-color)] bg-[var(--container-color-in)] rounded-md text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--button-bg-color)] focus:border-transparent"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -116,17 +108,17 @@ const ContactsPage = () => {
           </div>
         </div>
 
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-[var(--border-color)]">
           {loading ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-[var(--text-color)]">
               Loading contacts...
             </div>
           ) : filteredContacts.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-[var(--text-color)]">
               No contacts found
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-[var(--border-color)]">
               {filteredContacts.map((contact) => (
                 <ContactListItem 
                   key={contact._id} 

@@ -23,6 +23,9 @@
   --button-bg-color: #0b2545;
   --button-hover-color: #2a3747;
   --button-color: #ffffff;
+
+  /* Border color */
+  --border-color: #0b2545;
 }
 
 /* Dark theme */
@@ -43,6 +46,9 @@
   --button-bg-color: #ffffff;
   --button-hover-color: #d3d3d3;
   --button-color: #0b2545;
+
+  /* Border color */
+  --border-color: #d3d3d3;
 }
 
 /* Base styles */

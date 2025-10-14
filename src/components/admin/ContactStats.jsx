@@ -15,26 +15,26 @@ export default function ContactStats({ stats }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+      <div className="bg-[var(--container-color-in)] p-4 rounded-lg shadow-sm border border-[var(--border-color)]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-500">Total Submissions</p>
+            <p className="text-sm font-medium text-[var(--text-color-light)]">Total Submissions</p>
             <p className="text-2xl font-bold">{stats.total}</p>
           </div>
-          <div className="p-2 bg-blue-50 rounded-full">
-            <FiMail className="h-6 w-6 text-blue-500" />
+          <div className="p-2 bg-[var(--button-bg-color)] rounded-full">
+            <FiMail className="h-6 w-6 text-[var(--button-color)]" />
           </div>
         </div>
       </div>
 
       {['new', 'read', 'replied', 'archived'].map((status) => (
-        <div key={status} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+        <div key={status} className="bg-[var(--container-color-in)] p-4 rounded-lg shadow-sm border border-[var(--border-color)]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 capitalize">{status}</p>
+              <p className="text-sm font-medium text-[var(--text-color-light)] capitalize">{status}</p>
               <p className="text-2xl font-bold">{getCountByStatus(status)}</p>
             </div>
-            <div className="p-2 bg-gray-50 rounded-full">
+            <div className="p-2 bg-[var(--button-bg-color)] rounded-full">
               {statusIcons[status]}
             </div>
           </div>
