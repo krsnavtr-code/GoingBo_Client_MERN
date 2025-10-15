@@ -15,13 +15,13 @@ export function AuthProvider({ children }) {
     // Check if user is logged in on initial load
     const checkAuth = async () => {
       try {
-        console.log('Checking authentication status...');
+        // console.log('Checking authentication status...');
         const response = await authAPI.getCurrentUser();
-        console.log('Current user data:', response);
+        // console.log('Current user data:', response);
         
         // Check the response structure and extract user data
         if (response && response.status === 'success' && response.data && response.data.user) {
-          console.log('Setting user data:', response.data.user);
+          // console.log('Setting user data:', response.data.user);
           setUser(response.data.user);
         } else {
           console.log('No valid user data received');

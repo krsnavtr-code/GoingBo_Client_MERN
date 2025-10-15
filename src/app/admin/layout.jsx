@@ -82,6 +82,7 @@ export default function AdminLayout({ children }) {
     { name: "Media", icon: <FiImage />, path: "/admin/media" },
     { name: "Skills", icon: <FiAward />, path: "/admin/skills" },
     { name: "Contacts", icon: <FiMail />, path: "/admin/contacts" },
+    { name: "Blog", icon: <FiMail />, path: "/admin/blog" },
   ];
 
   return (
