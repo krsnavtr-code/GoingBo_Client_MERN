@@ -412,7 +412,10 @@ export default function BlogForm({ blogData = null }) {
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              Slug (Auto Generated)
+              Slug <span className="text-red-500">(Auto Generated)</span> -{" "}
+              <span className="text-green-500">
+                (Also modify if you want to change)
+              </span>
             </label>
             <div className="flex">
               <span className="px-3 inline-flex items-center bg-[var(--container-color)] border border-r-0 border-[var(--border-color)] text-[var(--text-color)] text-sm rounded-l-md cursor-not-allowed">
@@ -422,10 +425,10 @@ export default function BlogForm({ blogData = null }) {
                 type="text"
                 name="slug"
                 placeholder="slug will auto generated based on title"
-                disabled
+                // disabled
                 value={formData.slug}
                 onChange={handleChange}
-                className="flex-1 rounded-r-md px-3 py-2 bg-[var(--container-color)] border border-[var(--border-color)] cursor-not-allowed"
+                className="flex-1 rounded-r-md px-3 py-2 bg-[var(--container-color)] border border-[var(--border-color)]"
               />
             </div>
           </div>
@@ -444,12 +447,15 @@ export default function BlogForm({ blogData = null }) {
 
           {/* Featured Image URL */}
           <div>
-            <label htmlFor="imageUrl" className="block text-sm font-medium mb-1">
+            <label
+              htmlFor="imageUrl"
+              className="block text-sm font-medium mb-1"
+            >
               Featured Image URL
             </label>
             <div className="flex space-x-2">
               <input
-                type="url"
+                type="text"
                 id="imageUrl"
                 name="imageUrl"
                 value={formData.featuredImage || ""}
@@ -470,12 +476,18 @@ export default function BlogForm({ blogData = null }) {
             {imagePreview && (
               <div className="mt-2">
                 <img
-                  src={imagePreview}
+                  src={
+                    formData.featuredImage?.includes("process.env.NEXT_PUBLIC_API_URL")
+                      ? process.env.NEXT_PUBLIC_API_URL +
+                        formData.featuredImage.split('"')[1]
+                      : formData.featuredImage || "/avatar.png"
+                  }
                   alt="Preview"
                   className="max-h-40 rounded-md border border-[var(--border-color)]"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = 'https://via.placeholder.com/400x200?text=Image+not+found';
+                    e.target.src =
+                      "https://via.placeholder.com/400x200?text=Image+not+found";
                   }}
                 />
               </div>
@@ -548,6 +560,12 @@ export default function BlogForm({ blogData = null }) {
         {/* SEO Settings */}
         <div className="bg-[var(--container-color-in)] text-[var(--text-color)] shadow rounded-lg p-6 space-y-4 ">
           <h2 className="text-lg font-medium">SEO Settings</h2>
+          <label className="block text-sm font-medium mb-1">
+            Meta Title{" "}
+            <span className="text-green-500">
+              (Max length - 60 characters )
+            </span>
+          </label>
           <input
             type="text"
             name="metaTitle"
