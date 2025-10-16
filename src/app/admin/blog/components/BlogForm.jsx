@@ -240,30 +240,54 @@ export default function BlogForm({ blogData = null }) {
   const [tagInput, setTagInput] = useState("");
   const [categoryInput, setCategoryInput] = useState("");
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
-  const [availableCategories] = useState([
-    'Technology', 'Programming', 'Web Development', 'Mobile Development',
-    'Design', 'UI/UX', 'Business', 'Productivity', 'Other',
-    'Artificial Intelligence', 'DevOps', 'Cloud Computing', 'Cybersecurity',
-    'Data Science', 'Machine Learning', 'Blockchain', 'Startups', 'Marketing',
-    'Career', 'Tutorials', 'Opinion', 'News'
-  ].filter((value, index, self) => self.indexOf(value) === index)); // Remove duplicates
-  
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/v1/blog-categories", {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableCategories(data.data || []);
+        } else {
+          throw new Error("Failed to fetch categories");
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        toast.error("Failed to load categories");
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   // Filter categories based on search input
-  const filteredCategories = availableCategories.filter(category =>
-    category.toLowerCase().includes(categoryInput.toLowerCase()) &&
-    !formData.categories.includes(category)
-  );
+  const filteredCategories = availableCategories
+    .filter(
+      (category) =>
+        category.name.toLowerCase().includes(categoryInput.toLowerCase()) &&
+        !formData.categories.some((c) => c._id === category._id)
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   // Toggle category selection
   const toggleCategory = (category) => {
-    setFormData(prev => {
-      const newCategories = prev.categories.includes(category)
-        ? prev.categories.filter(c => c !== category)
+    setFormData((prev) => {
+      const categoryExists = prev.categories.some(
+        (c) => c._id === category._id
+      );
+      const newCategories = categoryExists
+        ? prev.categories.filter((c) => c._id !== category._id)
         : [...prev.categories, category];
       return { ...prev, categories: newCategories };
     });
   };
-  
+
   const [imagePreview, setImagePreview] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -273,6 +297,17 @@ export default function BlogForm({ blogData = null }) {
     if (isEditMode && blogData) {
       // console.log('Initializing form with blog data:', blogData);
 
+      const categories = Array.isArray(blogData.categories)
+        ? blogData.categories.map((cat) => {
+            if (typeof cat === "string") {
+              // If it's just an ID, try to find the full category in availableCategories
+              const found = availableCategories.find((c) => c._id === cat);
+              return found || { _id: cat, name: `Category (${cat})` };
+            }
+            return cat; // Already in the correct format
+          })
+        : [];
+
       const initialData = {
         title: blogData.title || "",
         slug: blogData.slug || "",
@@ -280,9 +315,7 @@ export default function BlogForm({ blogData = null }) {
         content: blogData.content || "",
         featuredImage: blogData.featuredImage || "",
         tags: Array.isArray(blogData.tags) ? [...blogData.tags] : [],
-        categories: Array.isArray(blogData.categories)
-          ? [...blogData.categories]
-          : [],
+        categories: categories,
         published: !!blogData.published,
         metaTitle: blogData.meta?.title || "",
         metaDescription: blogData.meta?.description || "",
@@ -458,6 +491,9 @@ export default function BlogForm({ blogData = null }) {
       const url = isEditMode ? `/api/v1/blog/${blogData._id}` : "/api/v1/blog";
       const method = isEditMode ? "PUT" : "POST";
 
+      const categoryIds = formData.categories.map((cat) =>
+        typeof cat === "object" ? cat._id : cat
+      );
       const response = await fetch(url, {
         method,
         headers: {
@@ -466,6 +502,7 @@ export default function BlogForm({ blogData = null }) {
         credentials: "include", // Important for cookies
         body: JSON.stringify({
           ...formData,
+          categories: categoryIds,
           meta: {
             title: formData.metaTitle,
             description: formData.metaDescription,
@@ -673,54 +710,64 @@ export default function BlogForm({ blogData = null }) {
 
               {showCategoryDropdown && (
                 <div className="absolute z-10 mt-1 w-full bg-[var(--container-color)] shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                  {filteredCategories.length > 0 ? (
-                    filteredCategories.map((category, index) => (
-                      <div
-                        key={`${category}-${index}`}
-                        onClick={() => toggleCategory(category)}
-                        className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-[var(--container-color-in)] ${
-                          formData.categories.includes(category)
-                            ? "bg-blue-50"
-                            : ""
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          <span className="font-normal ml-3 block truncate">
-                            {category}
-                          </span>
-                        </div>
-                        {formData.categories.includes(category) && (
-                          <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
-                            ✓
-                          </span>
-                        )}
+                  {filteredCategories.map((category) => (
+                    <div
+                      key={category._id}
+                      onClick={() => toggleCategory(category)}
+                      className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-[var(--container-color-in)] ${
+                        formData.categories.some((c) => c._id === category._id)
+                          ? "bg-blue-50"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <span className="font-normal ml-3 block truncate">
+                          {category.name}
+                        </span>
                       </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2 text-gray-500">
-                      No categories found
+                      {formData.categories.some(
+                        (c) => c._id === category._id
+                      ) && (
+                        <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                          ✓
+                        </span>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
               )}
             </div>
 
             <div className="mt-2 flex flex-wrap gap-2">
-              {formData.categories.map((category) => (
-                <span
-                  key={category}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                >
-                  {category}
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(category)}
-                    className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-200 text-green-600 hover:bg-green-300 focus:outline-none"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
+              {loadingCategories ? (
+                <div className="text-sm text-gray-500">
+                  Loading categories...
+                </div>
+              ) : (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {formData.categories.length === 0 ? (
+                    <span className="text-sm text-gray-500">
+                      No categories selected
+                    </span>
+                  ) : (
+                    formData.categories.map((category) => (
+                      <span
+                        key={category._id}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                      >
+                        {category.name}
+                        <button
+                          type="button"
+                          onClick={() => toggleCategory(category)}
+                          className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-200 text-green-600 hover:bg-green-300 focus:outline-none"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
