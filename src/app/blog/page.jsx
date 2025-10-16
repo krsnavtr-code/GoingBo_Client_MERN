@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
 import blogAPI from "@/services/blogApi";
+import axios from "axios";
 
 export default function BlogPage() {
   const [posts, setPosts] = useState([]);
@@ -16,15 +17,44 @@ export default function BlogPage() {
     total: 0,
     totalPages: 1,
   });
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get('/api/v1/blog-categories');
+      setCategories(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setCategories([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+    fetchBlogPosts(1); // Reset to first page when category changes
+  }, [selectedCategory]);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchBlogPosts();
+  }, []);
 
   const fetchBlogPosts = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await blogAPI.getBlogPosts({
+      const params = {
         page,
         limit: pagination.limit,
         sort: "-publishedAt",
-      });
+      };
+      
+      if (selectedCategory) {
+        params.category = selectedCategory;
+      }
+      
+      const response = await blogAPI.getBlogPosts(params);
 
       // Handle both array and paginated responses
       if (Array.isArray(response)) {
@@ -49,9 +79,10 @@ export default function BlogPage() {
     }
   };
 
+  // Fetch blog posts when page or category changes
   useEffect(() => {
     fetchBlogPosts(1);
-  }, []);
+  }, [selectedCategory]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -141,16 +172,29 @@ export default function BlogPage() {
               </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-4 justify-center">
-              {["All", "Web Dev", "React", "Next.js", "JavaScript", "CSS"].map(
-                (tag) => (
-                  <button
-                    key={tag}
-                    className="px-3 py-1 text-sm rounded-full bg-[var(--button-bg-color)] text-[var(--button-color)] cursor-pointer border-[var(--border-color)] hover:bg-[var(--button-hover-color)] transition-colors"
-                  >
-                    {tag}
-                  </button>
-                )
-              )}
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`px-3 py-1 text-sm rounded-full ${
+                  !selectedCategory 
+                    ? 'bg-[var(--accent-color)] text-white' 
+                    : 'bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)]'
+                } cursor-pointer border border-[var(--border-color)] transition-colors`}
+              >
+                All
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category._id}
+                  onClick={() => setSelectedCategory(category._id)}
+                  className={`px-3 py-1 text-sm rounded-full ${
+                    selectedCategory === category._id 
+                      ? 'bg-[var(--accent-color)] text-white' 
+                      : 'bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)]'
+                  } cursor-pointer border border-[var(--border-color)] transition-colors`}
+                >
+                  {category.name}
+                </button>
+              ))}
             </div>
           </div>
 

@@ -89,7 +89,9 @@ export default function BlogPostPage() {
     <div className="container mx-auto px-4 md:py-12 py-4">
       <article className="max-w-4xl mx-auto text-[var(--text-color)]">
         <header className="lg:mb-12 md:mb-8 mb-4">
-          <h1 className="text-lg md:text-3xl font-bold lg:mt-5">{post.title}</h1>
+          <h1 className="text-lg md:text-3xl font-bold lg:mt-5">
+            {post.title}
+          </h1>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6 items-center">
@@ -123,7 +125,7 @@ export default function BlogPostPage() {
                   href={`/blog?category=${encodeURIComponent(category)}`}
                   className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full hover:bg-green-200 transition-colors"
                 >
-                  {category}
+                  {typeof category === "object" ? category.name : category}
                 </Link>
               ))}
             </div>

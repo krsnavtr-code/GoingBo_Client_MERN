@@ -6,7 +6,7 @@ async function fetchBlogAPI(endpoint, method = 'GET', data = null, isPublic = tr
   // Ensure endpoint starts with a forward slash
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${API_BASE_URL}/api/v1${normalizedEndpoint}`;
-  
+
   const options = {
     method,
     headers: {
@@ -14,14 +14,14 @@ async function fetchBlogAPI(endpoint, method = 'GET', data = null, isPublic = tr
     },
     credentials: 'include', // Important for cookies/sessions
   };
-  
+
   // Add Authorization header if not public endpoint
   if (!isPublic) {
     const token = document.cookie
       .split('; ')
       .find(row => row.startsWith('jwt='))
       ?.split('=')[1];
-    
+
     if (token) {
       options.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -33,12 +33,12 @@ async function fetchBlogAPI(endpoint, method = 'GET', data = null, isPublic = tr
 
   try {
     const response = await fetch(url, options);
-    
+
     // Handle 204 No Content responses
     if (response.status === 204) {
       return null;
     }
-    
+
     const responseData = await response.json();
 
     if (!response.ok) {
@@ -58,12 +58,21 @@ async function fetchBlogAPI(endpoint, method = 'GET', data = null, isPublic = tr
 export const blogAPI = {
   // Get all blog posts
   getBlogPosts: async (params = {}) => {
-    const { page = 1, limit = 10, tag, search, sort = '-publishedAt' } = params;
+    const {
+      page = 1,
+      limit = 10,
+      tag,
+      search,
+      category,
+      sort = '-publishedAt'
+    } = params;
+
     let url = `/blog?published=true&page=${page}&limit=${limit}&sort=${sort}`;
-    
+
     if (tag) url += `&tag=${encodeURIComponent(tag)}`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
-    
+    if (category) url += `&category=${encodeURIComponent(category)}`;
+
     return fetchBlogAPI(url, 'GET', null, true);
   },
 

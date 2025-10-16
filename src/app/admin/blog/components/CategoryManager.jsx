@@ -65,8 +65,13 @@ const CategoryManager = ({ categories = [], onAddCategory, onDeleteCategory }) =
             className="group flex items-center gap-2 bg-[var(--button-bg-color)] text-[var(--button-color)] px-3 py-1.5 rounded-full text-sm"
           >
             <FiTag size={14} />
-            <span>{category.name}</span>
-            <div className="opacity-0 group-hover:opacity-100 flex gap-1">
+            <div className="flex items-center gap-1.5">
+              <span>{category.name}</span>
+              <span className="text-xs text-red-600 px-1.5 py-0.5 rounded-full">
+                {category.blogCount || 0}
+              </span>
+            </div>
+            <div className="flex gap-1">
               <button
                 onClick={() => handleEdit(category)}
                 className="text-[var(--button-color)] cursor-pointer"
