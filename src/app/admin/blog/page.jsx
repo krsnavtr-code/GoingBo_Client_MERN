@@ -1,19 +1,24 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { FiEdit2, FiTrash2, FiPlus, FiSearch } from 'react-icons/fi';
-import Link from 'next/link';
-import { toast } from 'react-toastify';
-import { format } from 'date-fns';
-import { getCookie } from '@/services/api';
+import { useState, useEffect } from "react";
+import { FiEdit2, FiTrash2, FiPlus, FiSearch, FiTag } from "react-icons/fi";
+import Link from "next/link";
+import { toast } from "react-toastify";
+import { format } from "date-fns";
+import { getCookie } from "@/services/api";
+import CategoryManager from "./components/CategoryManager";
+
+const API_BASE_URL = "/api/v1";
 
 export default function BlogList() {
   const [blogs, setBlogs] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchBlogs();
+    fetchCategories();
   }, []);
 
   const fetchBlogs = async () => {
@@ -48,6 +53,83 @@ export default function BlogList() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/v1/blog-categories", {
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data.data || []);
+      } else {
+        throw new Error("Failed to fetch categories");
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error(error.message || "Failed to load categories");
+      setCategories([]);
+    }
+  };
+
+  const handleAddCategory = async (categoryData) => {
+    try {
+      const url = categoryData._id
+        ? `${API_BASE_URL}/blog-categories/${categoryData._id}`
+        : `${API_BASE_URL}/blog-categories`;
+
+      const method = categoryData._id ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(categoryData),
+      });
+
+      if (res.ok) {
+        toast.success(
+          `Category ${categoryData._id ? "updated" : "added"} successfully`
+        );
+        fetchCategories();
+        return true;
+      } else {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to save category");
+      }
+    } catch (error) {
+      console.error("Error saving category:", error);
+      toast.error(error.message || "Failed to save category");
+      return false;
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) {
+      return false;
+    }
+
+    try {
+      const res = await fetch(`/api/v1/blog-categories/${categoryId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        toast.success("Category deleted successfully");
+        fetchCategories();
+        return true;
+      } else {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete category");
+      }
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error(error.message || "Failed to delete category");
+      return false;
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this blog post?")) {
       try {
@@ -76,18 +158,19 @@ export default function BlogList() {
     }
   };
 
-  const filteredBlogs = Array.isArray(blogs)
-    ? blogs.filter(
-        (blog) =>
-          blog.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          blog.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (blog.tags &&
-            Array.isArray(blog.tags) &&
-            blog.tags.some((tag) =>
-              tag?.toLowerCase().includes(searchTerm.toLowerCase())
-            ))
+  const filteredBlogs = blogs.filter(
+    (blog) =>
+      blog.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      blog.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      blog.tags?.some((tag) =>
+        tag?.toLowerCase().includes(searchTerm.toLowerCase())
+      ) ||
+      blog.categories?.some((cat) =>
+        (typeof cat === "object" ? cat.name : cat)
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase())
       )
-    : [];
+  );
 
   if (loading) {
     return (
@@ -98,7 +181,7 @@ export default function BlogList() {
   return (
     <div className="container mx-auto px-4">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Blog Posts</h1>
+        <h1 className="text-2xl font-bold">All Blog Posts</h1>
         <Link
           href="/admin/blog/new"
           className="bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] text-[var(--button-color)] px-4 py-2 rounded-md flex items-center gap-2"
@@ -106,6 +189,14 @@ export default function BlogList() {
           <FiPlus /> New Post
         </Link>
       </div>
+
+      {/* Category Management Section */}
+      <CategoryManager
+        categories={categories}
+        onAddCategory={handleAddCategory}
+        onDeleteCategory={handleDeleteCategory}
+        className="mb-8"
+      />
 
       <div className="mb-6">
         <div className="relative">

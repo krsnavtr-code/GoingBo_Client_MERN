@@ -245,15 +245,24 @@ export default function BlogForm({ blogData = null }) {
     'Design', 'UI/UX', 'Business', 'Productivity', 'Other',
     'Artificial Intelligence', 'DevOps', 'Cloud Computing', 'Cybersecurity',
     'Data Science', 'Machine Learning', 'Blockchain', 'Startups', 'Marketing',
-    'Cloud Computing', 'Cybersecurity', 'Data Science', 'DevOps', 'Career',
-    'Tutorials', 'Opinion', 'News'
-  ]);
+    'Career', 'Tutorials', 'Opinion', 'News'
+  ].filter((value, index, self) => self.indexOf(value) === index)); // Remove duplicates
   
   // Filter categories based on search input
   const filteredCategories = availableCategories.filter(category =>
     category.toLowerCase().includes(categoryInput.toLowerCase()) &&
     !formData.categories.includes(category)
   );
+
+  // Toggle category selection
+  const toggleCategory = (category) => {
+    setFormData(prev => {
+      const newCategories = prev.categories.includes(category)
+        ? prev.categories.filter(c => c !== category)
+        : [...prev.categories, category];
+      return { ...prev, categories: newCategories };
+    });
+  };
   
   const [imagePreview, setImagePreview] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -646,7 +655,7 @@ export default function BlogForm({ blogData = null }) {
 
           {/* Categories Input */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1">
               Categories (Select at least one)
             </label>
             <div className="relative">
@@ -659,17 +668,17 @@ export default function BlogForm({ blogData = null }) {
                   setTimeout(() => setShowCategoryDropdown(false), 200)
                 }
                 placeholder="Search categories..."
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="block w-full px-3 py-2 border border-[var(--border-color)] rounded-md shadow-sm focus:ring-[var(--border-color)] focus:border-[var(--border-color)] sm:text-sm"
               />
 
               {showCategoryDropdown && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                <div className="absolute z-10 mt-1 w-full bg-[var(--container-color)] shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                   {filteredCategories.length > 0 ? (
                     filteredCategories.map((category, index) => (
                       <div
                         key={`${category}-${index}`}
                         onClick={() => toggleCategory(category)}
-                        className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 ${
+                        className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-[var(--container-color-in)] ${
                           formData.categories.includes(category)
                             ? "bg-blue-50"
                             : ""
