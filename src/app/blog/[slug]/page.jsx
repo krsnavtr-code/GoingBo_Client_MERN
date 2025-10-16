@@ -21,9 +21,15 @@ export default function BlogPostPage() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(
-          `/api/v1/blog/${encodeURIComponent(slug)}`
+        // First try to fetch by slug
+        let response = await fetch(
+          `/api/v1/blog/slug/${encodeURIComponent(slug)}`
         );
+
+        // If not found by slug, try by ID (for backward compatibility)
+        if (!response.ok) {
+          response = await fetch(`/api/v1/blog/${encodeURIComponent(slug)}`);
+        }
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -80,16 +86,16 @@ export default function BlogPostPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 md:py-12 py-4">
       <article className="max-w-4xl mx-auto text-[var(--text-color)]">
-        <header className="mb-12">
-          <h1 className="text-xl md:text-3xl font-bold mt-5">{post.title}</h1>
+        <header className="lg:mb-12 md:mb-8 mb-4">
+          <h1 className="text-lg md:text-3xl font-bold lg:mt-5">{post.title}</h1>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6 items-center">
           {/* LEFT SIDE — FEATURED IMAGE */}
           {post.featuredImage && (
-            <div className="relative w-full h-48 md:h-64 rounded-xl overflow-hidden shadow-lg">
+            <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-lg">
               <Image
                 src={
                   post.featuredImage?.includes(
@@ -109,15 +115,20 @@ export default function BlogPostPage() {
 
           {/* RIGHT SIDE — BLOG DETAILS */}
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              {post.tags?.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 bg-[var(--button-bg-color)] text-[var(--button-color)] text-sm font-medium rounded-full"
+            {/* Categories */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {post.categories?.map((category) => (
+                <Link
+                  key={category}
+                  href={`/blog?category=${encodeURIComponent(category)}`}
+                  className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full hover:bg-green-200 transition-colors"
                 >
-                  {tag}
-                </span>
+                  {category}
+                </Link>
               ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="text-sm text-[var(--text-color-light)]">
                 {post.publishedAt
                   ? format(new Date(post.publishedAt), "MMMM d, yyyy")
@@ -128,10 +139,23 @@ export default function BlogPostPage() {
                 {Math.ceil((post.content?.length || 0) / 1000) || 5} min read
               </span>
             </div>
-            <p className="text-[var(--text-color-light)] leading-relaxed">
-              {post.meta.title ||
-                "A brief insight into this blog post goes here."}
+
+            <p className="text-[var(--text-color-light)] leading-relaxed mb-4">
+              {post.meta?.description || ""}
             </p>
+
+            {/* Tags */}
+            <div className="flex flex-wrap gap-2 ">
+              {post.tags?.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`/blog?tag=${encodeURIComponent(tag)}`}
+                  className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded hover:bg-blue-200 transition-colors"
+                >
+                  #{tag}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -144,7 +168,7 @@ export default function BlogPostPage() {
 
         <div className="mt-12 pt-8 border-t border-[var(--border-color)]">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               {post.tags?.map((tag) => (
                 <Link
                   key={tag}

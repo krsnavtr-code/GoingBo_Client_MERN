@@ -96,12 +96,12 @@ export default function BlogList() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Blog Posts</h1>
         <Link
           href="/admin/blog/new"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
+          className="bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] text-[var(--button-color)] px-4 py-2 rounded-md flex items-center gap-2"
         >
           <FiPlus /> New Post
         </Link>
@@ -115,43 +115,46 @@ export default function BlogList() {
           <input
             type="text"
             placeholder="Search blogs by title or tags..."
-            className="pl-10 pr-4 py-2 w-full border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="pl-10 pr-4 py-2 w-full border rounded-md focus:ring-2 focus:ring-[var(--button-bg-color)] focus:border-[var(--button-bg-color)]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-[var(--container-color-in)] text-[var(--text-color)] rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full table-auto divide-y divide-[var(--border-color)]">
+            <thead className="text-[var(--text-color-light)]">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Title
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Published
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Tags
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-[var(--container-color-in)] text-[var(--text-color)] divide-y divide-[var(--border-color)]">
               {filteredBlogs.length > 0 ? (
                 filteredBlogs.map((blog) => (
-                  <tr key={blog._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
+                  <tr
+                    key={blog._id}
+                    className="hover:bg-[var(--container-color-in)]"
+                  >
+                    <td className="px-6 py-4 max-w-[250px]">
+                      <div className="text-sm font-medium truncate">
                         {blog.title}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-[var(--text-color-light)]">
                         {blog.published ? "Published" : "Draft"}
                       </div>
                       {blog.publishedAt && (
@@ -176,13 +179,13 @@ export default function BlogList() {
                       <div className="flex space-x-3">
                         <Link
                           href={`/admin/blog/edit/${blog._id}`}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          className="cursor-pointer"
                         >
                           <FiEdit2 className="h-5 w-5" />
                         </Link>
                         <button
                           onClick={() => handleDelete(blog._id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="cursor-pointer"
                         >
                           <FiTrash2 className="h-5 w-5" />
                         </button>

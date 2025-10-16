@@ -22,15 +22,16 @@ export default function EditBlogPost() {
           throw new Error(errorData.message || "Failed to fetch blog post");
         }
 
-        const data = await res.json();
-        // console.log("Fetched blog data:", data);
-        const blogData = data.data;
-        // console.log("Blog data:", blogData);
+        const { data } = await res.json();
+        
+        if (!data) {
+          throw new Error("No blog data received");
+        }
 
         const formattedBlog = {
-          ...blogData,
-          metaTitle: blogData.meta?.title || "",
-          metaDescription: blogData.meta?.description || "",
+          ...data,
+          metaTitle: data.meta?.title || "",
+          metaDescription: data.meta?.description || "",
         };
 
         setBlog(formattedBlog);

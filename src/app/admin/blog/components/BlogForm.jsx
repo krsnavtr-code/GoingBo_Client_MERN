@@ -19,6 +19,7 @@ import {
   FiList,
 } from "react-icons/fi";
 import { toast } from "react-toastify";
+import { nanoid } from "nanoid";
 
 // Dynamically import Tiptap editor
 const Tiptap = dynamic(
@@ -192,7 +193,6 @@ const Tiptap = dynamic(
           },
           immediatelyRender: false, // ✅ add this
         });
-        
 
         // Update editor content when content prop changes
         useEffect(() => {
@@ -231,12 +231,30 @@ export default function BlogForm({ blogData = null }) {
     content: "",
     featuredImage: "",
     tags: [],
+    categories: [],
     published: false,
     metaTitle: "",
     metaDescription: "",
   });
 
   const [tagInput, setTagInput] = useState("");
+  const [categoryInput, setCategoryInput] = useState("");
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [availableCategories] = useState([
+    'Technology', 'Programming', 'Web Development', 'Mobile Development',
+    'Design', 'UI/UX', 'Business', 'Productivity', 'Other',
+    'Artificial Intelligence', 'DevOps', 'Cloud Computing', 'Cybersecurity',
+    'Data Science', 'Machine Learning', 'Blockchain', 'Startups', 'Marketing',
+    'Cloud Computing', 'Cybersecurity', 'Data Science', 'DevOps', 'Career',
+    'Tutorials', 'Opinion', 'News'
+  ]);
+  
+  // Filter categories based on search input
+  const filteredCategories = availableCategories.filter(category =>
+    category.toLowerCase().includes(categoryInput.toLowerCase()) &&
+    !formData.categories.includes(category)
+  );
+  
   const [imagePreview, setImagePreview] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -245,7 +263,7 @@ export default function BlogForm({ blogData = null }) {
   useEffect(() => {
     if (isEditMode && blogData) {
       // console.log('Initializing form with blog data:', blogData);
-      
+
       const initialData = {
         title: blogData.title || "",
         slug: blogData.slug || "",
@@ -253,6 +271,9 @@ export default function BlogForm({ blogData = null }) {
         content: blogData.content || "",
         featuredImage: blogData.featuredImage || "",
         tags: Array.isArray(blogData.tags) ? [...blogData.tags] : [],
+        categories: Array.isArray(blogData.categories)
+          ? [...blogData.categories]
+          : [],
         published: !!blogData.published,
         metaTitle: blogData.meta?.title || "",
         metaDescription: blogData.meta?.description || "",
@@ -271,35 +292,109 @@ export default function BlogForm({ blogData = null }) {
   }, [isEditMode, blogData]);
 
   // Handle editor updates
-  const handleEditorUpdate = useCallback(
-    (content) => {
-      setFormData((prev) => ({
-        ...prev,
-        content: content || ""
-      }));
-    },
-    []
-  );
+  const handleEditorUpdate = useCallback((content) => {
+    setFormData((prev) => ({
+      ...prev,
+      content: content || "",
+    }));
+  }, []);
 
   // Handle basic field changes
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
-  // Generate slug from title
-  const handleTitleChange = (e) => {
-    const title = e.target.value;
-    const slug = title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .trim();
+  const generateSlug = async () => {
+    if (!formData.title) return;
 
-    setFormData((prev) => ({ ...prev, title, slug }));
+    try {
+      // Common stop words (can expand list)
+      const stopWords = [
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "for",
+        "of",
+        "to",
+        "in",
+        "on",
+        "with",
+        "at",
+        "from",
+        "by",
+        "about",
+        "as",
+        "into",
+        "like",
+        "through",
+        "after",
+        "over",
+        "between",
+        "out",
+        "against",
+        "during",
+        "without",
+        "before",
+        "under",
+        "my",
+      ];
+
+      // Generate base slug
+      let slug = formData.title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "") // Remove special characters
+        .split(/\s+/)
+        .filter((word) => word && !stopWords.includes(word))
+        .slice(0, 8) // Limit to first 8 meaningful words
+        .join("-")
+        .replace(/--+/g, "-")
+        .trim("-");
+
+      // Check if slug exists in the database
+      try {
+        const response = await fetch(`/api/v1/blog/slug/${slug}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const { data } = await response.json();
+          if (data) {
+            // If slug exists, append a random string
+            slug = `${slug}-${nanoid(5)}`;
+          }
+        }
+      } catch (error) {
+        console.error("Error checking slug:", error);
+        // Continue with the generated slug even if check fails
+      }
+
+      // Enforce 60-char limit (without cutting mid-word)
+      const MAX_SLUG_LENGTH = 60;
+      if (slug.length > MAX_SLUG_LENGTH) {
+        const lastHyphen = slug.lastIndexOf("-", MAX_SLUG_LENGTH);
+        slug =
+          lastHyphen > 0
+            ? slug.substring(0, lastHyphen)
+            : slug.substring(0, MAX_SLUG_LENGTH);
+      }
+
+      // Update state with the new slug
+      setFormData((prev) => ({
+        ...prev,
+        slug: slug.replace(/-+$/, ""), // Remove any trailing hyphens
+      }));
+    } catch (error) {
+      console.error("Error generating slug:", error);
+      toast.error("Failed to generate slug. Please try again.");
+    }
   };
 
   // Tag handlers
@@ -318,10 +413,17 @@ export default function BlogForm({ blogData = null }) {
     }));
   };
 
-  const handleTagKey = (e) => {
-    if (["Enter", ","].includes(e.key)) {
+  const handleTagInput = (e) => {
+    if (e.key === "Enter" && tagInput.trim()) {
       e.preventDefault();
-      addTag();
+      const newTag = tagInput.trim().toLowerCase();
+      if (!formData.tags.includes(newTag)) {
+        setFormData((prev) => ({
+          ...prev,
+          tags: [...prev.tags, newTag],
+        }));
+      }
+      setTagInput("");
     }
   };
 
@@ -349,21 +451,21 @@ export default function BlogForm({ blogData = null }) {
 
       const response = await fetch(url, {
         method,
-        headers: { 
-          'Content-Type': 'application/json',
+        headers: {
+          "Content-Type": "application/json",
         },
-        credentials: 'include', // Important for cookies
+        credentials: "include", // Important for cookies
         body: JSON.stringify({
           ...formData,
           meta: {
             title: formData.metaTitle,
-            description: formData.metaDescription
-          }
+            description: formData.metaDescription,
+          },
         }),
       });
 
       if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
         return;
       }
 
@@ -403,7 +505,7 @@ export default function BlogForm({ blogData = null }) {
               type="text"
               name="title"
               value={formData.title}
-              onChange={handleTitleChange}
+              onChange={handleChange}
               placeholder="Enter blog title"
               className="w-full rounded-md px-3 py-2 bg-[var(--container-color)] border-[var(--border-color)] shadow-sm focus:border-[var(--border-color)] focus:ring-[var(--border-color)]"
               required
@@ -411,12 +513,17 @@ export default function BlogForm({ blogData = null }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Slug <span className="text-red-500">(Auto Generated)</span> -{" "}
-              <span className="text-green-500">
-                (Also modify if you want to change)
-              </span>
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium">Slug</label>
+              <button
+                type="button"
+                onClick={generateSlug}
+                className="text-sm text-blue-500 hover:text-blue-700"
+                disabled={!formData.title}
+              >
+                Generate from Title
+              </button>
+            </div>
             <div className="flex">
               <span className="px-3 inline-flex items-center bg-[var(--container-color)] border border-r-0 border-[var(--border-color)] text-[var(--text-color)] text-sm rounded-l-md cursor-not-allowed">
                 /blog/
@@ -424,11 +531,11 @@ export default function BlogForm({ blogData = null }) {
               <input
                 type="text"
                 name="slug"
-                placeholder="slug will auto generated based on title"
-                // disabled
-                value={formData.slug}
+                placeholder="Click 'Generate from Title' or enter manually"
+                value={formData.slug || ""}
                 onChange={handleChange}
                 className="flex-1 rounded-r-md px-3 py-2 bg-[var(--container-color)] border border-[var(--border-color)]"
+                required
               />
             </div>
           </div>
@@ -477,7 +584,9 @@ export default function BlogForm({ blogData = null }) {
               <div className="mt-2">
                 <img
                   src={
-                    formData.featuredImage?.includes("process.env.NEXT_PUBLIC_API_URL")
+                    formData.featuredImage?.includes(
+                      "process.env.NEXT_PUBLIC_API_URL"
+                    )
                       ? process.env.NEXT_PUBLIC_API_URL +
                         formData.featuredImage.split('"')[1]
                       : formData.featuredImage || "/avatar.png"
@@ -495,19 +604,21 @@ export default function BlogForm({ blogData = null }) {
           </div>
 
           {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Tags</label>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tags
+            </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {formData.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="bg-[var(--button-bg-color)] text-[var(--button-color)] px-2 py-0.5 rounded-full text-xs"
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                 >
                   {tag}
                   <button
-                    onClick={() => removeTag(tag)}
                     type="button"
-                    className="ml-1 text-[var(--button-color)] hover:text-red-600"
+                    onClick={() => removeTag(tag)}
+                    className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-200 text-blue-600 hover:bg-blue-300 focus:outline-none"
                   >
                     ×
                   </button>
@@ -515,24 +626,92 @@ export default function BlogForm({ blogData = null }) {
               ))}
             </div>
             <div className="flex">
-              <div className="relative flex-grow">
-                <FiTag className="absolute left-3 top-2.5 text-[var(--button-color)]" />
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKey}
-                  placeholder="Add tags..."
-                  className="pl-10 w-full rounded-l-md px-3 py-2 bg-[var(--container-color)] border-[var(--border-color)] focus:ring-[var(--border-color)] focus:border-[var(--border-color)]"
-                />
-              </div>
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagInput}
+                placeholder="Add a tag and press Enter"
+                className="flex-1 min-w-0 block w-full px-3 py-2 rounded-l-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
               <button
                 type="button"
                 onClick={addTag}
-                className="px-4 py-2 border bg-[var(--button-bg-color)] text-[var(--button-color)] border-[var(--border-color)] rounded-r-md hover:bg-[var(--button-bg-color)] cursor-pointer"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Add
               </button>
+            </div>
+          </div>
+
+          {/* Categories Input */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Categories (Select at least one)
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={categoryInput}
+                onChange={(e) => setCategoryInput(e.target.value)}
+                onFocus={() => setShowCategoryDropdown(true)}
+                onBlur={() =>
+                  setTimeout(() => setShowCategoryDropdown(false), 200)
+                }
+                placeholder="Search categories..."
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+
+              {showCategoryDropdown && (
+                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map((category, index) => (
+                      <div
+                        key={`${category}-${index}`}
+                        onClick={() => toggleCategory(category)}
+                        className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 ${
+                          formData.categories.includes(category)
+                            ? "bg-blue-50"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <span className="font-normal ml-3 block truncate">
+                            {category}
+                          </span>
+                        </div>
+                        {formData.categories.includes(category) && (
+                          <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-gray-500">
+                      No categories found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2">
+              {formData.categories.map((category) => (
+                <span
+                  key={category}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                >
+                  {category}
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(category)}
+                    className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-green-200 text-green-600 hover:bg-green-300 focus:outline-none"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
             </div>
           </div>
 
