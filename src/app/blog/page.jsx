@@ -23,10 +23,10 @@ export default function BlogPage() {
   // Fetch categories
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/api/v1/blog-categories');
+      const response = await axios.get("/api/v1/blog-categories");
       setCategories(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
       setCategories([]);
     }
   };
@@ -49,11 +49,11 @@ export default function BlogPage() {
         limit: pagination.limit,
         sort: "-publishedAt",
       };
-      
+
       if (selectedCategory) {
         params.category = selectedCategory;
       }
-      
+
       const response = await blogAPI.getBlogPosts(params);
 
       // Handle both array and paginated responses
@@ -148,7 +148,7 @@ export default function BlogPage() {
 
           {/* Search and Filter Section */}
           <div className="mb-8 max-w-2xl mx-auto">
-            <div className="relative">
+            {/* <div className="relative">
               <input
                 type="text"
                 placeholder="Search articles..."
@@ -170,14 +170,15 @@ export default function BlogPage() {
                   />
                 </svg>
               </button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-4 justify-center">
+            </div> */}
+            <div className="flex flex-wrap gap-2 mt-4 align-baseline justify-center">
+              <p className="font-semibold">Filter -</p>
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`px-3 py-1 text-sm rounded-full ${
-                  !selectedCategory 
-                    ? 'bg-[var(--accent-color)] text-white' 
-                    : 'bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)]'
+                className={`px-3 text-sm rounded-full ${
+                  !selectedCategory
+                    ? "bg-[var(--accent-color)] text-white"
+                    : "bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)]"
                 } cursor-pointer border border-[var(--border-color)] transition-colors`}
               >
                 All
@@ -186,10 +187,10 @@ export default function BlogPage() {
                 <button
                   key={category._id}
                   onClick={() => setSelectedCategory(category._id)}
-                  className={`px-3 py-1 text-sm rounded-full ${
-                    selectedCategory === category._id 
-                      ? 'bg-[var(--accent-color)] text-white' 
-                      : 'bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)]'
+                  className={`px-3 text-sm rounded-full ${
+                    selectedCategory === category._id
+                      ? "bg-[var(--accent-color)] text-white"
+                      : "bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)]"
                   } cursor-pointer border border-[var(--border-color)] transition-colors`}
                 >
                   {category.name}
