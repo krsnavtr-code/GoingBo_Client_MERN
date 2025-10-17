@@ -79,10 +79,11 @@ export default function AdminLayout({ children }) {
     { name: "Dashboard", icon: <FiPieChart />, path: "/admin" },
     { name: "Users", icon: <FiUsers />, path: "/admin/users" },
     { name: "Profile", icon: <FiUser />, path: "/admin/profile" },
-    { name: "Media", icon: <FiImage />, path: "/admin/media" },
+    { name: "IT Categories", icon: <FiImage />, path: "/admin/it-categories" },
     { name: "Skills", icon: <FiAward />, path: "/admin/skills" },
-    { name: "Contacts", icon: <FiMail />, path: "/admin/contacts" },
     { name: "Blog", icon: <FiMail />, path: "/admin/blog" },
+    { name: "Media", icon: <FiImage />, path: "/admin/media" },
+    { name: "Contacts", icon: <FiMail />, path: "/admin/contacts" },
   ];
 
   return (
