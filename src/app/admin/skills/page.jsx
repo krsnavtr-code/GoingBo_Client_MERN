@@ -8,6 +8,7 @@ import axios from "axios";
 
 const SkillsPage = () => {
   const [skills, setSkills] = useState([]);
+  const [itCategories, setItCategories] = useState([{ value: "", label: "Loading categories..." }]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -16,26 +17,48 @@ const SkillsPage = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    category: "frontend",
+    category: "",
     level: 3,
     icon: "code",
   });
   const router = useRouter();
 
-  // Skill categories
-  const skillCategories = [
-    { value: "", label: "Select Category" },
-    { value: "frontend", label: "Frontend" },
-    { value: "backend", label: "Backend" },
-    { value: "database", label: "Database" },
-    { value: "devops", label: "DevOps" },
-    { value: "mobile", label: "Mobile" },
-    { value: "other", label: "Other" },
-  ];
-
   const filteredSkills = skills.filter(
     (skill) => !categoryFilter || skill.category === categoryFilter
   );
+
+  // Fetch IT categories
+  const fetchItCategories = async () => {
+    try {
+      const { data } = await axios.get("/api/v1/it-categories");
+      
+      // Extract categories from the response
+      const categories = data.data?.categories || [];
+      
+      // Format categories for the select component
+      const formattedCategories = categories.map(category => ({
+        value: category._id,
+        label: category.name
+      }));
+      
+      // Add the default "Select Category" option
+      const allCategories = [
+        { value: "", label: "Select Category" },
+        ...formattedCategories
+      ];
+      
+      setItCategories(allCategories);
+      
+      // Set default category if not set
+      if (!formData.category && categories.length > 0) {
+        setFormData(prev => ({ ...prev, category: categories[0].value }));
+      }
+    } catch (error) {
+      console.error("Error fetching IT categories:", error);
+      toast.error("Failed to load IT categories");
+      setItCategories([{ value: "", label: "Failed to load categories" }]);
+    }
+  };
 
   // Fetch skills
   const fetchSkills = async () => {
@@ -51,7 +74,11 @@ const SkillsPage = () => {
   };
 
   useEffect(() => {
-    fetchSkills();
+    const fetchData = async () => {
+      await fetchItCategories();
+      await fetchSkills();
+    };
+    fetchData();
   }, []);
 
   // Handle form input changes
@@ -66,24 +93,51 @@ const SkillsPage = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate category
+    if (!formData.category) {
+      toast.error("Please select a category");
+      return;
+    }
+
     try {
       setLoading(true);
+      
+      // Prepare the data to send with the category ID
+      const skillData = {
+        name: formData.name,
+        category: formData.category, // Send the category ID directly
+        level: formData.level,
+        icon: formData.icon || "code"
+      };
+
       if (currentSkill) {
         // Update existing skill
-        await axios.patch(`/api/v1/admin/skills/${currentSkill._id}`, formData);
+        await axios.patch(`/api/v1/admin/skills/${currentSkill._id}`, skillData);
         toast.success("Skill updated successfully");
       } else {
         // Create new skill
-        await axios.post("/api/v1/admin/skills", formData);
+        await axios.post("/api/v1/admin/skills", skillData);
         toast.success("Skill created successfully");
       }
+      
+      // Reset form and refresh data
       setIsModalOpen(false);
       setCurrentSkill(null);
-      setFormData({ name: "", category: "frontend", level: 3, icon: "code" });
-      fetchSkills();
+      setFormData({ 
+        name: "", 
+        category: "", // Reset to empty to show the "Select Category" placeholder
+        level: 3, 
+        icon: "code" 
+      });
+      
+      // Refresh the skills list
+      await fetchSkills();
+      
     } catch (error) {
       console.error("Error saving skill:", error);
-      toast.error(error.response?.data?.message || "Failed to save skill");
+      const errorMessage = error.response?.data?.message || error.message || "Failed to save skill";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -92,12 +146,15 @@ const SkillsPage = () => {
   // Handle edit skill
   const handleEdit = (skill) => {
     setCurrentSkill(skill);
+    
+    // Set the category ID directly from the skill data
     setFormData({
       name: skill.name,
-      category: skill.category,
+      category: skill.category?._id || skill.category || "",
       level: skill.level,
       icon: skill.icon || "code",
     });
+    
     setIsModalOpen(true);
   };
 
@@ -144,8 +201,8 @@ const SkillsPage = () => {
           className="px-3 py-2 border rounded-md bg-[var(--container-color)] text-[var(--text-color)] focus:outline-none focus:ring-1"
         >
           <option value="">All Categories</option>
-          {skillCategories
-            .filter((cat) => cat.value !== "") // Exclude the "Select Category" option
+          {itCategories
+            .filter((cat) => cat.value !== "") // Exclude the empty value option
             .map((category) => (
               <option key={category.value} value={category.value}>
                 {category.label}
@@ -224,7 +281,7 @@ const SkillsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--container-color)] text-[var(--text-color)] capitalize">
-                        {skill.category}
+                        {typeof skill.category === 'object' ? skill.category.name : skill.category}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -288,11 +345,10 @@ const SkillsPage = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="MERN Stack"
-                    className="w-full px-3 py-2 border border rounded-md focus:outline-none focus:ring-1"
+                    className="w-full px-3 py-2 bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-1"
                     required
                   />
                 </div>
-
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
                     Category
@@ -301,21 +357,19 @@ const SkillsPage = () => {
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border rounded-md focus:outline-none focus:ring-1"
+                    className="w-full px-3 py-2 bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-1"
                     required
                   >
-                    {skillCategories.map((category) => (
+                    {itCategories.map((category, index) => (
                       <option
-                        key={category.value}
+                        key={category.value || `category-${index}`}
                         value={category.value}
-                        className="text-[var(--text-color)] bg-[var(--container-color)]"
                       >
                         {category.label}
                       </option>
                     ))}
                   </select>
                 </div>
-
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-1">
                     Proficiency Level
@@ -345,7 +399,7 @@ const SkillsPage = () => {
                     name="icon"
                     value={formData.icon}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border rounded-md focus:outline-none focus:ring-1"
+                    className="w-full px-3 py-2 bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-1"
                     placeholder="e.g., 💻 or code"
                   />
                 </div>
@@ -363,7 +417,7 @@ const SkillsPage = () => {
                         icon: "",
                       });
                     }}
-                    className="px-4 py-2 border rounded-md text-[var(--text-color)] cursor-pointer hover:bg-[var(--container-color-in)]"
+                    className="px-4 py-2 border rounded-md text-[var(--button-color)] cursor-pointer hover:bg-[var(--button-hover-color)] bg-[var(--button-bg-color)]"
                   >
                     Cancel
                   </button>
