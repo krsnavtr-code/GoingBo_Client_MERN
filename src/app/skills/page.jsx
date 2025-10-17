@@ -13,42 +13,71 @@ import axios from "axios";
 
 const SkillsPage = () => {
   const [skills, setSkills] = useState([]);
+  const [categories, setCategories] = useState([
+    { _id: "all", name: "All Skills", icon: <FaTools className="mr-2" /> },
+  ]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
 
-  const categories = [
-    { id: "all", name: "All Skills", icon: <FaTools className="mr-2" /> },
-    { id: "frontend", name: "Frontend", icon: <FaCode className="mr-2" /> },
-    { id: "backend", name: "Backend", icon: <FaServer className="mr-2" /> },
-    { id: "database", name: "Database", icon: <FaDatabase className="mr-2" /> },
-    { id: "devops", name: "DevOps", icon: <FaCloud className="mr-2" /> },
-    { id: "mobile", name: "Mobile", icon: <FaMobileAlt className="mr-2" /> },
-  ];
-
-  const getCategoryIcon = (category) => {
-    const cat = categories.find((c) => c.id === category);
-    return cat ? cat.icon : <FaTools className="mr-2" />;
+  const getCategoryIcon = (categoryId) => {
+    if (categoryId === "all") return <FaTools className="mr-2" />;
+    const category = categories.find((c) => c._id === categoryId || c.name.toLowerCase() === categoryId.toLowerCase());
+    if (category) return category.icon;
+    
+    // Fallback to default icons based on category name
+    const iconMap = {
+      frontend: <FaCode className="mr-2" />,
+      backend: <FaServer className="mr-2" />,
+      database: <FaDatabase className="mr-2" />,
+      devops: <FaCloud className="mr-2" />,
+      mobile: <FaMobileAlt className="mr-2" />,
+    };
+    return iconMap[categoryId?.toLowerCase()] || <FaTools className="mr-2" />;
   };
 
   useEffect(() => {
-    const fetchSkills = async () => {
+    const fetchData = async () => {
       try {
-        const { data } = await axios.get("/api/v1/skills");
-        setSkills(data.data.skills);
+        setLoading(true);
+        // Fetch both skills and categories in parallel
+        const [skillsRes, categoriesRes] = await Promise.all([
+          axios.get("/api/v1/skills"),
+          axios.get("/api/v1/it-categories"),
+        ]);
+
+        setSkills(skillsRes.data.data.skills);
+        
+        // Format categories for the UI
+        const formattedCategories = [
+          { _id: "all", name: "All Skills", icon: <FaTools className="mr-2" /> },
+          ...(categoriesRes.data.data?.categories || []).map(cat => ({
+            _id: cat._id,
+            name: cat.name,
+            icon: getCategoryIcon(cat.name)
+          }))
+        ];
+        
+        setCategories(formattedCategories);
       } catch (error) {
-        console.error("Error fetching skills:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSkills();
+    fetchData();
   }, []);
 
-  const filteredSkills =
-    activeCategory === "all"
-      ? skills
-      : skills.filter((skill) => skill.category === activeCategory);
+  const filteredSkills = skills.filter((skill) => {
+    if (activeCategory === "all") return true;
+    
+    // Handle both string and object categories
+    const categoryId = typeof skill.category === 'object' 
+      ? skill.category._id?.toString() 
+      : skill.category?.toString();
+      
+    return categoryId === activeCategory;
+  });
 
   if (loading) {
     return (
@@ -74,15 +103,15 @@ const SkillsPage = () => {
         <div className="flex flex-wrap justify-center gap-2 mb-12">
           {categories.map((category) => (
             <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id)}
+              key={category._id}
+              onClick={() => setActiveCategory(category._id)}
               className={`flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer ${
-                activeCategory === category.id
+                activeCategory === category._id
                   ? "bg-[var(--primary-color-in)] text-[var(--text-color)]"
                   : "bg-[var(--container-color-in)] text-[var(--text-color)] hover:bg-[var(--primary-color-in)]"
               } shadow-sm border border-gray-200`}
             >
-              {category.icon}
+              {getCategoryIcon(category._id)}
               {category.name}
             </button>
           ))}
@@ -122,8 +151,11 @@ const SkillsPage = () => {
                     <h3 className="ml-4 text-lg font-semibold">{skill.name}</h3>
                   </div>
                   <span className="px-3 py-1 text-xs font-semibold bg-[var(--container-color)] rounded-full">
-                    {skill.category.charAt(0).toUpperCase() +
-                      skill.category.slice(1)}
+                    {typeof skill.category === 'object' 
+                      ? skill.category?.name || 'Other'
+                      : (skill.category?.charAt(0)?.toUpperCase() || '') + 
+                        (skill.category?.slice(1) || 'other')
+                    }
                   </span>
                 </div>
 
