@@ -23,9 +23,16 @@ const SkillsPage = () => {
   });
   const router = useRouter();
 
-  const filteredSkills = skills.filter(
-    (skill) => !categoryFilter || skill.category === categoryFilter
-  );
+  const filteredSkills = skills.filter((skill) => {
+    if (!categoryFilter) return true;
+    
+    // Handle both string and object categories
+    const categoryId = typeof skill.category === 'object' 
+      ? skill.category._id?.toString() 
+      : skill.category?.toString();
+      
+    return categoryId === categoryFilter;
+  });
 
   // Fetch IT categories
   const fetchItCategories = async () => {
