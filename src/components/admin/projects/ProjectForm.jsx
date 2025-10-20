@@ -3,11 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { FiX } from 'react-icons/fi';
+import Image from "next/image";
+import { FiX } from "react-icons/fi";
 import dynamic from "next/dynamic";
 
 const TipTapEditor = dynamic(() => import("./TipTapEditor"), { ssr: false });
-
 
 const ProjectForm = ({ project = null }) => {
   const router = useRouter();
@@ -52,7 +52,7 @@ const ProjectForm = ({ project = null }) => {
           // console.log('Setting categories:', result.data.categories);
           setCategories(result.data.categories);
         } else {
-          console.warn('No categories found in response:', result);
+          console.warn("No categories found in response:", result);
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -106,7 +106,6 @@ const ProjectForm = ({ project = null }) => {
       description: html,
     }));
   };
-
 
   const addTechnology = (e) => {
     e.preventDefault();
@@ -172,22 +171,6 @@ const ProjectForm = ({ project = null }) => {
         : "/api/v1/projects";
       const method = project ? "PATCH" : "POST";
 
-      // Helper function to validate and format URLs
-      const formatImageUrl = (url) => {
-        if (!url || typeof url !== 'string') return null;
-        const trimmedUrl = url.trim();
-        if (!trimmedUrl) return null;
-        
-        // If it's already a full URL, return as is
-        try {
-          new URL(trimmedUrl);
-          return trimmedUrl;
-        } catch (e) {
-          // If it's a relative path, ensure it starts with a slash
-          return trimmedUrl.startsWith('/') ? trimmedUrl : `/${trimmedUrl}`;
-        }
-      };
-
       // Prepare the data to be sent
       const dataToSend = {
         ...formData,
@@ -198,23 +181,25 @@ const ProjectForm = ({ project = null }) => {
         startDate: formData.startDate || null,
         endDate: formData.endDate || null,
         // Ensure arrays are properly formatted
-        technologies: Array.isArray(formData.technologies) ? formData.technologies : [],
+        technologies: Array.isArray(formData.technologies)
+          ? formData.technologies
+          : [],
         tags: Array.isArray(formData.tags) ? formData.tags : [],
-        itcategories: Array.isArray(formData.itcategories) ? formData.itcategories : [],
+        itcategories: Array.isArray(formData.itcategories)
+          ? formData.itcategories
+          : [],
         // Format and validate image gallery URLs
-        imageGallery: Array.isArray(formData.imageGallery) 
-          ? formData.imageGallery
-              .map(url => formatImageUrl(url))
-              .filter(Boolean) // Remove any null/undefined values
+        imageGallery: Array.isArray(formData.imageGallery)
+          ? formData.imageGallery.map((url) => url).filter(Boolean)
           : [],
         // Ensure boolean fields are properly set
         isPublished: Boolean(formData.isPublished),
         // Ensure priority is a number
-        priority: Number(formData.priority) || 0
+        priority: Number(formData.priority) || 0,
       };
 
       // Format mainImage if it exists
-      dataToSend.mainImage = formatImageUrl(formData.mainImage);
+      dataToSend.mainImage = formData.mainImage;
 
       const response = await fetch(url, {
         method,
@@ -229,13 +214,15 @@ const ProjectForm = ({ project = null }) => {
       try {
         responseData = await response.json();
       } catch (e) {
-        console.error('Failed to parse response as JSON:', e);
-        throw new Error('Invalid response from server');
+        console.error("Failed to parse response as JSON:", e);
+        throw new Error("Invalid response from server");
       }
-      
+
       if (!response.ok) {
-        console.error('Server responded with error:', responseData);
-        throw new Error(responseData.message || responseData.error || 'Something went wrong');
+        console.error("Server responded with error:", responseData);
+        throw new Error(
+          responseData.message || responseData.error || "Something went wrong"
+        );
       }
 
       toast.success(`Project ${project ? "updated" : "created"} successfully`);
@@ -244,7 +231,7 @@ const ProjectForm = ({ project = null }) => {
     } catch (error) {
       console.error("Error saving project:", error);
       // Try to parse the error response if it's a JSON response
-      let errorMessage = 'Failed to save project';
+      let errorMessage = "Failed to save project";
       try {
         const errorData = await error.response?.json();
         if (errorData?.message) {
@@ -461,26 +448,34 @@ const ProjectForm = ({ project = null }) => {
         <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-center mb-6 border-b pb-2">
             <h2 className="text-lg font-semibold">
-              Main description with all information 
+              Main description with all information
             </h2>
             <div className="flex border border-[var(--border-color)] rounded-md overflow-hidden">
               <button
                 type="button"
                 onClick={() => setShowPreview(false)}
-                className={`px-4 py-1 text-sm font-medium cursor-pointer ${!showPreview ? 'bg-[var(--container-color)]' : 'bg-[var(--container-color-in)]'}`}
+                className={`px-4 py-1 text-sm font-medium cursor-pointer ${
+                  !showPreview
+                    ? "bg-[var(--container-color)]"
+                    : "bg-[var(--container-color-in)]"
+                }`}
               >
                 Edit
               </button>
               <button
                 type="button"
                 onClick={() => setShowPreview(true)}
-                className={`px-4 py-1 text-sm font-medium cursor-pointer ${showPreview ? 'bg-[var(--container-color)]' : 'bg-[var(--container-color-in)]'}`}
+                className={`px-4 py-1 text-sm font-medium cursor-pointer ${
+                  showPreview
+                    ? "bg-[var(--container-color)]"
+                    : "bg-[var(--container-color-in)]"
+                }`}
               >
                 Preview
               </button>
             </div>
           </div>
-          
+
           {!showPreview ? (
             <>
               <label className="block text-sm font-medium mb-2">
@@ -494,8 +489,13 @@ const ProjectForm = ({ project = null }) => {
               </div>
             </>
           ) : (
-            <div className="prose max-w-none p-4 border border-[var(--border-color)] rounded-lg bg-[var(--container-color)] min-h-[200px]"
-              dangerouslySetInnerHTML={{ __html: formData.description || '<p class="text-[var(--text-color-secondary)]">No content to preview. Start typing in the editor to see a preview here.</p>' }}
+            <div
+              className="prose max-w-none p-4 border border-[var(--border-color)] rounded-lg bg-[var(--container-color)] min-h-[200px]"
+              dangerouslySetInnerHTML={{
+                __html:
+                  formData.description ||
+                  '<p class="text-[var(--text-color-secondary)]">No content to preview. Start typing in the editor to see a preview here.</p>',
+              }}
             />
           )}
         </div>
@@ -597,19 +597,24 @@ const ProjectForm = ({ project = null }) => {
                 name="mainImage"
                 value={formData.mainImage}
                 onChange={handleChange}
-                placeholder="e.g., /uploads/projects/image.jpg"
+                placeholder="e.g., /uploads/media-65512.png"
                 className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
               />
+
               {formData.mainImage && (
-                <img
-                  src={
-                    formData.mainImage.startsWith("http")
-                      ? formData.mainImage
-                      : `${process.env.NEXT_PUBLIC_API_URL}${formData.mainImage}`
-                  }
-                  alt="Preview"
-                  className="w-14 h-14 rounded-lg object-cover border"
-                />
+                <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-[var(--border-color)] shadow-md">
+                  <Image
+                    src={
+                      formData.mainImage.startsWith("http")
+                        ? formData.mainImage
+                        : `${process.env.NEXT_PUBLIC_API_URL}${formData.mainImage}`
+                    }
+                    alt="Preview"
+                    fill
+                    className="object-cover object-center"
+                    priority
+                  />
+                </div>
               )}
             </div>
           </div>
@@ -618,33 +623,50 @@ const ProjectForm = ({ project = null }) => {
             <label className="block text-sm font-medium mb-2">
               Image Gallery
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
               {formData.imageGallery.map((img, i) => (
-                <div key={i} className="relative group">
-                  <img
-                    src={
-                      img.startsWith("http")
-                        ? img
-                        : `${process.env.NEXT_PUBLIC_API_URL}${img}`
-                    }
-                    className="rounded-lg object-cover w-full aspect-video border"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImageFromGallery(img)}
-                    className="absolute top-1 right-1 bg-red-600 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                  >
-                    ✕
-                  </button>
+                <div
+                  key={i}
+                  className="p-2 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] shadow-sm"
+                >
+                  {/* Image Path + Remove Button */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] truncate max-w-[80%]">
+                      {img}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeImageFromGallery(img)}
+                      className="bg-red-500 hover:bg-red-600 text-white text-[10px] rounded-full px-2 py-[2px] transition"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Image Preview */}
+                  <div className="relative w-full h-28 flex items-center justify-center rounded-md overflow-hidden border border-[var(--border-color)] bg-[var(--container-color-in)]">
+                    <Image
+                      src={
+                        img.startsWith("http")
+                          ? img
+                          : `${process.env.NEXT_PUBLIC_API_URL}${img}`
+                      }
+                      alt={`Gallery image ${i + 1}`}
+                      fill
+                      className="object-contain object-center"
+                      priority
+                    />
+                  </div>
                 </div>
               ))}
             </div>
+
             <div className="flex gap-3">
               <input
                 type="text"
                 value={newImage}
                 onChange={(e) => setNewImage(e.target.value)}
-                placeholder="Add image URL"
+                placeholder="e.g., /uploads/media-554545.png"
                 className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
               />
               <button

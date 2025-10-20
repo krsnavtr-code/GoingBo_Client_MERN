@@ -153,11 +153,12 @@ const ProjectsPage = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto bg-base-100 rounded-lg shadow">
+      <div className="overflow-x-auto bg-base-100 rounded-lg shadow p-5 bg-[var(--container-color-in)]">
         <table className="w-full table-auto rounded-lg overflow-hidden">
-          <thead className="bg-[var(--container-color-in)]">
+          <thead>
             <tr>
-              <th className="w-16">#</th>
+              <th className="w-5">#</th>
+              <th className="">Media</th>
               <th>
                 <button
                   className="flex items-center gap-1"
@@ -166,7 +167,6 @@ const ProjectsPage = () => {
                   Title {getSortIcon("title")}
                 </button>
               </th>
-              <th>Technologies</th>
               <th className="text-center">
                 <button
                   className="flex items-center justify-center gap-1 w-full"
@@ -183,10 +183,18 @@ const ProjectsPage = () => {
                   Created {getSortIcon("createdAt")}
                 </button>
               </th>
+              <th>
+                <button
+                  className="flex items-center justify-center gap-1 w-full"
+                  onClick={() => requestSort("updatedAt")}
+                >
+                  Updated {getSortIcon("updatedAt")}
+                </button>
+              </th>
               <th className="text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-[var(--container-color-in)] border-t border-[var(--border-color)]">
+          <tbody className="border-t border-[var(--border-color)]">
             {projects.length === 0 ? (
               <tr>
                 <td colSpan="6" className="text-center py-8">
@@ -198,38 +206,30 @@ const ProjectsPage = () => {
                 <tr key={project._id} className="hover">
                   <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td>
-                    <div className="flex items-center gap-3">
-                      {project.mainImage && (
-                        <div className="avatar">
-                          <div className="w-12 h-12 rounded">
-                            <img
-                              src={project.mainImage}
-                              alt={project.title}
-                              className="object-cover w-full h-full"
-                            />
-                          </div>
+                    {project.mainImage && (
+                      <div className="avatar">
+                        <div className="w-12 h-12 rounded">
+                          <img
+                            src={
+                              project.mainImage.startsWith("http")
+                                ? project.mainImage
+                                : `${process.env.NEXT_PUBLIC_API_URL}${project.mainImage}`
+                            }
+                            alt={project.title}
+                            className="object-cover w-full h-full"
+                          />
                         </div>
-                      )}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-3">
                       <div>
                         <div className="font-semibold">{project.title}</div>
                         <div className="text-sm opacity-50">
                           {project.shortDescription?.substring(0, 50)}...
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="flex flex-wrap gap-1">
-                      {project.technologies?.slice(0, 3).map((tech, i) => (
-                        <span key={i} className="badge badge-ghost">
-                          {tech}
-                        </span>
-                      ))}
-                      {project.technologies?.length > 3 && (
-                        <span className="badge badge-ghost">
-                          +{project.technologies.length - 3} more
-                        </span>
-                      )}
                     </div>
                   </td>
                   <td className="text-center">
@@ -246,12 +246,15 @@ const ProjectsPage = () => {
                     </span>
                   </td>
                   <td className="text-center">
-                    {format(new Date(project.createdAt), "MMM d, yyyy")}
+                    {format(new Date(project.createdAt), "d MMM, yy")}
+                  </td>
+                  <td className="text-center">
+                    {format(new Date(project.updatedAt), "d MMM, yy")}
                   </td>
                   <td>
                     <div className="flex justify-center gap-2">
                       <button
-                        className="btn btn-ghost btn-xs"
+                        className="btn btn-ghost btn-xs cursor-pointer"
                         onClick={() =>
                           togglePublish(project._id, project.isPublished)
                         }
@@ -261,12 +264,12 @@ const ProjectsPage = () => {
                       </button>
                       <Link
                         href={`/admin/projects/edit/${project._id}`}
-                        className="btn btn-ghost btn-xs"
+                        className="btn btn-ghost btn-xs cursor-pointer"
                       >
                         <FiEdit />
                       </Link>
                       <button
-                        className="btn btn-ghost btn-xs text-error"
+                        className="btn btn-ghost btn-xs text-error cursor-pointer"
                         onClick={() => handleDelete(project._id)}
                       >
                         <FiTrash2 />
