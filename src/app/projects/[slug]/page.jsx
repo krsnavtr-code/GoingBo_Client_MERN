@@ -1,169 +1,262 @@
-import Image from 'next/image';
-import { notFound } from 'next/navigation';
+"use client";
+
+import React from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { ExternalLink, Github } from "lucide-react";
 
 async function getProject(slug) {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/projects/slug/${slug}`, {
-      next: { revalidate: 60 } 
-    });
-    
-    if (!res.ok) {
-      if (res.status === 404) return null;
-      throw new Error(`Failed to fetch project: ${res.statusText}`);
-    }
-    
-    return await res.json();
-  } catch (error) {
-    console.error('Error in getProject:', error);
-    throw new Error(`Failed to fetch project: ${error.message}`);
-  }
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/projects/slug/${slug}`,
+    { next: { revalidate: 60 } }
+  );
+  if (!res.ok) return null;
+  return await res.json();
 }
 
-export async function generateMetadata({ params }) {
-  const { data } = await getProject(params.slug);
-  const project = data?.project;
-  
-  if (!project) {
-    return {
-      title: 'Project Not Found',
+export default function ProjectDetailPage({ params }) {
+  const { slug } = React.use(params);
+  const [project, setProject] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const result = await getProject(slug);
+      setProject(result?.data?.project || null);
     };
-  }
-
-  return {
-    title: `${project.title} | Projects`,
-    description: project.shortDescription,
-    openGraph: {
-      title: project.title,
-      description: project.shortDescription,
-      images: [
-        {
-          url: project.mainImage.startsWith('http')
-            ? project.mainImage
-            : `${process.env.NEXT_PUBLIC_API_URL}${project.mainImage}`,
-          width: 1200,
-          height: 630,
-          alt: project.title,
-        },
-      ],
-    },
-  };
-}
-
-export default async function ProjectDetailPage({ params }) {
-  const { data } = await getProject(params.slug);
-  const project = data?.project;
+    fetchData();
+  }, [slug]);
 
   if (!project) {
-    notFound();
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-500 text-lg">
+        Loading project details...
+      </div>
+    );
   }
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
-  };
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <article className="prose dark:prose-invert max-w-none">
-        {project.mainImage && (
-          <div className="relative w-full h-96 mb-8 rounded-xl overflow-hidden shadow-lg">
-            <Image
-              src={
-                project.mainImage.startsWith('http')
-                  ? project.mainImage
-                  : `${process.env.NEXT_PUBLIC_API_URL}${project.mainImage}`
-              }
-              alt={project.title}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
-        )}
+    <div className="text-[var(--text-color)]">
+      {/* === HERO === */}
+      <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
+        <Image
+          src={
+            project.mainImage.startsWith("http")
+              ? project.mainImage
+              : `${process.env.NEXT_PUBLIC_API_URL}${project.mainImage}`
+          }
+          alt={project.title}
+          fill
+          priority
+          className="object-cover brightness-[0.45]"
+        />
 
-        <header className="mb-12">
-          <div className="flex flex-wrap gap-2 mb-4">
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-transparent" />
+
+        {/* Text */}
+        <div className="relative z-10 text-center px-6">
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl md:text-4xl font-bold text-white drop-shadow-lg"
+          >
+            {project.title}
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto mt-4"
+          >
+            {project.shortDescription}
+          </motion.p>
+
+          {/* Buttons */}
+          <motion.div
+            className="flex flex-wrap justify-center gap-4 mt-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
+            {project.projectUrl && (
+              <a
+                href={project.projectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--button-bg-color)] text-[var(--button-color)] font-semibold shadow-lg hover:bg-[var(--button-hover-color)] transition"
+              >
+                <ExternalLink size={18} /> Go Live
+              </a>
+            )}
+            {project.githubUrl && (
+              <a
+                href={project.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--button-bg-color)] text-[var(--button-color)] font-semibold shadow-lg hover:bg-[var(--button-hover-color)] transition"
+              >
+                <Github size={18} />{" "}
+                {project.githubUrl2 ? "Frontend Code" : "Code"}
+              </a>
+            )}
+            {project.githubUrl2 && (
+              <a
+                href={project.githubUrl2}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--button-bg-color)] text-[var(--button-color)] font-semibold shadow-lg hover:bg-[var(--button-hover-color)] transition"
+              >
+                <Github size={18} /> Backend Code
+              </a>
+            )}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* === OVERVIEW === */}
+      <motion.section
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="max-w-5xl mx-auto px-6 py-20"
+      >
+        <h2 className="text-3xl font-bold mb-6">Project Overview</h2>
+        <div
+          className="prose dark:prose-invert max-w-none text-lg leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: project.description }}
+        />
+      </motion.section>
+
+      {/* === TECH STACK === */}
+      <motion.section
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="bg-[var(--container-color-in)] py-20"
+      >
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold mb-8">Tech Stack & Tools</h2>
+          <div className="flex flex-wrap justify-center gap-3">
             {project.technologies?.map((tech, i) => (
               <span
                 key={i}
-                className="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                className="px-4 py-2 rounded-full bg-[var(--button-bg-color)] text-[var(--button-color)] border border-[var(--border-color)] shadow-sm text-sm font-medium hover:scale-105 transition"
               >
                 {tech}
               </span>
             ))}
           </div>
-          
-          <h1 className="text-4xl font-bold mb-4">{project.title}</h1>
-          
-          <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mb-6">
-            {project.startDate && (
-              <span>
-                {formatDate(project.startDate)}
-                {project.endDate ? ` - ${formatDate(project.endDate)}` : ' - Present'}
+        </div>
+      </motion.section>
+
+      {/* === DETAILS === */}
+      <motion.section
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="max-w-5xl mx-auto px-6 py-20"
+      >
+        <h2 className="text-3xl font-bold mb-8">Project Timeline & Status</h2>
+        <div className="grid sm:grid-cols-2 gap-6 text-lg bg-[var(--container-color-in)] p-6 rounded-2xl shadow-sm">
+          <div>
+            <p>
+              <strong>Status:</strong>{" "}
+              <span
+                className={`${
+                  project.status === "completed"
+                    ? "text-green-600 dark:text-green-600"
+                    : "text-yellow-600 dark:text-yellow-600"
+                } font-semibold`}
+              >
+                {project.status}
               </span>
-            )}
+            </p>
+            <p>
+              <strong>Duration:</strong> {formatDate(project.startDate)} –{" "}
+              {project.endDate ? formatDate(project.endDate) : "Present"}
+            </p>
           </div>
+          <div>
+            <p>
+              <strong>Created:</strong> {formatDate(project.createdAt)}
+            </p>
+            <p>
+              <strong>Last Updated:</strong> {formatDate(project.updatedAt)}
+            </p>
+          </div>
+        </div>
+      </motion.section>
 
-          <p className="text-xl text-gray-700 dark:text-gray-300">
-            {project.shortDescription}
-          </p>
-        </header>
-
-        <div 
-          className="prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: project.description }}
-        />
-
-        {project.imageGallery && project.imageGallery.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">Gallery</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* === GALLERY === */}
+      {project.imageGallery?.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className=""
+        >
+          <div className="max-w-6xl mx-auto px-6">
+            <h2 className="text-3xl font-bold mb-10 text-center">
+              Project Gallery
+            </h2>
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
               {project.imageGallery.map((img, i) => (
-                <div key={i} className="relative h-64 rounded-lg overflow-hidden">
+                <div
+                  key={i}
+                  className="mb-4 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-transform hover:scale-[1.02]"
+                >
                   <Image
                     src={
-                      img.startsWith('http')
+                      img.startsWith("http")
                         ? img
                         : `${process.env.NEXT_PUBLIC_API_URL}${img}`
                     }
-                    alt={`${project.title} - Gallery image ${i + 1}`}
-                    fill
-                    className="object-cover"
+                    alt={`${project.title} screenshot ${i + 1}`}
+                    width={600}
+                    height={400}
+                    className="w-full h-auto object-cover"
                   />
                 </div>
               ))}
             </div>
           </div>
-        )}
+        </motion.section>
+      )}
 
-        {(project.projectUrl || project.githubUrl) && (
-          <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-6">Project Links</h2>
-            <div className="flex flex-wrap gap-4">
-              {project.projectUrl && (
-                <a
-                  href={project.projectUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  View Live Project
-                </a>
-              )}
-              {project.githubUrl && (
-                <a
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
-                >
-                  View on GitHub
-                </a>
-              )}
-            </div>
+      {/* === TAGS === */}
+      {project.tags?.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="max-w-5xl mx-auto px-6 py-20"
+        >
+          <h2 className="text-3xl font-bold mb-6">Tags</h2>
+          <div className="flex flex-wrap gap-3">
+            {project.tags.map((tag, i) => (
+              <span
+                key={i}
+                className="px-3 py-1 text-sm rounded-full bg-[var(--button-bg-color)] text-[var(--button-color)]"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
-        )}
-      </article>
+        </motion.section>
+      )}
     </div>
   );
 }

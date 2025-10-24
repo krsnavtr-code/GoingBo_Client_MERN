@@ -6,6 +6,8 @@ import { toast } from 'react-hot-toast';
 import Image from "next/image";
 import { FiX } from "react-icons/fi";
 import dynamic from "next/dynamic";
+import CharCountField from "@/components/CharCountField";
+import HtmlTagStats from "@/components/HtmlTagStats";
 
 const TipTapEditor = dynamic(() => import("./TipTapEditor"), { ssr: false });
 
@@ -275,8 +277,13 @@ const ProjectForm = ({ project = null }) => {
                   value={formData.title}
                   onChange={handleChange}
                   required
+                  minLength={5}
+                  maxLength={100}
                   className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
                 />
+
+                {/* ✅ Character count below input */}
+                <CharCountField value={formData.title} maxLength={100} />
               </div>
 
               <div>
@@ -290,9 +297,10 @@ const ProjectForm = ({ project = null }) => {
                   maxLength={250}
                   className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 h-24 resize-none focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
                 />
-                <p className="text-xs text-gray-500 mt-1 text-right">
-                  {formData.shortDescription?.length || 0}/250
-                </p>
+                <CharCountField
+                  value={formData.shortDescription}
+                  maxLength={250}
+                />
               </div>
 
               {/* Categories */}
@@ -327,6 +335,10 @@ const ProjectForm = ({ project = null }) => {
                     </option>
                   )}
                 </select>
+                <CharCountField
+                  value={formData.itcategories}
+                  maxLength={categories.length}
+                />
                 <p className="text-xs text-gray-500 mt-2">
                   Hold Ctrl/Cmd to select multiple
                 </p>
@@ -450,6 +462,7 @@ const ProjectForm = ({ project = null }) => {
             <h2 className="text-lg font-semibold">
               Main description with all information
             </h2>
+            <CharCountField value={formData.description} />
             <div className="flex border border-[var(--border-color)] rounded-md overflow-hidden">
               <button
                 type="button"
@@ -498,6 +511,8 @@ const ProjectForm = ({ project = null }) => {
               }}
             />
           )}
+          <CharCountField value={formData.description} />
+          <HtmlTagStats html={formData.description} />
         </div>
 
         {/* Technologies + Tags + Images + Publish */}
@@ -507,6 +522,8 @@ const ProjectForm = ({ project = null }) => {
             <h2 className="text-lg font-semibold mb-6 border-b pb-2">
               Technologies
             </h2>
+
+            {/* Display technologies */}
             <div className="flex flex-wrap gap-2 mb-4">
               {formData.technologies.map((tech, i) => (
                 <span
@@ -523,18 +540,47 @@ const ProjectForm = ({ project = null }) => {
                   </button>
                 </span>
               ))}
+              <CharCountField value={formData.technologies} />
             </div>
+
+            {/* Input + Add button */}
             <div className="flex gap-3">
               <input
                 type="text"
                 value={newTech}
                 onChange={(e) => setNewTech(e.target.value)}
-                placeholder="Add a technology"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    document.querySelector("#addTechBtn")?.click();
+                  }
+                }}
+                placeholder='Add technologies (e.g. "React, Next JS, Tailwind CSS")'
                 className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
               />
               <button
+                id="addTechBtn"
                 type="button"
-                onClick={addTechnology}
+                onClick={() => {
+                  if (!newTech.trim()) return;
+
+                  // Split by comma and clean spaces
+                  const extractedTechs = newTech
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter((t) => t.length > 0);
+
+                  // Add all unique technologies
+                  setFormData((prev) => ({
+                    ...prev,
+                    technologies: [
+                      ...new Set([...prev.technologies, ...extractedTechs]),
+                    ],
+                  }));
+
+                  // Clear input field
+                  setNewTech("");
+                }}
                 disabled={!newTech.trim()}
                 className="px-6 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)] transition cursor-pointer"
               >
@@ -546,6 +592,8 @@ const ProjectForm = ({ project = null }) => {
           {/* Tags */}
           <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
             <h2 className="text-lg font-semibold mb-6 border-b pb-2">Tags</h2>
+
+            {/* Display Tags */}
             <div className="flex flex-wrap gap-2 mb-4">
               {formData.tags.map((tag, i) => (
                 <span
@@ -562,18 +610,52 @@ const ProjectForm = ({ project = null }) => {
                   </button>
                 </span>
               ))}
+              <CharCountField value={formData.tags} />
             </div>
+
+            {/* Input Field */}
             <div className="flex gap-3">
               <input
                 type="text"
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add a tag"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    document.querySelector("#addTagBtn")?.click();
+                  }
+                }}
+                placeholder="Add tags — e.g. #React #NextJS #Tailwind"
                 className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
               />
               <button
+                id="addTagBtn"
                 type="button"
-                onClick={addTag}
+                onClick={() => {
+                  if (!newTag.trim()) return;
+
+                  // Extract tags (keep #)
+                  const extractedTags = newTag.match(/#\w+/g) || [];
+
+                  // If no hashtags found, still allow manual entry
+                  const finalTags =
+                    extractedTags.length > 0
+                      ? extractedTags
+                      : [
+                          newTag.trim().startsWith("#")
+                            ? newTag.trim()
+                            : `#${newTag.trim()}`,
+                        ];
+
+                  // Add unique tags
+                  setFormData((prev) => ({
+                    ...prev,
+                    tags: [...new Set([...prev.tags, ...finalTags])],
+                  }));
+
+                  // Clear input
+                  setNewTag("");
+                }}
                 disabled={!newTag.trim()}
                 className="px-6 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)] transition cursor-pointer"
               >
