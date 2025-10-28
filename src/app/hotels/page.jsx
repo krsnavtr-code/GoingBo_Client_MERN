@@ -27,10 +27,10 @@ export default function HotelsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container text-[var(--text-color)] mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 text-center">Find Your Perfect Stay</h1>
       
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div className="bg-[var(--container-color-in)] rounded-lg shadow-md p-6 mb-8">
         <HotelSearch onSearch={handleSearch} loading={loading} />
       </div>
 
