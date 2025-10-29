@@ -9,13 +9,16 @@ import { useRouter } from 'next/navigation';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 
-const ProjectsPage = () => {
+const PackagesPage = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({
+    key: "createdAt",
+    direction: "desc",
+  });
   const router = useRouter();
   const itemsPerPage = 10;
 
@@ -27,20 +30,22 @@ const ProjectsPage = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/v1/projects?page=${currentPage}&limit=${itemsPerPage}` +
-        `&sort=${sortConfig.direction === 'asc' ? '' : '-'}${sortConfig.key}` +
-        `${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ''}`
+        `/api/v1/packages?page=${currentPage}&limit=${itemsPerPage}` +
+          `&sort=${sortConfig.direction === "asc" ? "" : "-"}${
+            sortConfig.key
+          }` +
+          `${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ""}`
       );
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch projects');
+        throw new Error("Failed to fetch projects");
       }
-      
+
       const data = await response.json();
       setProjects(data.data.projects);
       setTotalPages(data.totalPages);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error("Error fetching projects:", error);
       toast.error(error.message);
     } finally {
       setLoading(false);
@@ -49,32 +54,32 @@ const ProjectsPage = () => {
 
   const handleDelete = (id) => {
     confirmAlert({
-      title: 'Confirm to delete',
-      message: 'Are you sure you want to delete this project?',
+      title: "Confirm to delete",
+      message: "Are you sure you want to delete this project?",
       buttons: [
         {
-          label: 'Yes',
+          label: "Yes",
           onClick: async () => {
             try {
-              const response = await fetch(`/api/v1/projects/${id}`, {
-                method: 'DELETE',
-                credentials: 'include',
+              const response = await fetch(`/api/v1/packages/${id}`, {
+                method: "DELETE",
+                credentials: "include",
               });
 
               if (!response.ok) {
-                throw new Error('Failed to delete project');
+                throw new Error("Failed to delete project");
               }
 
-              toast.success('Project deleted successfully');
+              toast.success("Project deleted successfully");
               fetchProjects();
             } catch (error) {
-              console.error('Error deleting project:', error);
+              console.error("Error deleting project:", error);
               toast.error(error.message);
             }
           },
         },
         {
-          label: 'No',
+          label: "No",
           onClick: () => {},
         },
       ],
@@ -83,35 +88,37 @@ const ProjectsPage = () => {
 
   const togglePublish = async (id, currentStatus) => {
     try {
-      const response = await fetch(`/api/v1/projects/${id}/toggle-publish`, {
-        method: 'PATCH',
-        credentials: 'include',
+      const response = await fetch(`/api/v1/packages/${id}/toggle-publish`, {
+        method: "PATCH",
+        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update project status');
+        throw new Error("Failed to update project status");
       }
 
       const data = await response.json();
-      toast.success(`Project ${!currentStatus ? 'published' : 'unpublished'} successfully`);
+      toast.success(
+        `Package ${!currentStatus ? "published" : "unpublished"} successfully`
+      );
       fetchProjects();
     } catch (error) {
-      console.error('Error updating project status:', error);
+      console.error("Error updating project status:", error);
       toast.error(error.message);
     }
   };
 
   const requestSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return null;
-    return sortConfig.direction === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
+    return sortConfig.direction === "asc" ? <FiArrowUp /> : <FiArrowDown />;
   };
 
   if (loading) {
@@ -125,12 +132,12 @@ const ProjectsPage = () => {
   return (
     <div className="container text-[var(--text-color)] mx-auto px-4">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold mb-4 md:mb-0">Projects</h1>
+        <h1 className="text-3xl font-bold mb-4 md:mb-0">All Packages</h1>
         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           <div className="relative">
             <input
               type="text"
-              placeholder="Search projects..."
+              placeholder="Search packages..."
               className="input input-bordered w-full md:w-64 rounded pr-10 py-2 px-2 bg-[var(--container-color-in)]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -145,10 +152,10 @@ const ProjectsPage = () => {
             )}
           </div>
           <Link
-            href="/admin/projects/new"
+            href="/admin/packages/new"
             className="rounded-full px-3 py-2 flex items-center bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)]"
           >
-            <FiPlus className="mr-2" /> Add Project
+            <FiPlus className="mr-2" /> Add Package
           </Link>
         </div>
       </div>
@@ -198,7 +205,7 @@ const ProjectsPage = () => {
             {projects.length === 0 ? (
               <tr>
                 <td colSpan="6" className="text-center py-8">
-                  No projects found. Create your first project!
+                  No packages found. Create your first package!
                 </td>
               </tr>
             ) : (
@@ -263,7 +270,7 @@ const ProjectsPage = () => {
                         {project.isPublished ? <FiEye /> : <FiEyeOff />}
                       </button>
                       <Link
-                        href={`/admin/projects/edit/${project._id}`}
+                        href={`/admin/packages/edit/${project._id}`}
                         className="btn btn-ghost btn-xs cursor-pointer"
                       >
                         <FiEdit />
@@ -332,4 +339,4 @@ const ProjectsPage = () => {
   );
 };
 
-export default ProjectsPage;
+export default PackagesPage;

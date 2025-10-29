@@ -9,9 +9,9 @@ import dynamic from "next/dynamic";
 import CharCountField from "@/components/CharCountField";
 import HtmlTagStats from "@/components/HtmlTagStats";
 
-const TipTapEditor = dynamic(() => import("./TipTapEditor"), { ssr: false });
+const TipTapEditor = dynamic(() => import("../TipTapEditor"), { ssr: false });
 
-const ProjectForm = ({ project = null }) => {
+const PackageForm = ({ project = null }) => {
   const router = useRouter();
   const [formData, setFormData] = useState({
     // Basic project fields
@@ -106,7 +106,7 @@ const ProjectForm = ({ project = null }) => {
       };
 
       setFormData({
-        // Basic project fields
+        // Basic package fields
         title: project.title || "",
         shortDescription: project.shortDescription || "",
         description: project.description || "",
@@ -122,7 +122,7 @@ const ProjectForm = ({ project = null }) => {
         mainImage: project.mainImage || "",
         imageGallery: project.imageGallery || [],
         itcategories: project.itcategories?.map((cat) => cat._id || cat) || [],
-        
+
         // Travel package fields
         packageType: project.packageType || "travel",
         destination: project.destination || "",
@@ -146,7 +146,7 @@ const ProjectForm = ({ project = null }) => {
         groupDiscountDetails: project.groupDiscountDetails || "",
         ageRestrictions: project.ageRestrictions || "",
         physicalRating: project.physicalRating || "",
-        specialRequirements: project.specialRequirements || ""
+        specialRequirements: project.specialRequirements || "",
       });
     }
   }, [project]);
@@ -227,8 +227,8 @@ const ProjectForm = ({ project = null }) => {
 
     try {
       const url = project
-        ? `/api/v1/projects/${project._id}`
-        : "/api/v1/projects";
+        ? `/api/v1/packages/${project._id}`
+        : "/api/v1/packages";
       const method = project ? "PATCH" : "POST";
 
       // Prepare the data to be sent
@@ -312,7 +312,7 @@ const ProjectForm = ({ project = null }) => {
       }
 
       toast.success(`Project ${project ? "updated" : "created"} successfully`);
-      router.push("/admin/projects");
+      router.push("/admin/packages");
       router.refresh();
     } catch (error) {
       console.error("Error saving project:", error);
@@ -1343,4 +1343,4 @@ const ProjectForm = ({ project = null }) => {
   );
 };
 
-export default ProjectForm;
+export default PackageForm;

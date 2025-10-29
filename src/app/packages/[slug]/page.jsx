@@ -7,7 +7,7 @@ import { ExternalLink, Github } from "lucide-react";
 
 async function getProject(slug) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/projects/slug/${slug}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/packages/slug/${slug}`,
     { next: { revalidate: 60 } }
   );
   if (!res.ok) return null;

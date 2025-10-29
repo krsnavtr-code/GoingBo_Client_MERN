@@ -6,12 +6,12 @@ import { toast } from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 
 // Dynamically import the ProjectForm component to avoid SSR issues with ReactQuill
-const ProjectForm = dynamic(
-  () => import('@/components/admin/projects/ProjectForm'),
+const PackageForm = dynamic(
+  () => import('@/components/admin/packages/PackageForm'),
   { ssr: false }
 );
 
-const EditProjectPage = () => {
+const EditPackagePage = () => {
   const { id } = useParams();
   const router = useRouter();
   const [project, setProject] = useState(null);
@@ -21,7 +21,7 @@ const EditProjectPage = () => {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await fetch(`/api/v1/projects/${id}`);
+        const response = await fetch(`/api/v1/packages/${id}`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -71,8 +71,8 @@ const EditProjectPage = () => {
             </svg>
             <span>{error}</span>
           </div>
-          <button className="btn btn-sm" onClick={() => router.push('/admin/projects')}>
-            Back to Projects
+          <button className="btn btn-sm" onClick={() => router.push('/admin/packages')}>
+            Back to Packages
           </button>
         </div>
       </div>
@@ -82,7 +82,7 @@ const EditProjectPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {project ? (
-        <ProjectForm project={project} />
+        <PackageForm project={project} />
       ) : (
         <div className="alert alert-warning">
           <div>
@@ -101,8 +101,8 @@ const EditProjectPage = () => {
             </svg>
             <span>Project not found</span>
           </div>
-          <button className="btn btn-sm" onClick={() => router.push('/admin/projects')}>
-            Back to Projects
+          <button className="btn btn-sm" onClick={() => router.push('/admin/packages')}>
+            Back to Packages
           </button>
         </div>
       )}
@@ -110,4 +110,4 @@ const EditProjectPage = () => {
   );
 };
 
-export default EditProjectPage;
+export default EditPackagePage;

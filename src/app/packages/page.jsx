@@ -4,7 +4,7 @@ import { ExternalLink, Github } from "lucide-react";
 
 async function getProjects() {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/projects?isPublished=true`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/packages?isPublished=true`,
     {
       next: { revalidate: 60 },
     }
@@ -24,16 +24,15 @@ export default async function ProjectsPage() {
   return (
     <div className="container text-[var(--text-color)] mx-auto px-4 py-12">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-3">My Projects</h1>
+        <h1 className="text-4xl font-bold mb-3">All Packages</h1>
         <p className="text-lg max-w-2xl mx-auto">
-          A selection of my best work showcasing full-stack web development, UI
-          design, and modern tech stacks.
+          Best packages for your needs
         </p>
       </div>
 
       {projects.length === 0 ? (
         <div className="text-center py-12">
-          <p className="">No projects found. Check back soon!</p>
+          <p className="">No packages found. Check back soon!</p>
         </div>
       ) : (
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
@@ -43,7 +42,7 @@ export default async function ProjectsPage() {
               className="group bg-[var(--container-color-in)] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-[var(--border-color)]"
             >
               {/* Image Section */}
-              <Link href={`/projects/${project.slug || project._id}`}>
+              <Link href={`/packages/${project.slug || project._id}`}>
                 <div className="relative h-56 w-full overflow-hidden">
                   {project.mainImage && (
                     <Image
@@ -69,7 +68,7 @@ export default async function ProjectsPage() {
               {/* Content Section */}
               <div className="p-5 flex flex-col justify-between h-[230px]">
                 <div>
-                  <Link href={`/projects/${project.slug || project._id}`}>
+                  <Link href={`/packages/${project.slug || project._id}`}>
                     <h2 className="text-lg font-semibold hover:text-blue-400 transition-colors duration-300 line-clamp-2">
                       {project.title}
                     </h2>

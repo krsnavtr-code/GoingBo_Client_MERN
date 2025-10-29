@@ -42,8 +42,8 @@ function Navbar() {
     { name: "Admin", path: "/admin", hidden: !isAdmin },
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
-    { name: "Projects", path: "/projects" },
-    { name: "Skills", path: "/skills" },
+    { name: "Packages", path: "/packages" },
+    // { name: "Skills", path: "/skills" },
     { name: "Contact", path: "/contact" },
   ];
 
