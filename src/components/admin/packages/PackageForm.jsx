@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import Image from "next/image";
-import { FiX } from "react-icons/fi";
+import { FiX, FiPlus, FiTrash2, FiChevronDown, FiChevronUp, FiImage } from "react-icons/fi";
 import dynamic from "next/dynamic";
 import CharCountField from "@/components/CharCountField";
 import HtmlTagStats from "@/components/HtmlTagStats";
@@ -18,7 +18,6 @@ const PackageForm = ({ project = null }) => {
     title: "",
     shortDescription: "",
     description: "",
-    technologies: [],
     status: "planning",
     priority: 0,
     startDate: "",
@@ -30,16 +29,13 @@ const PackageForm = ({ project = null }) => {
     itcategories: [],
     mainImage: "",
     imageGallery: [],
-    
-    // Travel package fields
     packageType: "travel",
     destination: "",
     duration: 0,
+    durationDay: 0,
     price: 0,
     discount: 0,
     maxTravelers: 1,
-    departureDate: "",
-    returnDate: "",
     included: [],
     excluded: [],
     itinerary: [],
@@ -55,12 +51,37 @@ const PackageForm = ({ project = null }) => {
     ageRestrictions: "",
     physicalRating: "",
     specialRequirements: "",
+    location: {
+      country: "",
+      state: "",
+      city: "",
+      address: ""
+    },
+    highlights: [],
+    ratings: {
+      average: 0,
+      count: 0,
+      reviews: []
+    },
+    faqs: [],
+    availableSeats: 0,
+    metaTitle: "",
+    metaDescription: "",
+    metaKeywords: [],
   });
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [newTech, setNewTech] = useState("");
   const [newTag, setNewTag] = useState("");
   const [newImage, setNewImage] = useState("");
+  const [newHighlight, setNewHighlight] = useState("");
+  const [newFaq, setNewFaq] = useState({ question: "", answer: "" });
+  const [newMetaKeyword, setNewMetaKeyword] = useState('');
+  const [newReview, setNewReview] = useState({
+    user: '',
+    rating: 0,
+    comment: ''
+  });
+  const [users, setUsers] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -95,13 +116,13 @@ const PackageForm = ({ project = null }) => {
     if (project) {
       // Format dates for date inputs
       const formatDate = (dateString) => {
-        if (!dateString) return '';
+        if (!dateString) return "";
         try {
           const date = new Date(dateString);
-          return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
+          return isNaN(date.getTime()) ? "" : date.toISOString().split("T")[0];
         } catch (e) {
-          console.error('Error formatting date:', e);
-          return '';
+          console.error("Error formatting date:", e);
+          return "";
         }
       };
 
@@ -110,7 +131,6 @@ const PackageForm = ({ project = null }) => {
         title: project.title || "",
         shortDescription: project.shortDescription || "",
         description: project.description || "",
-        technologies: project.technologies || [],
         status: project.status || "planning",
         priority: project.priority || 0,
         startDate: formatDate(project.startDate),
@@ -127,11 +147,10 @@ const PackageForm = ({ project = null }) => {
         packageType: project.packageType || "travel",
         destination: project.destination || "",
         duration: project.duration || 0,
+        durationDay: project.durationDay || 0,
         price: project.price || 0,
         discount: project.discount || 0,
         maxTravelers: project.maxTravelers || 1,
-        departureDate: formatDate(project.departureDate),
-        returnDate: formatDate(project.returnDate),
         included: project.included || [],
         excluded: project.excluded || [],
         itinerary: project.itinerary || [],
@@ -147,19 +166,89 @@ const PackageForm = ({ project = null }) => {
         ageRestrictions: project.ageRestrictions || "",
         physicalRating: project.physicalRating || "",
         specialRequirements: project.specialRequirements || "",
+        
+        // Location fields
+        location: {
+          country: project.location?.country || "",
+          state: project.location?.state || "",
+          city: project.location?.city || "",
+          address: project.location?.address || ""
+        },
+        
+        // Highlights
+        highlights: Array.isArray(project.highlights) ? [...project.highlights] : [],
+        
+        // Ratings & Reviews
+        ratings: {
+          average: project.ratings?.average || 0,
+          count: project.ratings?.count || 0,
+          reviews: Array.isArray(project.ratings?.reviews) 
+            ? project.ratings.reviews.map(review => ({
+                user: review.user?._id || review.user || null,
+                rating: review.rating || 0,
+                comment: review.comment || "",
+                createdAt: review.createdAt ? new Date(review.createdAt).toISOString() : new Date().toISOString()
+              }))
+            : []
+        },
+        
+        // FAQs
+        faqs: Array.isArray(project.faqs) 
+          ? project.faqs.map(faq => ({
+              question: faq.question || "",
+              answer: faq.answer || "",
+              isActive: faq.isActive !== undefined ? faq.isActive : true
+            }))
+          : [],
+        
+        // Availability
+        availableSeats: project.availableSeats || 0,
+        
+        // SEO Meta Fields
+        metaTitle: project.metaTitle || "",
+        metaDescription: project.metaDescription || "",
+        metaKeywords: Array.isArray(project.metaKeywords) ? [...project.metaKeywords] : [],
       });
     }
   }, [project]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value, type, checked, dataset } = e.target;
+    
+    // Handle nested location fields
+    if (name.startsWith('location.')) {
+      const field = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          [field]: type === 'number' ? parseFloat(value) : value
+        }
+      }));
+    } 
+    // Handle nested ratings fields
+    else if (name.startsWith('ratings.')) {
+      const field = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        ratings: {
+          ...prev.ratings,
+          [field]: type === 'number' ? parseFloat(value) : value
+        }
+      }));
+    }
+    // Handle regular fields
+    else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : 
+                type === 'number' ? parseFloat(value) : 
+                value
+      }));
+    }
   };
 
-  // Update the description field in form data
+  // Update the description field 
   const handleDescriptionChange = (html) => {
     setFormData((prev) => ({
       ...prev,
@@ -167,21 +256,65 @@ const PackageForm = ({ project = null }) => {
     }));
   };
 
-  const addTechnology = (e) => {
+  // Handle array field changes
+  const handleArrayChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: [...(prev[field] || []), value]
+    }));
+  };
+
+  // Handle adding a new highlight
+  const handleAddHighlight = (e) => {
     e.preventDefault();
-    if (newTech.trim() && !formData.technologies.includes(newTech.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        technologies: [...prev.technologies, newTech.trim()],
-      }));
-      setNewTech("");
+    if (newHighlight.trim()) {
+      handleArrayChange('highlights', newHighlight.trim());
+      setNewHighlight('');
     }
   };
 
-  const removeTechnology = (techToRemove) => {
-    setFormData((prev) => ({
+  // Handle removing a highlight
+  const handleRemoveHighlight = (index) => {
+    setFormData(prev => ({
       ...prev,
-      technologies: prev.technologies.filter((tech) => tech !== techToRemove),
+      highlights: prev.highlights.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Handle adding a new FAQ
+  const handleAddFaq = (e) => {
+    e.preventDefault();
+    if (newFaq.question.trim() && newFaq.answer.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        faqs: [...(prev.faqs || []), { ...newFaq }]
+      }));
+      setNewFaq({ question: "", answer: "" });
+    }
+  };
+
+  // Handle removing an FAQ
+  const handleRemoveFaq = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      faqs: prev.faqs.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Handle adding a meta keyword
+  const handleAddMetaKeyword = (e) => {
+    e.preventDefault();
+    if (newMetaKeyword.trim()) {
+      handleArrayChange('metaKeywords', newMetaKeyword.trim());
+      setNewMetaKeyword('');
+    }
+  };
+
+  // Handle removing a meta keyword
+  const handleRemoveMetaKeyword = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      metaKeywords: prev.metaKeywords.filter((_, i) => i !== index)
     }));
   };
 
@@ -237,14 +370,15 @@ const PackageForm = ({ project = null }) => {
         // Ensure required fields are present
         title: formData.title.trim(),
         description: formData.description.trim(),
-        shortDescription: formData.shortDescription?.trim() || '',
+        shortDescription: formData.shortDescription?.trim() || "",
         // Convert empty strings to null for optional fields
         startDate: formData.startDate || null,
         endDate: formData.endDate || null,
         // Ensure arrays are properly formatted
-        technologies: Array.isArray(formData.technologies) ? formData.technologies : [],
         tags: Array.isArray(formData.tags) ? formData.tags : [],
-        itcategories: Array.isArray(formData.itcategories) ? formData.itcategories : [],
+        itcategories: Array.isArray(formData.itcategories)
+          ? formData.itcategories
+          : [],
         // Format and validate image gallery URLs
         imageGallery: Array.isArray(formData.imageGallery)
           ? formData.imageGallery.map((url) => url).filter(Boolean)
@@ -256,36 +390,42 @@ const PackageForm = ({ project = null }) => {
         // Ensure priority is a number
         priority: Number(formData.priority) || 0,
         // Format travel package fields
-        packageType: formData.packageType || 'project',
-        destination: formData.destination || '',
+        packageType: formData.packageType || "project",
+        destination: formData.destination || "",
         duration: Number(formData.duration) || 0,
+        durationDay: Number(formData.durationDay) || 0,
         price: Number(formData.price) || 0,
         discount: Number(formData.discount) || 0,
         maxTravelers: Number(formData.maxTravelers) || 1,
-        departureDate: formData.departureDate || null,
-        returnDate: formData.returnDate || null,
-        included: Array.isArray(formData.included) ? formData.included.filter(Boolean) : [],
-        excluded: Array.isArray(formData.excluded) ? formData.excluded.filter(Boolean) : [],
-        itinerary: Array.isArray(formData.itinerary) ? formData.itinerary.map(item => ({
-          title: item.title?.trim() || `Day ${item._id || ''}`.trim(),
-          location: item.location?.trim() || '',
-          description: item.description?.trim() || '',
-          meals: Array.isArray(item.meals) ? item.meals : []
-        })) : [],
-        accommodation: formData.accommodation || '',
-        transportation: formData.transportation || '',
-        mealPlan: formData.mealPlan || '',
-        cancellationPolicy: formData.cancellationPolicy || '',
+        included: Array.isArray(formData.included)
+          ? formData.included.filter(Boolean)
+          : [],
+        excluded: Array.isArray(formData.excluded)
+          ? formData.excluded.filter(Boolean)
+          : [],
+        itinerary: Array.isArray(formData.itinerary)
+          ? formData.itinerary.map((item) => ({
+              title: item.title?.trim() || `Day ${item._id || ""}`.trim(),
+              location: item.location?.trim() || "",
+              locationMapLink: item.locationMapLink?.trim() || "",
+              description: item.description?.trim() || "",
+              meals: Array.isArray(item.meals) ? item.meals : [],
+            }))
+          : [],
+        accommodation: formData.accommodation || "",
+        transportation: formData.transportation || "",
+        mealPlan: formData.mealPlan || "",
+        cancellationPolicy: formData.cancellationPolicy || "",
         bookingDeadline: formData.bookingDeadline || null,
         minTravelersRequired: Number(formData.minTravelersRequired) || 1,
-        groupDiscountDetails: formData.groupDiscountDetails || '',
-        ageRestrictions: formData.ageRestrictions || '',
-        physicalRating: formData.physicalRating || '',
-        specialRequirements: formData.specialRequirements || ''
+        groupDiscountDetails: formData.groupDiscountDetails || "",
+        ageRestrictions: formData.ageRestrictions || "",
+        physicalRating: formData.physicalRating || "",
+        specialRequirements: formData.specialRequirements || "",
       };
 
       // Format mainImage if it exists
-      dataToSend.mainImage = formData.mainImage || '';
+      dataToSend.mainImage = formData.mainImage || "";
 
       const response = await fetch(url, {
         method,
@@ -390,10 +530,11 @@ const PackageForm = ({ project = null }) => {
     const newDay = {
       title: `Day ${formData.itinerary.length + 1}`,
       location: "",
+      locationMapLink: "",
       description: "",
       meals: [],
     };
-    
+
     setFormData((prev) => ({
       ...prev,
       itinerary: [...prev.itinerary, newDay],
@@ -446,14 +587,14 @@ const PackageForm = ({ project = null }) => {
                   // Generate slug from title
                   const slug = e.target.value
                     .toLowerCase()
-                    .replace(/[^\w\s-]/g, '') // remove special chars
-                    .replace(/\s+/g, '-')      // replace spaces with -
-                    .replace(/--+/g, '-')       // replace multiple - with single -
+                    .replace(/[^\w\s-]/g, "") // remove special chars
+                    .replace(/\s+/g, "-") // replace spaces with -
+                    .replace(/--+/g, "-") // replace multiple - with single -
                     .trim();
-                  
-                  setFormData(prev => ({
+
+                  setFormData((prev) => ({
                     ...prev,
-                    slug: slug
+                    slug: slug,
                   }));
                 }}
                 required
@@ -473,18 +614,18 @@ const PackageForm = ({ project = null }) => {
                         <input
                           type="text"
                           name="slug"
-                          value={formData.slug || ''}
+                          value={formData.slug || ""}
                           onChange={(e) => {
                             const newSlug = e.target.value
                               .toLowerCase()
-                              .replace(/[^\w\s-]/g, '') // remove special chars
-                              .replace(/\s+/g, '-')      // replace spaces with -
-                              .replace(/--+/g, '-')       // replace multiple - with single -
+                              .replace(/[^\w\s-]/g, "") // remove special chars
+                              .replace(/\s+/g, "-") // replace spaces with -
+                              .replace(/--+/g, "-") // replace multiple - with single -
                               .trim();
-                            
-                            setFormData(prev => ({
+
+                            setFormData((prev) => ({
                               ...prev,
-                              slug: newSlug
+                              slug: newSlug,
                             }));
                           }}
                           className="w-full text-xs font-mono bg-gray-50 border border-gray-200 rounded px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
@@ -496,21 +637,30 @@ const PackageForm = ({ project = null }) => {
                             // Auto-generate slug from title when the button is clicked
                             const newSlug = formData.title
                               .toLowerCase()
-                              .replace(/[^\w\s-]/g, '')
-                              .replace(/\s+/g, '-')
-                              .replace(/--+/g, '-')
+                              .replace(/[^\w\s-]/g, "")
+                              .replace(/\s+/g, "-")
+                              .replace(/--+/g, "-")
                               .trim();
-                            
-                            setFormData(prev => ({
+
+                            setFormData((prev) => ({
                               ...prev,
-                              slug: newSlug
+                              slug: newSlug,
                             }));
                           }}
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 p-1"
                           title="Regenerate from title"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3.5 w-3.5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -519,8 +669,15 @@ const PackageForm = ({ project = null }) => {
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   {formData.slug ? (
-                    <span>URL: <span className="font-mono">/projects/{formData.slug}</span></span>
-                  ) : 'Enter a title to generate URL'}
+                    <span>
+                      URL:{" "}
+                      <span className="font-mono">
+                        /projects/{formData.slug}
+                      </span>
+                    </span>
+                  ) : (
+                    "Enter a title to generate URL"
+                  )}
                 </p>
               </div>
             </div>
@@ -566,6 +723,7 @@ const PackageForm = ({ project = null }) => {
               />
             </div>
 
+            {/* Short Description */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Short Description
@@ -580,6 +738,198 @@ const PackageForm = ({ project = null }) => {
               <CharCountField
                 value={formData.shortDescription}
                 maxLength={250}
+              />
+            </div>
+
+            {/* Display Tags */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Tags
+              </label>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {formData.tags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center bg-[var(--button-bg-color)] text-[var(--button-color)] px-3 py-1 rounded-full text-sm"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(tag)}
+                      className="ml-2 text-[var(--button-color)] hover:text-red-500 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+                <CharCountField value={formData.tags} />
+              </div>
+
+              {/* Input Field */}
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      document.querySelector("#addTagBtn")?.click();
+                    }
+                  }}
+                  placeholder="Add tags — e.g. #React #NextJS #Tailwind"
+                  className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                />
+                <button
+                  id="addTagBtn"
+                  type="button"
+                  onClick={() => {
+                    if (!newTag.trim()) return;
+
+                    // Extract tags (keep #)
+                    const extractedTags = newTag.match(/#\w+/g) || [];
+
+                    // If no hashtags found, still allow manual entry
+                    const finalTags =
+                      extractedTags.length > 0
+                        ? extractedTags
+                        : [
+                            newTag.trim().startsWith("#")
+                              ? newTag.trim()
+                              : `#${newTag.trim()}`,
+                          ];
+
+                    // Add unique tags
+                    setFormData((prev) => ({
+                      ...prev,
+                      tags: [...new Set([...prev.tags, ...finalTags])],
+                    }));
+
+                    // Clear input
+                    setNewTag("");
+                  }}
+                  disabled={!newTag.trim()}
+                  className="px-6 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)] transition cursor-pointer"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Location Section */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            Location Information
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Country *</label>
+              <input
+                type="text"
+                name="location.country"
+                value={formData.location?.country || ''}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">State/Region</label>
+              <input
+                type="text"
+                name="location.state"
+                value={formData.location?.state || ''}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">City *</label>
+              <input
+                type="text"
+                name="location.city"
+                value={formData.location?.city || ''}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Address *</label>
+              <input
+                type="text"
+                name="location.address"
+                value={formData.location?.address || ''}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Highlights Section */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            Package Highlights
+          </h2>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 mb-4">
+              {formData.highlights?.map((highlight, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                >
+                  {highlight}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveHighlight(index)}
+                    className="ml-2 text-blue-600 hover:text-blue-800"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={newHighlight}
+                onChange={(e) => setNewHighlight(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddHighlight(e)}
+                placeholder="Add a highlight (e.g., 'Free WiFi')"
+                className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+              <button
+                type="button"
+                onClick={handleAddHighlight}
+                disabled={!newHighlight.trim()}
+                className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Availability */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            Availability
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Available Seats *</label>
+              <input
+                type="number"
+                name="availableSeats"
+                min="0"
+                value={formData.availableSeats || 0}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
               />
             </div>
           </div>
@@ -658,6 +1008,7 @@ const PackageForm = ({ project = null }) => {
                 type="text"
                 name="destination"
                 value={formData.destination}
+                placeholder="e.g.- Delhi, OR (Delhi -> Noida -> Gurugram))"
                 onChange={handleChange}
                 required
                 className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
@@ -666,7 +1017,28 @@ const PackageForm = ({ project = null }) => {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Duration (Days) *
+                Accommodation Type *{" "}
+                <span className="">(place where a person stays)</span>
+              </label>
+              <select
+                name="accommodation"
+                value={formData.accommodation}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              >
+                <option value="">Select Accommodation</option>
+                <option value="hotel">Hotel</option>
+                <option value="resort">Resort</option>
+                <option value="hostel">Hostel</option>
+                <option value="villa">Villa</option>
+                <option value="apartment">Apartment</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Duration (Nights) *
               </label>
               <input
                 type="number"
@@ -678,13 +1050,27 @@ const PackageForm = ({ project = null }) => {
                 className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Duration (Day) *
+              </label>
+              <input
+                type="number"
+                name="durationDay"
+                value={formData.durationDay}
+                onChange={handleChange}
+                min="1"
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Price (USD) *
+                Price (INR) *
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2">$</span>
+                <span className="absolute left-3 top-2">₹</span>
                 <input
                   type="number"
                   name="price"
@@ -715,35 +1101,6 @@ const PackageForm = ({ project = null }) => {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Departure Date *
-              </label>
-              <input
-                type="date"
-                name="departureDate"
-                value={formData.departureDate}
-                onChange={handleChange}
-                required
-                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Return Date *
-              </label>
-              <input
-                type="date"
-                name="returnDate"
-                value={formData.returnDate}
-                onChange={handleChange}
-                min={formData.departureDate}
-                required
-                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
                 Max Travelers *
               </label>
               <input
@@ -755,26 +1112,6 @@ const PackageForm = ({ project = null }) => {
                 required
                 className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Accommodation Type *
-              </label>
-              <select
-                name="accommodation"
-                value={formData.accommodation}
-                onChange={handleChange}
-                required
-                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-              >
-                <option value="">Select Accommodation</option>
-                <option value="hotel">Hotel</option>
-                <option value="resort">Resort</option>
-                <option value="hostel">Hostel</option>
-                <option value="villa">Villa</option>
-                <option value="apartment">Apartment</option>
-              </select>
             </div>
           </div>
 
@@ -855,7 +1192,9 @@ const PackageForm = ({ project = null }) => {
           </div>
 
           <div className="mt-6">
-            <h3 className="text-md font-medium mb-3">Itinerary</h3>
+            <h3 className="text-md font-medium mb-3">
+              Itinerary (detailed stay plan)
+            </h3>
             {(formData.itinerary || []).map((day, index) => (
               <div
                 key={index}
@@ -898,6 +1237,24 @@ const PackageForm = ({ project = null }) => {
                       }
                       className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
                       placeholder="Location"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Location Map Link
+                    </label>
+                    <input
+                      type="url"
+                      value={day.locationMapLink}
+                      onChange={(e) =>
+                        updateItineraryDay(
+                          index,
+                          "locationMapLink",
+                          e.target.value
+                        )
+                      }
+                      className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                      placeholder="Location Map Link"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -962,10 +1319,10 @@ const PackageForm = ({ project = null }) => {
           </div>
         </div>
 
-        {/* Project Details */}
+        {/* Package Details */}
         <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-6 border-b pb-2">
-            Project Status Details
+            Package Status Details
           </h2>
 
           <div className="space-y-5">
@@ -982,13 +1339,12 @@ const PackageForm = ({ project = null }) => {
                   <option value="in_progress">In Progress</option>
                   <option value="completed">Completed</option>
                   <option value="on_hold">On Hold</option>
-                  <option value="cancelled">Cancelled</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Priority (0–10)
+                  Priority (0–10) (Based on Top selling)
                 </label>
                 <input
                   type="number"
@@ -1005,7 +1361,7 @@ const PackageForm = ({ project = null }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Start Date
+                  Package Start Date
                 </label>
                 <input
                   type="date"
@@ -1018,7 +1374,7 @@ const PackageForm = ({ project = null }) => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  End Date
+                  Package End Date
                 </label>
                 <input
                   type="date"
@@ -1032,156 +1388,6 @@ const PackageForm = ({ project = null }) => {
             </div>
 
             {/* URL fields removed as requested */}
-          </div>
-        </div>
-
-        {/* Technologies + Tags + Images + Publish */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Technologies */}
-          <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-6 border-b pb-2">
-              Technologies
-            </h2>
-
-            {/* Display technologies */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {formData.technologies.map((tech, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center bg-[var(--button-bg-color)] text-[var(--button-color)] px-3 py-1 rounded-full text-sm"
-                >
-                  {tech}
-                  <button
-                    type="button"
-                    onClick={() => removeTechnology(tech)}
-                    className="ml-2 text-[var(--button-color)] hover:text-red-500 cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                </span>
-              ))}
-              <CharCountField value={formData.technologies} />
-            </div>
-
-            {/* Input + Add button */}
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={newTech}
-                onChange={(e) => setNewTech(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    document.querySelector("#addTechBtn")?.click();
-                  }
-                }}
-                placeholder='Add technologies (e.g. "React, Next JS, Tailwind CSS")'
-                className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-              />
-              <button
-                id="addTechBtn"
-                type="button"
-                onClick={() => {
-                  if (!newTech.trim()) return;
-
-                  // Split by comma and clean spaces
-                  const extractedTechs = newTech
-                    .split(",")
-                    .map((t) => t.trim())
-                    .filter((t) => t.length > 0);
-
-                  // Add all unique technologies
-                  setFormData((prev) => ({
-                    ...prev,
-                    technologies: [
-                      ...new Set([...prev.technologies, ...extractedTechs]),
-                    ],
-                  }));
-
-                  // Clear input field
-                  setNewTech("");
-                }}
-                disabled={!newTech.trim()}
-                className="px-6 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)] transition cursor-pointer"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-6 border-b pb-2">Tags</h2>
-
-            {/* Display Tags */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {formData.tags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center bg-[var(--button-bg-color)] text-[var(--button-color)] px-3 py-1 rounded-full text-sm"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="ml-2 text-[var(--button-color)] hover:text-red-500 cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                </span>
-              ))}
-              <CharCountField value={formData.tags} />
-            </div>
-
-            {/* Input Field */}
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    document.querySelector("#addTagBtn")?.click();
-                  }
-                }}
-                placeholder="Add tags — e.g. #React #NextJS #Tailwind"
-                className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-              />
-              <button
-                id="addTagBtn"
-                type="button"
-                onClick={() => {
-                  if (!newTag.trim()) return;
-
-                  // Extract tags (keep #)
-                  const extractedTags = newTag.match(/#\w+/g) || [];
-
-                  // If no hashtags found, still allow manual entry
-                  const finalTags =
-                    extractedTags.length > 0
-                      ? extractedTags
-                      : [
-                          newTag.trim().startsWith("#")
-                            ? newTag.trim()
-                            : `#${newTag.trim()}`,
-                        ];
-
-                  // Add unique tags
-                  setFormData((prev) => ({
-                    ...prev,
-                    tags: [...new Set([...prev.tags, ...finalTags])],
-                  }));
-
-                  // Clear input
-                  setNewTag("");
-                }}
-                disabled={!newTag.trim()}
-                className="px-6 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--button-bg-color)] text-[var(--button-color)] hover:bg-[var(--button-hover-color)] transition cursor-pointer"
-              >
-                Add
-              </button>
-            </div>
           </div>
         </div>
 
@@ -1279,6 +1485,307 @@ const PackageForm = ({ project = null }) => {
               >
                 Add
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Ratings & Reviews Section */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            Ratings & Reviews
+          </h2>
+          
+          {/* Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div>
+              <label className="block text-sm font-medium mb-2">Average Rating</label>
+              <div className="flex items-center">
+                <input
+                  type="number"
+                  name="ratings.average"
+                  min="1"
+                  max="5"
+                  step="0.1"
+                  value={formData.ratings?.average || 0}
+                  onChange={handleChange}
+                  className="w-20 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                />
+                <span className="ml-2 text-gray-500">/ 5</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Total Reviews</label>
+              <input
+                type="number"
+                name="ratings.count"
+                min="0"
+                value={formData.ratings?.count || 0}
+                onChange={handleChange}
+                className="w-32 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+          </div>
+
+          {/* Reviews List */}
+          <div className="space-y-4">
+            <h3 className="text-md font-medium">Reviews</h3>
+            {formData.ratings?.reviews?.map((review, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-medium">
+                      {review.user?.name || 'User'}
+                      <span className="text-sm text-gray-500 ml-2">
+                        {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}
+                      </span>
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <div className="text-yellow-400 mr-2">
+                        {'★'.repeat(Math.floor(review.rating))}
+                        {'☆'.repeat(5 - Math.floor(review.rating))}
+                      </div>
+                      <span className="text-sm text-gray-500">{review.rating.toFixed(1)}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updatedReviews = [...formData.ratings.reviews];
+                      updatedReviews.splice(index, 1);
+                      setFormData(prev => ({
+                        ...prev,
+                        ratings: {
+                          ...prev.ratings,
+                          reviews: updatedReviews,
+                          count: updatedReviews.length,
+                          average: updatedReviews.length > 0 
+                            ? updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length 
+                            : 0
+                        }
+                      }));
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <FiX size={20} />
+                  </button>
+                </div>
+                {review.comment && (
+                  <p className="mt-2 text-gray-700">{review.comment}</p>
+                )}
+              </div>
+            ))}
+
+            {/* Add New Review */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mt-6">
+              <h3 className="text-md font-medium mb-4">Add New Review</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">User</label>
+                  <select
+                    value={newReview.user || ''}
+                    onChange={(e) => setNewReview({...newReview, user: e.target.value})}
+                    className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                  >
+                    <option value="">Select User</option>
+                    {users.map(user => (
+                      <option key={user._id} value={user._id}>
+                        {user.name} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Rating</label>
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setNewReview({...newReview, rating: star})}
+                        className="text-2xl focus:outline-none"
+                      >
+                        {star <= (newReview.rating || 0) ? '★' : '☆'}
+                      </button>
+                    ))}
+                    <span className="ml-2 text-gray-500">
+                      {newReview.rating ? `${newReview.rating}/5` : 'Select rating'}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Comment</label>
+                  <textarea
+                    value={newReview.comment || ''}
+                    onChange={(e) => setNewReview({...newReview, comment: e.target.value})}
+                    className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                    rows="3"
+                    placeholder="Share your experience..."
+                  ></textarea>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!newReview.user || !newReview.rating) return;
+                    
+                    const newReviewObj = {
+                      user: newReview.user,
+                      rating: newReview.rating,
+                      comment: newReview.comment || '',
+                      createdAt: new Date().toISOString()
+                    };
+
+                    const updatedReviews = [...(formData.ratings?.reviews || []), newReviewObj];
+                    
+                    setFormData(prev => ({
+                      ...prev,
+                      ratings: {
+                        ...prev.ratings,
+                        reviews: updatedReviews,
+                        count: updatedReviews.length,
+                        average: updatedReviews.reduce((sum, r) => sum + r.rating, 0) / updatedReviews.length
+                      }
+                    }));
+
+                    // Reset form
+                    setNewReview({ user: '', rating: 0, comment: '' });
+                  }}
+                  disabled={!newReview.user || !newReview.rating}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Add Review
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQs Section */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-4">
+            {formData.faqs?.map((faq, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-medium">Q: {faq.question}</h4>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFaq(index)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <FiX size={20} />
+                  </button>
+                </div>
+                <p className="text-gray-600">A: {faq.answer}</p>
+              </div>
+            ))}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+              <h4 className="font-medium mb-3">Add New FAQ</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Question *</label>
+                  <input
+                    type="text"
+                    value={newFaq.question}
+                    onChange={(e) => setNewFaq({...newFaq, question: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    placeholder="Enter question"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Answer *</label>
+                  <textarea
+                    value={newFaq.answer}
+                    onChange={(e) => setNewFaq({...newFaq, answer: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    rows="3"
+                    placeholder="Enter answer"
+                  ></textarea>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddFaq}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  disabled={!newFaq.question.trim() || !newFaq.answer.trim()}
+                >
+                  Add FAQ
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SEO Settings */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            SEO Settings
+          </h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Meta Title</label>
+              <input
+                type="text"
+                name="metaTitle"
+                value={formData.metaTitle || ''}
+                onChange={handleChange}
+                maxLength={100}
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                placeholder="Meta title (max 100 characters)"
+              />
+              <div className="text-xs text-gray-500 text-right mt-1">
+                {formData.metaTitle?.length || 0}/100 characters
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Meta Description</label>
+              <textarea
+                name="metaDescription"
+                value={formData.metaDescription || ''}
+                onChange={handleChange}
+                rows="3"
+                maxLength={160}
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                placeholder="Meta description (max 160 characters)"
+              ></textarea>
+              <div className="text-xs text-gray-500 text-right mt-1">
+                {formData.metaDescription?.length || 0}/160 characters
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Meta Keywords</label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={newMetaKeyword}
+                  onChange={(e) => setNewMetaKeyword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddMetaKeyword(e)}
+                  className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                  placeholder="Add keywords (press Enter to add)"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddMetaKeyword}
+                  disabled={!newMetaKeyword.trim()}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.metaKeywords?.map((keyword, index) => (
+                  <span key={index} className="inline-flex items-center bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
+                    {keyword}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMetaKeyword(index)}
+                      className="ml-2 text-gray-600 hover:text-gray-800"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
