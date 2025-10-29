@@ -171,8 +171,8 @@ export default function ITCategoriesPage() {
     <div className="container mx-auto py-8 px-4 text-[var(--text-color)]">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">IT Categories</h1>
-          <p className="text-gray-500">Manage your IT skill categories</p>
+          <h1 className="text-3xl font-bold">Package Categories</h1>
+          <p className="text-gray-500">Manage your Package categories</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}

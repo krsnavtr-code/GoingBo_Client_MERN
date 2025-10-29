@@ -14,22 +14,47 @@ const TipTapEditor = dynamic(() => import("./TipTapEditor"), { ssr: false });
 const ProjectForm = ({ project = null }) => {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    // Basic project fields
     title: "",
     shortDescription: "",
     description: "",
     technologies: [],
-    projectUrl: "",
-    githubUrl: "",
-    githubUrl2: "",
     status: "planning",
     priority: 0,
     startDate: "",
     endDate: "",
     tags: [],
     isPublished: false,
+    slug: "",
+    order: 0,
+    itcategories: [],
     mainImage: "",
     imageGallery: [],
-    itcategories: [],
+    
+    // Travel package fields
+    packageType: "travel",
+    destination: "",
+    duration: 0,
+    price: 0,
+    discount: 0,
+    maxTravelers: 1,
+    departureDate: "",
+    returnDate: "",
+    included: [],
+    excluded: [],
+    itinerary: [],
+    accommodation: "",
+    transportation: "",
+    mealPlan: "",
+    cancellationPolicy: "",
+    bookingDeadline: "",
+    minTravelersRequired: 1,
+    isFeatured: false,
+    isGroupDiscountAvailable: false,
+    groupDiscountDetails: "",
+    ageRestrictions: "",
+    physicalRating: "",
+    specialRequirements: "",
   });
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -68,27 +93,60 @@ const ProjectForm = ({ project = null }) => {
   // If editing, populate form with project data
   useEffect(() => {
     if (project) {
+      // Format dates for date inputs
+      const formatDate = (dateString) => {
+        if (!dateString) return '';
+        try {
+          const date = new Date(dateString);
+          return isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
+        } catch (e) {
+          console.error('Error formatting date:', e);
+          return '';
+        }
+      };
+
       setFormData({
+        // Basic project fields
         title: project.title || "",
         shortDescription: project.shortDescription || "",
         description: project.description || "",
         technologies: project.technologies || [],
-        projectUrl: project.projectUrl || "",
-        githubUrl: project.githubUrl || "",
-        githubUrl2: project.githubUrl2 || "",
         status: project.status || "planning",
         priority: project.priority || 0,
-        startDate: project.startDate
-          ? new Date(project.startDate).toISOString().split("T")[0]
-          : "",
-        endDate: project.endDate
-          ? new Date(project.endDate).toISOString().split("T")[0]
-          : "",
+        startDate: formatDate(project.startDate),
+        endDate: formatDate(project.endDate),
         tags: project.tags || [],
         isPublished: project.isPublished || false,
+        slug: project.slug || "",
+        order: project.order || 0,
         mainImage: project.mainImage || "",
         imageGallery: project.imageGallery || [],
-        itcategories: project.itcategories?.map((cat) => cat._id) || [],
+        itcategories: project.itcategories?.map((cat) => cat._id || cat) || [],
+        
+        // Travel package fields
+        packageType: project.packageType || "travel",
+        destination: project.destination || "",
+        duration: project.duration || 0,
+        price: project.price || 0,
+        discount: project.discount || 0,
+        maxTravelers: project.maxTravelers || 1,
+        departureDate: formatDate(project.departureDate),
+        returnDate: formatDate(project.returnDate),
+        included: project.included || [],
+        excluded: project.excluded || [],
+        itinerary: project.itinerary || [],
+        accommodation: project.accommodation || "",
+        transportation: project.transportation || "",
+        mealPlan: project.mealPlan || "",
+        cancellationPolicy: project.cancellationPolicy || "",
+        bookingDeadline: formatDate(project.bookingDeadline),
+        minTravelersRequired: project.minTravelersRequired || 1,
+        isFeatured: project.isFeatured || false,
+        isGroupDiscountAvailable: project.isGroupDiscountAvailable || false,
+        groupDiscountDetails: project.groupDiscountDetails || "",
+        ageRestrictions: project.ageRestrictions || "",
+        physicalRating: project.physicalRating || "",
+        specialRequirements: project.specialRequirements || ""
       });
     }
   }, [project]);
@@ -179,29 +237,55 @@ const ProjectForm = ({ project = null }) => {
         // Ensure required fields are present
         title: formData.title.trim(),
         description: formData.description.trim(),
+        shortDescription: formData.shortDescription?.trim() || '',
         // Convert empty strings to null for optional fields
         startDate: formData.startDate || null,
         endDate: formData.endDate || null,
         // Ensure arrays are properly formatted
-        technologies: Array.isArray(formData.technologies)
-          ? formData.technologies
-          : [],
+        technologies: Array.isArray(formData.technologies) ? formData.technologies : [],
         tags: Array.isArray(formData.tags) ? formData.tags : [],
-        itcategories: Array.isArray(formData.itcategories)
-          ? formData.itcategories
-          : [],
+        itcategories: Array.isArray(formData.itcategories) ? formData.itcategories : [],
         // Format and validate image gallery URLs
         imageGallery: Array.isArray(formData.imageGallery)
           ? formData.imageGallery.map((url) => url).filter(Boolean)
           : [],
         // Ensure boolean fields are properly set
         isPublished: Boolean(formData.isPublished),
+        isFeatured: Boolean(formData.isFeatured),
+        isGroupDiscountAvailable: Boolean(formData.isGroupDiscountAvailable),
         // Ensure priority is a number
         priority: Number(formData.priority) || 0,
+        // Format travel package fields
+        packageType: formData.packageType || 'project',
+        destination: formData.destination || '',
+        duration: Number(formData.duration) || 0,
+        price: Number(formData.price) || 0,
+        discount: Number(formData.discount) || 0,
+        maxTravelers: Number(formData.maxTravelers) || 1,
+        departureDate: formData.departureDate || null,
+        returnDate: formData.returnDate || null,
+        included: Array.isArray(formData.included) ? formData.included.filter(Boolean) : [],
+        excluded: Array.isArray(formData.excluded) ? formData.excluded.filter(Boolean) : [],
+        itinerary: Array.isArray(formData.itinerary) ? formData.itinerary.map(item => ({
+          title: item.title?.trim() || `Day ${item._id || ''}`.trim(),
+          location: item.location?.trim() || '',
+          description: item.description?.trim() || '',
+          meals: Array.isArray(item.meals) ? item.meals : []
+        })) : [],
+        accommodation: formData.accommodation || '',
+        transportation: formData.transportation || '',
+        mealPlan: formData.mealPlan || '',
+        cancellationPolicy: formData.cancellationPolicy || '',
+        bookingDeadline: formData.bookingDeadline || null,
+        minTravelersRequired: Number(formData.minTravelersRequired) || 1,
+        groupDiscountDetails: formData.groupDiscountDetails || '',
+        ageRestrictions: formData.ageRestrictions || '',
+        physicalRating: formData.physicalRating || '',
+        specialRequirements: formData.specialRequirements || ''
       };
 
       // Format mainImage if it exists
-      dataToSend.mainImage = formData.mainImage;
+      dataToSend.mainImage = formData.mainImage || '';
 
       const response = await fetch(url, {
         method,
@@ -251,207 +335,252 @@ const ProjectForm = ({ project = null }) => {
     }
   };
 
+  // Add state for new included/excluded items and itinerary days
+  const [newIncluded, setNewIncluded] = useState("");
+  const [newExcluded, setNewExcluded] = useState("");
+  const [newItineraryDay, setNewItineraryDay] = useState({
+    title: "",
+    location: "",
+    description: "",
+    meals: [],
+  });
+
+  // Handle adding included items
+  const addIncluded = (e) => {
+    e.preventDefault();
+    if (newIncluded.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        included: [...prev.included, newIncluded.trim()],
+      }));
+      setNewIncluded("");
+    }
+  };
+
+  // Handle removing included items
+  const removeIncluded = (item) => {
+    setFormData((prev) => ({
+      ...prev,
+      included: prev.included.filter((i) => i !== item),
+    }));
+  };
+
+  // Handle adding excluded items
+  const addExcluded = (e) => {
+    e.preventDefault();
+    if (newExcluded.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        excluded: [...prev.excluded, newExcluded.trim()],
+      }));
+      setNewExcluded("");
+    }
+  };
+
+  // Handle removing excluded items
+  const removeExcluded = (item) => {
+    setFormData((prev) => ({
+      ...prev,
+      excluded: prev.excluded.filter((i) => i !== item),
+    }));
+  };
+
+  // Handle adding a new itinerary day
+  const addItineraryDay = () => {
+    const newDay = {
+      title: `Day ${formData.itinerary.length + 1}`,
+      location: "",
+      description: "",
+      meals: [],
+    };
+    
+    setFormData((prev) => ({
+      ...prev,
+      itinerary: [...prev.itinerary, newDay],
+    }));
+  };
+
+  // Handle updating an itinerary day
+  const updateItineraryDay = (index, field, value) => {
+    const updatedItinerary = [...formData.itinerary];
+    updatedItinerary[index] = {
+      ...updatedItinerary[index],
+      [field]: value,
+    };
+    setFormData((prev) => ({
+      ...prev,
+      itinerary: updatedItinerary,
+    }));
+  };
+
+  // Handle removing an itinerary day
+  const removeItineraryDay = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      itinerary: prev.itinerary.filter((_, i) => i !== index),
+    }));
+  };
+
   return (
     <div className="container mx-auto max-w-6xl px-6 text-[var(--text-color)]">
       <h1 className="text-3xl font-bold mb-10 border-b pb-3">
-        {project ? "Edit Project" : "Add New Project"}
+        {project ? "Edit Package" : "Add New Package"}
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic + Details Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Basic Info */}
-          <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-6 border-b pb-2">
-              Basic Information
-            </h2>
+        {/* Basic Info */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            Basic Information
+          </h2>
 
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                  minLength={5}
-                  maxLength={100}
-                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                />
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium mb-2">Title *</label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={(e) => {
+                  handleChange(e);
+                  // Generate slug from title
+                  const slug = e.target.value
+                    .toLowerCase()
+                    .replace(/[^\w\s-]/g, '') // remove special chars
+                    .replace(/\s+/g, '-')      // replace spaces with -
+                    .replace(/--+/g, '-')       // replace multiple - with single -
+                    .trim();
+                  
+                  setFormData(prev => ({
+                    ...prev,
+                    slug: slug
+                  }));
+                }}
+                required
+                minLength={5}
+                maxLength={100}
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
 
-                {/* ✅ Character count below input */}
-                <CharCountField value={formData.title} maxLength={100} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Short Description
-                </label>
-                <textarea
-                  name="shortDescription"
-                  value={formData.shortDescription}
-                  onChange={handleChange}
-                  maxLength={250}
-                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 h-24 resize-none focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                />
-                <CharCountField
-                  value={formData.shortDescription}
-                  maxLength={250}
-                />
-              </div>
-
-              {/* Categories */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Select Categories *
-                </label>
-                <select
-                  multiple
-                  value={formData.itcategories}
-                  onChange={(e) => {
-                    const selected = Array.from(
-                      e.target.selectedOptions,
-                      (o) => o.value
-                    );
-                    setFormData((prev) => ({
-                      ...prev,
-                      itcategories: selected,
-                    }));
-                  }}
-                  className="w-full min-h-[120px] rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                >
-                  {categories.length > 0 ? (
-                    categories.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>
-                      No categories found. Please add categories first.
-                    </option>
+              {/* Character count and slug preview */}
+              <div className="mt-1">
+                <div className="flex justify-between items-center">
+                  <CharCountField value={formData.title} maxLength={100} />
+                  {formData.title && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Slug:</span>
+                      <div className="relative flex-1 max-w-xs">
+                        <input
+                          type="text"
+                          name="slug"
+                          value={formData.slug || ''}
+                          onChange={(e) => {
+                            const newSlug = e.target.value
+                              .toLowerCase()
+                              .replace(/[^\w\s-]/g, '') // remove special chars
+                              .replace(/\s+/g, '-')      // replace spaces with -
+                              .replace(/--+/g, '-')       // replace multiple - with single -
+                              .trim();
+                            
+                            setFormData(prev => ({
+                              ...prev,
+                              slug: newSlug
+                            }));
+                          }}
+                          className="w-full text-xs font-mono bg-gray-50 border border-gray-200 rounded px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="custom-slug"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Auto-generate slug from title when the button is clicked
+                            const newSlug = formData.title
+                              .toLowerCase()
+                              .replace(/[^\w\s-]/g, '')
+                              .replace(/\s+/g, '-')
+                              .replace(/--+/g, '-')
+                              .trim();
+                            
+                            setFormData(prev => ({
+                              ...prev,
+                              slug: newSlug
+                            }));
+                          }}
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 p-1"
+                          title="Regenerate from title"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   )}
-                </select>
-                <CharCountField
-                  value={formData.itcategories}
-                  maxLength={categories.length}
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Hold Ctrl/Cmd to select multiple
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  {formData.slug ? (
+                    <span>URL: <span className="font-mono">/projects/{formData.slug}</span></span>
+                  ) : 'Enter a title to generate URL'}
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Project Details */}
-          <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-6 border-b pb-2">
-              Project Details
-            </h2>
+            {/* Categories */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Select Categories *{" "}
+                <span className="text-xs text-gray-500">
+                  (Hold Ctrl/Cmd to select multiple)
+                </span>
+              </label>
+              <select
+                multiple
+                value={formData.itcategories}
+                onChange={(e) => {
+                  const selected = Array.from(
+                    e.target.selectedOptions,
+                    (o) => o.value
+                  );
+                  setFormData((prev) => ({
+                    ...prev,
+                    itcategories: selected,
+                  }));
+                }}
+                className="w-full min-h-[120px] rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              >
+                {categories.length > 0 ? (
+                  categories.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>
+                    No categories found. Please add categories first.
+                  </option>
+                )}
+              </select>
+              <CharCountField
+                value={formData.itcategories}
+                maxLength={categories.length}
+              />
+            </div>
 
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                  >
-                    <option value="planning">Planning</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="on_hold">On Hold</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Priority (0–10)
-                  </label>
-                  <input
-                    type="number"
-                    name="priority"
-                    min="0"
-                    max="10"
-                    value={formData.priority}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={formData.endDate}
-                    onChange={handleChange}
-                    min={formData.startDate}
-                    className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Project URL
-                </label>
-                <input
-                  type="url"
-                  name="projectUrl"
-                  value={formData.projectUrl}
-                  onChange={handleChange}
-                  placeholder="https://example.com"
-                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  GitHub Repository
-                </label>
-                <input
-                  type="url"
-                  name="githubUrl"
-                  value={formData.githubUrl}
-                  onChange={handleChange}
-                  placeholder="https://github.com/username/repo"
-                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 mb-3 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                />
-                <input
-                  type="url"
-                  name="githubUrl2"
-                  value={formData.githubUrl2}
-                  onChange={handleChange}
-                  placeholder="Secondary GitHub URL (optional)"
-                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Short Description
+              </label>
+              <textarea
+                name="shortDescription"
+                value={formData.shortDescription}
+                onChange={handleChange}
+                maxLength={250}
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 h-24 resize-none focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+              <CharCountField
+                value={formData.shortDescription}
+                maxLength={250}
+              />
             </div>
           </div>
         </div>
@@ -513,6 +642,397 @@ const ProjectForm = ({ project = null }) => {
           )}
           <CharCountField value={formData.description} />
           <HtmlTagStats html={formData.description} />
+        </div>
+
+        {/* Combined Form Fields */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm mb-8">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            Package Stay Details
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Destination *
+              </label>
+              <input
+                type="text"
+                name="destination"
+                value={formData.destination}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Duration (Days) *
+              </label>
+              <input
+                type="number"
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                min="1"
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Price (USD) *
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2">$</span>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  required
+                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] pl-8 pr-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Discount (%)
+              </label>
+              <input
+                type="number"
+                name="discount"
+                value={formData.discount}
+                onChange={handleChange}
+                min="0"
+                max="100"
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Departure Date *
+              </label>
+              <input
+                type="date"
+                name="departureDate"
+                value={formData.departureDate}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Return Date *
+              </label>
+              <input
+                type="date"
+                name="returnDate"
+                value={formData.returnDate}
+                onChange={handleChange}
+                min={formData.departureDate}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Max Travelers *
+              </label>
+              <input
+                type="number"
+                name="maxTravelers"
+                value={formData.maxTravelers}
+                onChange={handleChange}
+                min="1"
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Accommodation Type *
+              </label>
+              <select
+                name="accommodation"
+                value={formData.accommodation}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              >
+                <option value="">Select Accommodation</option>
+                <option value="hotel">Hotel</option>
+                <option value="resort">Resort</option>
+                <option value="hostel">Hostel</option>
+                <option value="villa">Villa</option>
+                <option value="apartment">Apartment</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h3 className="text-md font-medium mb-3">What's Included</h3>
+            <div className="flex items-center mb-2">
+              <input
+                type="text"
+                value={newIncluded}
+                onChange={(e) => setNewIncluded(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && addIncluded(e)}
+                placeholder="Add included item"
+                className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+              <button
+                onClick={addIncluded}
+                type="button"
+                className="ml-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(formData.included || []).map((item, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full"
+                >
+                  {item}
+                  <button
+                    type="button"
+                    onClick={() => removeIncluded(item)}
+                    className="ml-2 text-indigo-600 hover:text-indigo-900"
+                  >
+                    <FiX size={16} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h3 className="text-md font-medium mb-3">What's Not Included</h3>
+            <div className="flex items-center mb-2">
+              <input
+                type="text"
+                value={newExcluded}
+                onChange={(e) => setNewExcluded(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && addExcluded(e)}
+                placeholder="Add excluded item"
+                className="flex-1 rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+              />
+              <button
+                onClick={addExcluded}
+                type="button"
+                className="ml-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+              >
+                Add
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(formData.excluded || []).map((item, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full"
+                >
+                  {item}
+                  <button
+                    type="button"
+                    onClick={() => removeExcluded(item)}
+                    className="ml-2 text-gray-600 hover:text-gray-900"
+                  >
+                    <FiX size={16} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h3 className="text-md font-medium mb-3">Itinerary</h3>
+            {(formData.itinerary || []).map((day, index) => (
+              <div
+                key={index}
+                className="mb-4 p-4 border border-[var(--border-color)] rounded-lg"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-medium">Day {index + 1}</h4>
+                  <button
+                    type="button"
+                    onClick={() => removeItineraryDay(index)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <FiX size={18} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      value={day.title}
+                      onChange={(e) =>
+                        updateItineraryDay(index, "title", e.target.value)
+                      }
+                      className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                      placeholder="Day title"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={day.location}
+                      onChange={(e) =>
+                        updateItineraryDay(index, "location", e.target.value)
+                      }
+                      className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                      placeholder="Location"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={day.description}
+                      onChange={(e) =>
+                        updateItineraryDay(index, "description", e.target.value)
+                      }
+                      className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 text-sm h-24 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                      placeholder="Day description"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Meals Included
+                    </label>
+                    <div className="flex space-x-4">
+                      {["breakfast", "lunch", "dinner"].map((meal) => (
+                        <label key={meal} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={day.meals?.includes(meal) || false}
+                            onChange={(e) => {
+                              const updatedMeals = day.meals || [];
+                              if (e.target.checked) {
+                                updatedMeals.push(meal);
+                              } else {
+                                const index = updatedMeals.indexOf(meal);
+                                if (index > -1) {
+                                  updatedMeals.splice(index, 1);
+                                }
+                              }
+                              updateItineraryDay(index, "meals", [
+                                ...updatedMeals,
+                              ]);
+                            }}
+                            className="rounded border-[var(--border-color)] text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span className="ml-2 text-sm capitalize">
+                            {meal}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div className="mt-4 p-4 border-2 border-dashed border-[var(--border-color)] rounded-lg">
+              <h4 className="text-sm font-medium mb-3">Add New Day</h4>
+              <button
+                type="button"
+                onClick={addItineraryDay}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm flex items-center justify-center gap-2"
+              >
+                <span>+</span> Add Day {(formData.itinerary || []).length + 1}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Project Details */}
+        <div className="bg-[var(--container-color-in)] border border-[var(--border-color)] rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-6 border-b pb-2">
+            Project Status Details
+          </h2>
+
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Status</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                >
+                  <option value="planning">Planning</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Priority (0–10)
+                </label>
+                <input
+                  type="number"
+                  name="priority"
+                  min="0"
+                  max="10"
+                  value={formData.priority}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  name="startDate"
+                  value={formData.startDate}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  name="endDate"
+                  value={formData.endDate}
+                  onChange={handleChange}
+                  min={formData.startDate}
+                  className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--container-color)] px-3 py-2 focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition"
+                />
+              </div>
+            </div>
+
+            {/* URL fields removed as requested */}
+          </div>
         </div>
 
         {/* Technologies + Tags + Images + Publish */}
@@ -780,7 +1300,10 @@ const ProjectForm = ({ project = null }) => {
                 type="checkbox"
                 checked={formData.isPublished}
                 onChange={(e) =>
-                  setFormData((p) => ({ ...p, isPublished: e.target.checked }))
+                  setFormData((p) => ({
+                    ...p,
+                    isPublished: e.target.checked,
+                  }))
                 }
                 className="w-5 h-5 accent-indigo-600 cursor-pointer"
               />
