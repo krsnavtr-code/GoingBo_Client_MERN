@@ -106,28 +106,45 @@ export default function ProfileManagement() {
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0">
                 {formData.image ? (
-                  <img 
+                  <img
                     src={(() => {
                       // Handle both direct URLs and env variable format
-                      if (formData.image.includes('process.env.NEXT_PUBLIC_API_URL')) {
+                      if (
+                        formData.image.includes(
+                          "process.env.NEXT_PUBLIC_API_URL"
+                        )
+                      ) {
                         // Extract the path part from format: process.env.NEXT_PUBLIC_API_URL + "/path"
-                        const pathMatch = formData.image.match(/\+\s*"([^"]+)"/);
-                        const path = pathMatch ? pathMatch[1] : '';
+                        const pathMatch =
+                          formData.image.match(/\+\s*"([^"]+)"/);
+                        const path = pathMatch ? pathMatch[1] : "";
                         return process.env.NEXT_PUBLIC_API_URL + path;
                       }
                       return formData.image;
-                    })()} 
-                    alt="Profile Preview" 
+                    })()}
+                    alt="Profile Preview"
                     className="h-16 w-16 rounded-full object-cover border-2 border-[var(--container-color)]"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/64';
-                      e.target.className = 'h-16 w-16 rounded-full bg-[var(--container-color)] flex items-center justify-center text-[var(--text-color)]';
+                      e.target.src = "https://via.placeholder.com/64";
+                      e.target.className =
+                        "h-16 w-16 rounded-full bg-[var(--container-color)] flex items-center justify-center text-[var(--text-color)]";
                     }}
                   />
                 ) : (
                   <div className="h-16 w-16 rounded-full bg-[var(--container-color)] flex items-center justify-center text-[var(--text-color)]">
-                    <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <svg
+                      className="h-8 w-8"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
                     </svg>
                   </div>
                 )}
@@ -296,7 +313,7 @@ export default function ProfileManagement() {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2 bg-[var(--logo-bg-color)] text-[var(--logo-color)] font-medium rounded-md hover:bg-[var(--logo-color)] hover:text-[var(--logo-bg-color)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
+            className="px-6 py-2 bg-[var(--button-bg-color)] text-[var(--button-color)] font-medium rounded-md hover:bg-[var(--button-hover-color)] cursor-pointer"
           >
             Save Changes
           </button>

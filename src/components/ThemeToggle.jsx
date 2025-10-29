@@ -16,13 +16,13 @@ export default function ThemeToggle() {
         <div className="flex items-center gap-2 cursor-pointer">
           <FiMoon className="w-5 h-5" />
           {/* If /admin hide it */}
-          {window.location.pathname.startsWith("/admin") || <span>Dark</span>}
+          {/* {window.location.pathname.startsWith("/admin") || <span>Dark</span>} */}
         </div>
       ) : (
         <div className="flex items-center gap-2 cursor-pointer">
           <FiSun className="w-5 h-5" />
           {/* If /admin hide it */}
-          {window.location.pathname.startsWith("/admin") || <span>Light</span>}
+          {/* {window.location.pathname.startsWith("/admin") || <span>Light</span>} */}
         </div>
       )}
     </button>

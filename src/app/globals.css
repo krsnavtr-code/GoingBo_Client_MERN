@@ -3,9 +3,10 @@
 /* Light theme (default) */
 :root {
   /* Brand */
-  --logo-bg-color: #0b2545;
-  --logo-bg-color-light: #2a3747;
-  --logo-color: #ffffff;
+  --logo-bg-color: #0094de;
+  --logo-bg-color-light: #3aa7dd;
+  --logo-color: #ee8837;
+  --logo-color-two: #0094de;
 
   /* Container */
   --container-color: #ffffff;
@@ -13,15 +14,15 @@
   /* --container-color-in: #d6d3f0; */
   /* --container-color-in: #fedbe4; */
   /* --container-color-in: #c1f1bd; */
-  --container-color-in: #d3d3d3;
+  --container-color-in: #eaf5ff;
 
   /* Text */
   --text-color: #000000;
   --text-color-light: #3c3c3c;
 
   /* Button */
-  --button-bg-color: #0b2545;
-  --button-hover-color: #2a3747;
+  --button-bg-color: #0094de;
+  --button-hover-color: #1d9fe1;
   --button-color: #ffffff;
 
   /* Border color */
@@ -32,8 +33,10 @@
 .dark {
   /* Brand */
   --logo-bg-color: #ffffff;
-  --logo-bg-color-light: #2a3747;
-  --logo-color: #0b2545;
+  --logo-bg-color-light: #3aa7dd;
+  --logo-color: #ee8837;
+  --logo-color-two: #0094de;
+  
   /* Container */
   --container-color: #0b2545;
   --container-color-in: #1e3a5f;
@@ -43,9 +46,9 @@
   --text-color-light: #c0c0c0;
 
   /* Button */
-  --button-bg-color: #ffffff;
-  --button-hover-color: #d3d3d3;
-  --button-color: #0b2545;
+  --button-bg-color: #ee8837;
+  --button-hover-color: #e89551;
+  --button-color: #ffffff;
 
   /* Border color */
   --border-color: #d3d3d3;

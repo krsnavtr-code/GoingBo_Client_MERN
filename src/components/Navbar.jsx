@@ -2,18 +2,18 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import {
-  FiMenu,
-  FiX,
-  FiUser,
-  FiLogOut,
-  FiLogIn,
-  FiSettings,
-} from "react-icons/fi";
+import { FiMenu, FiX, FiUser, FiLogOut, FiLogIn } from "react-icons/fi";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
-import Logo from "assets/trivixa-fix-size-brand-logo.png";
+import Logo from "assets/brand/goingbo-logo.png";
 import ThemeToggle from "./ThemeToggle";
+
+// Nav Image as Icon
+import Flight from "assets/nav/nobg-flight.png";
+import Hotel from "assets/nav/nobg-hotel.png";
+import Cab from "assets/nav/nobg-cabs.png";
+import Bus from "assets/nav/nobg-bus.png";
+import Package from "assets/nav/nobg-holiday-package.png";
 
 function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -39,12 +39,38 @@ function Navbar() {
   const isAdmin = user?.role === "admin";
 
   const navItems = [
-    { name: "Admin", path: "/admin", hidden: !isAdmin },
-    { name: "Home", path: "/" },
-    { name: "About", path: "/about" },
-    { name: "Packages", path: "/packages" },
-    // { name: "Skills", path: "/skills" },
-    { name: "Contact", path: "/contact" },
+    // { name: "Admin", path: "/admin", hidden: !isAdmin },
+    {
+      name: "Flight",
+      path: "/flight",
+      icon: Flight,
+      color: "text-[var(--logo-color-two)]",
+    },
+    {
+      name: "Hotel",
+      path: "/hotel",
+      icon: Hotel,
+      color: "text-[var(--logo-color-two)]",
+    },
+    {
+      name: "Cab",
+      path: "/cab",
+      icon: Cab,
+      color: "text-[var(--logo-color-two)]",
+    },
+    {
+      name: "Bus",
+      path: "/bus",
+      icon: Bus,
+      color: "text-[var(--logo-color-two)]",
+    },
+    {
+      name: "Packages",
+      path: "/packages",
+      icon: Package,
+      color: "text-[var(--logo-color)]",
+    },
+    { name: "All Services", path: "/" },
   ];
 
   const handleLogout = async () => {
@@ -66,28 +92,46 @@ function Navbar() {
     >
       <div className="container mx-auto py-2 px-2">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-gray-800">
+          <Link href="/">
             <Image
               src={Logo}
               alt="Logo"
-              width={70}
-              height={70}
+              width={90}
+              height={90}
               className="rounded-sm"
             />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <nav className="flex space-x-8">
+          <div className="hidden md:flex items-center space-x-5">
+            <nav className="flex space-x-5">
               {navItems.map(
                 (item) =>
                   !item.hidden && (
                     <Link
                       key={item.name}
                       href={item.path}
-                      className="transition-colors duration-50 font-medium group relative"
+                      className="flex items-center gap-1 transition-colors duration-200 font-medium group relative"
                     >
-                      {item.name}
+                      {/* Image Icon */}
+                      {item.icon && (
+                        <span className="flex items-center justify-center w-5 h-5">
+                          <Image
+                            src={item.icon}
+                            alt={item.name}
+                            width={20}
+                            height={20}
+                            className={`object-contain`}
+                          />
+                        </span>
+                      )}
+
+                      {/* Text */}
+                      <span className={`${item.color} font-600`}>
+                        {item.name}
+                      </span>
+
+                      {/* Underline Hover Effect */}
                       <span className="absolute left-1/2 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-transparent via-[var(--logo-bg-color)] to-transparent rounded-full transition-all duration-300 ease-out group-hover:w-full group-hover:left-0"></span>
                     </Link>
                   )
@@ -111,8 +155,8 @@ function Navbar() {
                       className="rounded-full"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center ">
-                      <span className="text-blue-700 dark:text-blue-300 font-semibold bg-[#0B2545] rounded-full">
+                    <div className="w-8 h-8 rounded-full bg-[var(--logo-color)] flex items-center justify-center ">
+                      <span className="text-white font-semibold bg-[var(--logo-color-two)] rounded-full">
                         {user?.name
                           ? user.name
                               .split(" ")
@@ -174,7 +218,7 @@ function Navbar() {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden bg-[var(--container-color-in)] mt-3 pb-4 max-w-[200px] border rounded border-[#0B2545] border-[3px] p-2">
+        <div className="md:hidden bg-[var(--container-color-in)] mt-3 pb-4 border rounded border-[#0B2545] border-[3px] p-2">
           <nav className="flex flex-col space-y-3">
             {navItems.map(
               (item) =>
@@ -182,10 +226,24 @@ function Navbar() {
                   <Link
                     key={item.name}
                     href={item.path}
-                    className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200"
+                    className="block p-2 hover:bg-[var(--container-color-in)] rounded-md transition-colors duration-200 flex gap-1"
                     onClick={() => setIsOpen(false)}
                   >
-                    {item.name}
+                    {/* Image Icon */}
+                    {item.icon && (
+                      <span className="flex items-center justify-center w-5 h-5">
+                        <Image
+                          src={item.icon}
+                          alt={item.name}
+                          width={20}
+                          height={20}
+                          className={`object-contain`}
+                        />
+                      </span>
+                    )}
+                    <span className={`${item.color} font-600`}>
+                      {item.name}
+                    </span>
                   </Link>
                 )
             )}

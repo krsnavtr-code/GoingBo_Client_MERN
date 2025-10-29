@@ -8,10 +8,12 @@ import { useEffect, useState } from "react";
 const Banner = () => {
   const [user, setUser] = useState({
     image: "/avatar.png",
-    role: "Software Engineer – Web Development",
-    name: "Krishna Avtar",
-    description: "Making The Impossible Possible. Using 1's and 0's.",
-    sortDescription: "Problem solving is what makes me unique.",
+    role: "GoingBo | Book Flights, Hotels & Holiday Packages",
+    name: "GoingBo",
+    description:
+      "GoingBo – Best Travel Agency in India | Flights, Hotels & Holiday Packages",
+    sortDescription:
+      "Book affordable flights, hotels, bus tickets, and customized holiday packages with GoingBo – India’s trusted online travel agency. Explore honeymoon tours, family vacations, and international trips at the best prices.",
     experience: "2.5",
     projects: "203",
     cvPdf: "/resume.pdf",
@@ -111,27 +113,27 @@ const Banner = () => {
           {user.sortDescription}
         </motion.p>
 
-        <motion.div
+        {/* <motion.div
           className="flex items-center justify-center md:justify-start gap-10 mb-10"
           variants={itemVariants}
         >
           <div>
             <h2 className="text-4xl font-bold">{user.experience}</h2>
             <p className="text-sm text-[var(--text-color-light)]">
-              Years of Experience
+              Years
             </p>
           </div>
           <div>
             <h2 className="text-4xl font-bold">{user.projects}</h2>
             <p className="text-sm text-[var(--text-color-light)]">
-              Projects / Contributions
+              Packages
             </p>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         <motion.div variants={itemVariants}>
           <Button as="a" href={user.cvPdf} download variant="secondary">
-            View CV
+            Explore All Services
           </Button>
         </motion.div>
       </motion.div>
