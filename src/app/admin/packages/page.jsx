@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiPlus, FiEdit, FiTrash2, FiEye, FiEyeOff, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiEye, FiEyeOff, FiArrowUp, FiArrowDown, FiCopy } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
@@ -104,6 +104,29 @@ const PackagesPage = () => {
       fetchProjects();
     } catch (error) {
       console.error("Error updating project status:", error);
+      toast.error(error.message);
+    }
+  };
+
+  const handleDuplicate = async (id) => {
+    try {
+      const response = await fetch(`/api/v1/packages/${id}/duplicate`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to duplicate package");
+      }
+
+      const data = await response.json();
+      toast.success("Package duplicated successfully!");
+      fetchProjects();
+      
+      // Navigate to edit the duplicated package
+      router.push(`/admin/packages/edit/${data.data.package._id}`);
+    } catch (error) {
+      console.error("Error duplicating package:", error);
       toast.error(error.message);
     }
   };
@@ -268,6 +291,13 @@ const PackagesPage = () => {
                         title={project.isPublished ? "Unpublish" : "Publish"}
                       >
                         {project.isPublished ? <FiEye /> : <FiEyeOff />}
+                      </button>
+                      <button
+                        onClick={() => handleDuplicate(project._id)}
+                        className="btn btn-ghost btn-xs cursor-pointer"
+                        title="Duplicate"
+                      >
+                        <FiCopy />
                       </button>
                       <Link
                         href={`/admin/packages/edit/${project._id}`}
