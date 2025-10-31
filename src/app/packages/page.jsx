@@ -1,146 +1,354 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ExternalLink, Github } from "lucide-react";
+import { MapPin, Clock, Users, Star } from "lucide-react";
+import PackageGallery from "@/components/PackageGallery";
+import { styleEffect } from "framer-motion";
 
-async function getProjects() {
+async function getPackages() {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/v1/packages?isPublished=true`,
-    {
-      next: { revalidate: 60 },
-    }
+    { next: { revalidate: 60 } }
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch projects");
-  }
-
+  if (!res.ok) throw new Error("Failed to fetch packages");
   return res.json();
 }
 
-export default async function ProjectsPage() {
-  const { data } = await getProjects();
-  const projects = data?.projects || [];
+export default async function PackagesPage() {
+  const { data } = await getPackages();
+  const packages = data?.projects || [];
 
   return (
-    <div className="container text-[var(--text-color)] mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-12 text-[var(--text-color)]">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-3">All Packages</h1>
-        <p className="text-lg max-w-2xl mx-auto">
-          Best packages for your needs
+        <h1 className="text-2xl font-bold mb-3">All Travel Packages</h1>
+        <p className="text-base max-w-2xl mx-auto">
+          Explore our exclusive travel deals and limited-time offers ✈️
         </p>
       </div>
 
-      {projects.length === 0 ? (
+      {packages.length === 0 ? (
         <div className="text-center py-12">
-          <p className="">No packages found. Check back soon!</p>
+          <p>No packages found. Check back soon!</p>
         </div>
       ) : (
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <div
-              key={project._id}
-              className="group bg-[var(--container-color-in)] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-[var(--border-color)]"
-            >
-              {/* Image Section */}
-              <Link href={`/packages/${project.slug || project._id}`}>
-                <div className="relative h-56 w-full overflow-hidden">
-                  {project.mainImage && (
-                    <Image
-                      src={
-                        project.mainImage.startsWith("http")
-                          ? project.mainImage
-                          : `${process.env.NEXT_PUBLIC_API_URL}${project.mainImage}`
-                      }
-                      alt={project.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-70 group-hover:opacity-50 transition-opacity duration-300" />
-                  <div className="absolute bottom-4 left-4 bg-[var(--button-bg-color)] text-[var(--button-color)] rounded px-1">
-                    <span className="text-xs font-semibold uppercase">
-                      {project.status || "In Progress"}
-                    </span>
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2">
+          {/* Filter Sidebar */}
+          <div className="col-span-2 space-y-2 overflow-y-auto h-[calc(100vh-8rem)] sticky top-24 pr-2">
+            {/* Scrollable container */}
+            <div className="space-y-2">
+              {/* Categories Filter */}
+              <div className="rounded-xl overflow-hidden shadow-lg border border-[var(--border-color)] bg-[var(--container-color-in)] p-5">
+                <h3 className="font-semibold mb-3">Categories</h3>
+                <div className="space-y-2">
+                  {[
+                    "Adventure",
+                    "Honeymoon",
+                    "Family",
+                    "Solo",
+                    "Luxury",
+                    "Beach",
+                    "Mountain",
+                  ].map((category) => (
+                    <label
+                      key={category}
+                      className="flex items-center space-x-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded border-[var(--border-color)]"
+                      />
+                      <span>{category}</span>
+                    </label>
+                  ))}
                 </div>
-              </Link>
+              </div>
 
-              {/* Content Section */}
-              <div className="p-5 flex flex-col justify-between h-[230px]">
-                <div>
-                  <Link href={`/packages/${project.slug || project._id}`}>
-                    <h2 className="text-lg font-semibold hover:text-blue-400 transition-colors duration-300 line-clamp-2">
-                      {project.title}
-                    </h2>
-                  </Link>
-
-                  <p className="mt-2 text-sm line-clamp-3 text-[var(--text-color-light)]">
-                    {project.shortDescription}
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {project.technologies?.slice(0, 3).map((tech, i) => (
-                      <span
-                        key={i}
-                        className="px-2 py-1 text-xs rounded-full bg-[var(--button-bg-color)] text-[var(--button-color)]"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                    {project.technologies?.length > 3 && (
-                      <span className="text-xs text-[var(--text-color-light)]">
-                        +{project.technologies.length - 3} more
-                      </span>
-                    )}
-                  </div>
+              {/* Duration Filter */}
+              <div className="rounded-xl overflow-hidden shadow-lg border border-[var(--border-color)] bg-[var(--container-color-in)] p-5">
+                <h3 className="font-semibold mb-3">Duration (in Days)</h3>
+                <div className="space-y-2">
+                  {["1-3", "4-7", "8-14", "15+"].map((range) => (
+                    <label
+                      key={range}
+                      className="flex items-center space-x-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded border-[var(--border-color)]"
+                      />
+                      <span>{range} Days</span>
+                    </label>
+                  ))}
                 </div>
+              </div>
 
-                {/* Footer Buttons */}
-                <div className="flex items-center justify-between mt-4">
-                  <div className="flex gap-2">
-                    {project.projectUrl && (
-                      <Link
-                        href={project.projectUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm hover:underline px-2 py-1 rounded bg-[var(--button-bg-color)] text-[var(--button-color)]"
-                      >
-                        <ExternalLink size={16} /> Live
-                      </Link>
-                    )}
-                    {project.githubUrl && (
-                      <Link
-                        href={project.githubUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm hover:underline px-2 py-1 rounded bg-[var(--button-bg-color)] text-[var(--button-color)]"
-                      >
-                        <Github size={16} />{" "}
-                        {project.githubUrl2 ? "F-Code" : "Code"}
-                      </Link>
-                    )}
-                    {project.githubUrl2 && (
-                      <Link
-                        href={project.githubUrl2}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm hover:underline px-2 py-1 rounded bg-[var(--button-bg-color)] text-[var(--button-color)]"
-                      >
-                        <Github size={16} /> B-Code
-                      </Link>
-                    )}
-                  </div>
+              {/* Budget Filter */}
+              <div className="rounded-xl overflow-hidden shadow-lg border border-[var(--border-color)] bg-[var(--container-color-in)] p-5">
+                <h3 className="font-semibold mb-3">Budget Per Person (in ₹)</h3>
+                <div className="space-y-2">
+                  {[
+                    "Under 10,000",
+                    "10,000 - 20,000",
+                    "20,000 - 50,000",
+                    "50,000+",
+                  ].map((range) => (
+                    <label
+                      key={range}
+                      className="flex items-center space-x-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded border-[var(--border-color)]"
+                      />
+                      <span>₹{range}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
-                  <Link
-                    href={`/projects/${project.slug || project._id}`}
-                    className="text-sm font-medium hover:underline px-2 py-1 rounded bg-[var(--button-bg-color)] text-[var(--button-color)]"
-                  >
-                    View →
-                  </Link>
+              {/* Hotel Star Rating */}
+              <div className="rounded-xl overflow-hidden shadow-lg border border-[var(--border-color)] bg-[var(--container-color-in)] p-5">
+                <h3 className="font-semibold mb-3">Hotel Star Rating</h3>
+                <div className="space-y-2">
+                  {[5, 4, 3, 2, 1].map((stars) => (
+                    <label
+                      key={stars}
+                      className="flex items-center space-x-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded border-[var(--border-color)]"
+                      />
+                      <div className="flex">
+                        {[...Array(stars)].map((_, i) => (
+                          <Star
+                            key={i}
+                            size={16}
+                            className="fill-yellow-400 text-yellow-400"
+                          />
+                        ))}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Activities Filter */}
+              <div className="rounded-xl overflow-hidden shadow-lg border border-[var(--border-color)] bg-[var(--container-color-in)] p-5">
+                <h3 className="font-semibold mb-3">Activities</h3>
+                <div className="space-y-2">
+                  {[
+                    "Trekking",
+                    "Sightseeing",
+                    "Safari",
+                    "Beach",
+                    "Shopping",
+                    "Cultural",
+                  ].map((activity) => (
+                    <label
+                      key={activity}
+                      className="flex items-center space-x-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded border-[var(--border-color)]"
+                      />
+                      <span>{activity}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cities Filter */}
+              <div className="rounded-xl overflow-hidden shadow-lg border border-[var(--border-color)] bg-[var(--container-color-in)] p-5">
+                <h3 className="font-semibold mb-3">Cities</h3>
+                <div className="space-y-2">
+                  {[
+                    "Mumbai",
+                    "Delhi",
+                    "Goa",
+                    "Kerala",
+                    "Rajasthan",
+                    "Himachal",
+                  ].map((city) => (
+                    <label
+                      key={city}
+                      className="flex items-center space-x-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded border-[var(--border-color)]"
+                      />
+                      <span>{city}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Inclusions Filter */}
+              <div className="rounded-xl overflow-hidden shadow-lg border border-[var(--border-color)] bg-[var(--container-color-in)] p-5">
+                <h3 className="font-semibold mb-3">Inclusions</h3>
+                <div className="space-y-2">
+                  {[
+                    "Breakfast",
+                    "Lunch",
+                    "Dinner",
+                    "Sightseeing",
+                    "Airport Transfer",
+                    "Guide",
+                  ].map((inclusion) => (
+                    <label
+                      key={inclusion}
+                      className="flex items-center space-x-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="rounded border-[var(--border-color)]"
+                      />
+                      <span>{inclusion}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Package card */}
+          <div className="col-span-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {packages.map((pkg) => (
+                <div
+                  key={pkg._id}
+                  className="rounded-xl overflow-hidden shadow-md border border-[var(--border-color)] bg-[var(--container-color-in)] hover:shadow-lg transition duration-300"
+                >
+                  {pkg.endDate && (
+                    <div className="bg-amber-100 text-amber-900 text-xs font-medium text-center py-1 px-2">
+                      Hurry up! Offer valid till{" "}
+                      {new Date(pkg.endDate).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </div>
+                  )}
+
+                  {/* Image Section */}
+                  <div className="relative">
+                    <Link href={`/packages/${pkg.slug || pkg._id}`}>
+                      <PackageGallery pkg={pkg} />
+                    </Link>
+
+                    {/* Discount Badge */}
+                    {pkg.discount > 0 && (
+                      <div className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow-sm z-10">
+                        {pkg.discount}% OFF
+                      </div>
+                    )}
+                    {pkg.itcategories?.length > 0 && (
+                      <div className="absolute top-2 right-2 bg-teal-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded shadow-sm z-10">
+                        {pkg.itcategories.map((cat) => cat.name).join(", ")}
+                      </div>
+                    )}
+
+                    {/* At image in bottom */}
+                    {/* <div className="absolute bottom-2 left-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin size={18} /> {pkg.destination || "—"}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock size={18} /> {pkg.durationDay} Days /{" "}
+                        {pkg.duration} Nights
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users size={18} /> Max {pkg.maxTravelers} Travelers
+                      </div>
+                      {pkg.ratings?.average && (
+                        <div className="flex items-center gap-2">
+                          <Star size={18} className="text-yellow-400" />
+                          {pkg.ratings.average.toFixed(1)} ({pkg.ratings.count}{" "}
+                          reviews)
+                        </div>
+                      )}
+                    </div> */}
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-3 flex flex-col justify-between min-h-[200px]">
+                    {/* Title */}
+                    <Link href={`/packages/${pkg.slug || pkg._id}`}>
+                      <h2 className="text-base font-semibold hover:text-[var(--logo-color)] transition line-clamp-2">
+                        {pkg.title}
+                      </h2>
+                    </Link>
+
+                    {/* Description */}
+                    <p className="text-xs text-[var(--text-color-light)] line-clamp-2">
+                      {pkg.shortDescription}
+                    </p>
+
+                    {/* Duration */}
+                    <p className="text-xs text-[var(--text-color-light)]">
+                      {pkg.durationDay}D / {pkg.duration}N •{" "}
+                      {/* <span className="text-amber-700 font-medium">
+                        {pkg.accommodation || ""}
+                      </span>{" "}
+                      Included */}
+                    </p>
+
+                    {/* Price Section */}
+                    <div className="">
+                      {pkg.discount ? (
+                        <>
+                          <div className="flex items-center gap-1">
+                            <div className="text-lg font-bold text-green-600">
+                              ₹{" "}
+                              {(
+                                pkg.price -
+                                (pkg.price * parseFloat(pkg.discount)) / 100
+                              ).toLocaleString("en-IN")}
+                            </div>
+                            <span className="text-[11px] text-gray-400 line-through">
+                              ₹ {pkg.price.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-lg font-bold text-green-600">
+                          ₹ {pkg.price?.toLocaleString("en-IN")}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Ratings */}
+                    {pkg.ratings && (
+                      <div className="text-xs text-[var(--text-color-light)] flex items-center gap-1">
+                        <span className="text-yellow-500">★</span>
+                        <span className="font-semibold">
+                          {pkg.ratings.average}
+                        </span>
+                        <span className="text-[var(--text-color-light)]">
+                          ({pkg.ratings.count} reviews)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="border-t border-[var(--border-color)] flex text-[12px]">
+                    <span className="w-1/2 text-center font-medium py-2 bg-[var(--container-color-in)] hover:bg-[var(--container-color-in)] transition">
+                      {pkg.availableSeats} seats left
+                    </span>
+                    <Link
+                      href={`/packages/${pkg.slug || pkg._id}`}
+                      className="w-1/2 text-center font-medium py-2 bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] transition text-[var(--button-color)]"
+                    >
+                      Book Now
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

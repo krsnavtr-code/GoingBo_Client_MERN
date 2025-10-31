@@ -87,3 +87,20 @@ body {
   color: black;
   background-color: rgba(0, 174, 239, 0.8);
 }
+
+
+/* Style for swiper image PackageGallery.jsx */
+.swiper-button-prev,
+.swiper-button-next {
+  color: var(--logo-color) !important;
+  z-index: 10 !important;
+ height: 24px !important;
+ background-color: gradient(to right, var(--logo-color), var(--logo-color-two)) !important;
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  color: var(--logo-color-two) !important;
+}
+
+
