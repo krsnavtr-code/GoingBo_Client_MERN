@@ -5,130 +5,129 @@ const TermsPage = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
       <div className="prose prose-lg max-w-none">
-        <h1 className="text-3xl font-bold p-4">Terms and Conditions</h1>
+        <h1 className="text-3xl font-bold p-4">Terms & Conditions Policy</h1>
         <p className="text-gray-600 p-4">Last updated: October 13, 2025</p>
 
         <section className="p-4">
-          <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
           <p className="mb-4">
-            Welcome to Portfolio. These Terms and Conditions outline the rules
-            and regulations for the use of our portfolio website.
+            The itinerary is fixed and cannot be modified. Transportation shall
+            be provided as per the itinerary and will not be at disposal. For
+            any paid activity which is non-operational due to any unforeseen
+            reason, we will process a refund, and the same should reach the
+            guest within 30 days of processing the refund.
           </p>
+
+          <p className="mb-4">
+            Also, for any activity which is complimentary and not charged to
+            Goingbo & guest, no refund will be processed.
+          </p>
+
+          <p className="mb-4">
+            Entrance fee, parking, and guide charges are not included in the
+            packages.
+          </p>
+
+          <p className="mb-4">
+            If your flights involve a combination of different airlines, you may
+            have to collect your luggage on arrival at the connecting hub and
+            register it again while checking in for the onward journey to your
+            destination.
+          </p>
+
+          <p className="mb-4">
+            Booking rates are subject to change without prior notice.
+          </p>
+
+          <p className="mb-4">
+            Airline seats and hotel rooms are subject to availability at the
+            time of booking.
+          </p>
+
+          <p className="mb-4">
+            Pricing of the booking is based on the age of the passengers. Please
+            make sure you enter the correct age of passengers at the time of
+            booking. Passengers furnishing incorrect age details may incur a
+            penalty at the time of travelling.
+          </p>
+
+          <p className="mb-4">
+            In case of unavailability in the listed hotels, arrangement for an
+            alternate accommodation will be made in a hotel of similar standard.
+          </p>
+
+          <p className="mb-4">
+            In case your package needs to be cancelled due to any natural
+            calamity, weather conditions etc., Goingbo shall strive to give you
+            the maximum possible refund subject to the agreement made with our
+            trade partners/vendors.
+          </p>
+
+          <p className="mb-4">
+            Goingbo reserves the right to modify the itinerary at any point, due
+            to reasons including but not limited to: Force Majeure events,
+            strikes, fairs, festivals, weather conditions, traffic problems,
+            overbooking of hotels/flights, cancellation/re-routing of flights,
+            closure of/entry restrictions at a place of visit, etc. While we
+            will do our best to make suitable alternate arrangements, we would
+            not be held liable for any refunds/compensation claims arising out
+            of this.
+          </p>
+
+          <p className="mb-4">
+            Certain hotels may ask for a security deposit during check-in, which
+            is refundable at check-out subject to the hotel policy.
+          </p>
+
+          <p className="mb-4">
+            The booking price does not include: expenses of personal nature,
+            such as laundry, telephone calls, room service, alcoholic beverages,
+            mini bar charges, tips, portage, camera fees, etc.
+          </p>
+
+          <p className="mb-4">
+            Any other items not mentioned under "Inclusions" are not included in
+            the cost of the booking.
+          </p>
+
+          <p className="mb-4">
+            The package price does not include mandatory gala dinner charges
+            levied by the hotels especially during New Year, Christmas, or any
+            special occasions. Goingbo shall try to communicate the same while
+            booking the package; however, Goingbo may not have this information
+            readily available all the time.
+          </p>
+
+          <p className="mb-4">
+            Cost of deviation and cost of extension of the validity on your
+            ticket is not included.
+          </p>
+
+          <p className="mb-4">
+            For queries regarding cancellations and refunds, please refer to our{" "}
+            <Link
+              href="/cancellation-policy"
+              className="text-blue-600 font-bold hover:underline"
+            >
+              Cancellation Policy
+            </Link>
+            .
+          </p>
+
+          <p className="mb-4">
+            Disputes, if any, shall be subject to the exclusive jurisdiction of
+            the courts in New Delhi.
+          </p>
+
           <p>
-            By accessing this website, we assume you accept these terms and
-            conditions. Do not continue to use Portfolio if you do
-            not agree to all of the terms and conditions stated on this page.
+            The cost of mentioned tours and transfer is not valid between 6 PM
+            to 8 AM.
           </p>
         </section>
 
-        <section className="mb-8 bg-[var(--container-color-in)] p-4 rounded-lg">
-          <h2 className="text-2xl font-semibold mb-4">
-            2. Intellectual Property
-          </h2>
-          <p className="mb-4">
-            The content, layout, design, data, and graphics on this website are
-            protected by intellectual property laws and are the property of
-            Portfolio. Unless otherwise stated, all rights are reserved.
-          </p>
-          <p>
-            You may view and/or print pages from this website for your own
-            personal use, subject to restrictions set in these terms and
-            conditions.
-          </p>
-        </section>
-
-        <section className="mb-8 p-4">
-          <h2 className="text-2xl font-semibold mb-4">3. Use License</h2>
-          <p className="mb-4">
-            Permission is granted to temporarily download one copy of the
-            materials on Portfolio for personal, non-commercial
-            transitory viewing only.
-          </p>
-          <p className="mb-4">
-            This is the grant of a license, not a transfer of title, and under
-            this license, you may not:
-          </p>
-          <ul className="list-disc pl-6 mb-4 space-y-2">
-            <li>Modify or copy the materials</li>
-            <li>Use the materials for any commercial purpose</li>
-            <li>
-              Attempt to reverse engineer any software contained on the website
-            </li>
-            <li>
-              Remove any copyright or other proprietary notations from the
-              materials
-            </li>
-          </ul>
-        </section>
-
-        <section className="mb-8 bg-[var(--container-color-in)] p-4 rounded-lg">
-          <h2 className="text-2xl font-semibold mb-4">4. Disclaimer</h2>
-          <p className="mb-4">
-            The materials on Portfolio are provided on an 'as is'
-            basis. Portfolio makes no warranties, expressed or implied, and
-            hereby disclaims and negates all other warranties including, without
-            limitation, implied warranties or conditions of merchantability,
-            fitness for a particular purpose, or non-infringement of
-            intellectual property or other violation of rights.
-          </p>
-        </section>
-
-        <section className="mb-8 p-4">
-          <h2 className="text-2xl font-semibold mb-4">5. Limitations</h2>
-          <p>
-            In no event shall Portfolio or its suppliers be liable for any
-            damages (including, without limitation, damages for loss of data or
-            profit, or due to business interruption) arising out of the use or
-            inability to use the materials on Portfolio, even if Portfolio or a Portfolio authorized representative has been
-            notified orally or in writing of the possibility of such damage.
-          </p>
-        </section>
-
-        <section className="mb-8 bg-[var(--container-color-in)] p-4 rounded-lg">
-          <h2 className="text-2xl font-semibold mb-4">
-            6. Revisions and Errata
-          </h2>
-          <p>
-            The materials appearing on Portfolio could include
-            technical, typographical, or photographic errors. Portfolio does
-            not warrant that any of the materials on its website are accurate,
-            complete, or current. Portfolio may make changes to the materials
-            contained on its website at any time without notice.
-          </p>
-        </section>
-
-        <section className="mb-8 p-4">
-          <h2 className="text-2xl font-semibold mb-4">7. Links</h2>
-          <p className="mb-4">
-            Portfolio has not reviewed all of the sites linked to its website
-            and is not responsible for the contents of any such linked site. The
-            inclusion of any link does not imply endorsement by Portfolio of
-            the site. Use of any such linked website is at the user's own risk.
-          </p>
-        </section>
-
-        <section className="mb-8 bg-[var(--container-color-in)] p-4 rounded-lg">
-          <h2 className="text-2xl font-semibold mb-4">8. Modifications</h2>
-          <p className="mb-4">
-            Profacenal may revise these terms of service for its website at any
-            time without notice. By using this website you are agreeing to be
-            bound by the then current version of these terms of service.
-          </p>
-        </section>
-
-        <section className="mb-8 p-4">
-          <h2 className="text-2xl font-semibold mb-4">9. Governing Law</h2>
-          <p>
-            These terms and conditions are governed by and construed in
-            accordance with the laws of India and you irrevocably
-            submit to the exclusive jurisdiction of the location.
-          </p>
-        </section>
-
-        <section className="mt-12 pt-6 border-t border-gray-200">
+        <section className="mt-12 pt-6 border-t border-gray-200 p-4">
           <h2 className="text-2xl font-semibold mb-4">Contact Us</h2>
           <p className="mb-2">
-            If you have any questions about these Terms and Conditions, please
+            If you have any questions about these Terms & Conditions, please
             contact us at:
           </p>
           <p className="mb-2">
@@ -142,7 +141,10 @@ const TermsPage = () => {
           </p>
           <p>
             Or through our{" "}
-            <Link href="/contact" className="text-blue-600 font-bold hover:underline">
+            <Link
+              href="/contact"
+              className="text-blue-600 font-bold hover:underline"
+            >
               contact page
             </Link>
             .

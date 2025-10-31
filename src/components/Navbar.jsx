@@ -70,7 +70,7 @@ function Navbar() {
       icon: Package,
       color: "text-[var(--logo-color)]",
     },
-    { name: "All Services", path: "/" },
+    { name: "All Services", path: "/all-services" },
   ];
 
   const handleLogout = async () => {
