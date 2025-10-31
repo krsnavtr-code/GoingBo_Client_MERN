@@ -98,9 +98,9 @@ const features = [
 
 const AllServicesPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
+      <div className="bg-[var(--container-color-in)] py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Travel Services</h1>
           <p className="text-xl md:text-2xl max-w-3xl mx-auto">
@@ -145,12 +145,12 @@ const AllServicesPage = () => {
       </div>
 
       {/* Features Section */}
-      <div className="bg-gray-100 py-16">
+      <div className="bg-[var(--container-color-in)] py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">Why Choose Us</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div key={index} className="bg-[var(--container-color-in)] p-6 rounded-lg shadow-md text-center">
                 <div className="flex justify-center mb-4">
                   {feature.icon}
                 </div>
@@ -163,7 +163,7 @@ const AllServicesPage = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-blue-700 text-white py-16">
+      <div className="bg-[var(--container-color-in)] text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Plan Your Next Trip?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
@@ -171,7 +171,7 @@ const AllServicesPage = () => {
           </p>
           <Link 
             href="/contact"
-            className="inline-block bg-white text-blue-700 font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors duration-300"
+            className="inline-block bg-[var(--logo-color-two)] text-white font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors duration-300"
           >
             Contact Us Today
           </Link>

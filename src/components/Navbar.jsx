@@ -42,13 +42,13 @@ function Navbar() {
     // { name: "Admin", path: "/admin", hidden: !isAdmin },
     {
       name: "Flight",
-      path: "/flight",
+      path: "/flights",
       icon: Flight,
       color: "text-[var(--logo-color-two)]",
     },
     {
       name: "Hotel",
-      path: "/hotel",
+      path: "/hotels",
       icon: Hotel,
       color: "text-[var(--logo-color-two)]",
     },

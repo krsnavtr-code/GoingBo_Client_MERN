@@ -4,6 +4,7 @@ import { useState } from 'react';
 import HotelSearch from '@/components/hotels/HotelSearch';
 import HotelList from '@/components/hotels/HotelList';
 import { searchHotels } from '@/services/hotelService';
+import FloatingSearchCard from '@/components/FloatingSearchCard';
 
 export default function HotelsPage() {
   const [searchResults, setSearchResults] = useState(null);
@@ -28,8 +29,11 @@ export default function HotelsPage() {
 
   return (
     <div className="container text-[var(--text-color)] mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">Find Your Perfect Stay</h1>
-      
+      {/* Floating Search Card */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <FloatingSearchCard />
+      </div>
+
       <div className="bg-[var(--container-color-in)] rounded-lg shadow-md p-6 mb-8">
         <HotelSearch onSearch={handleSearch} loading={loading} />
       </div>
@@ -41,7 +45,10 @@ export default function HotelsPage() {
       )}
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6"
+          role="alert"
+        >
           <strong className="font-bold">Error: </strong>
           <span className="block sm:inline">{error}</span>
         </div>
@@ -50,8 +57,8 @@ export default function HotelsPage() {
       {searchResults && (
         <div className="mt-8">
           <h2 className="text-2xl font-semibold mb-6">Available Hotels</h2>
-          <HotelList 
-            hotels={searchResults.Hotels || []} 
+          <HotelList
+            hotels={searchResults.Hotels || []}
             searchParams={searchParams}
           />
         </div>
