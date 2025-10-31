@@ -34,7 +34,7 @@ export default function HotelsPage() {
         <FloatingSearchCard />
       </div>
 
-      <div className="bg-[var(--container-color-in)] rounded-lg shadow-md p-6 mb-8">
+      <div className="pt-18 pb-8">
         <HotelSearch onSearch={handleSearch} loading={loading} />
       </div>
 
