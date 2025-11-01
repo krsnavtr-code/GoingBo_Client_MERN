@@ -94,6 +94,7 @@ export default function AdminLayout({ children }) {
     { name: "Popular Cabs", icon: <Car />, path: "/admin/popular-cabs" },
     { name: "Popular Buses", icon: <Bus />, path: "/admin/popular-buses" },
     { name: "Blog", icon: <FiMail />, path: "/admin/blog" },
+    { name: "FAQs", icon: <FiMail />, path: "/admin/faqs" },
     { name: "Media", icon: <Images />, path: "/admin/media" },
     { name: "Contacts", icon: <SmartphoneNfc />, path: "/admin/contacts" },
   ];

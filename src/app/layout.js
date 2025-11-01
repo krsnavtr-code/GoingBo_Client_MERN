@@ -46,7 +46,10 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-bg text-text transition-colors duration-200 min-h-screen`}>
+      <body 
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-bg text-text transition-colors duration-200 min-h-screen`}
+        suppressHydrationWarning={true}
+      >
         <AuthProvider>
           <ThemeProvider>
             <LayoutWrapper>{children}</LayoutWrapper>
