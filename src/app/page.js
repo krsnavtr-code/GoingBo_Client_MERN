@@ -9,6 +9,7 @@ import FlightList from '@/components/flights/FlightList';
 import searchFlights from '@/components/FloatingSearchCard';
 import { FaPlane, FaCreditCard, FaPassport, FaUsers, FaCalendarAlt, FaBell } from 'react-icons/fa';
 import Contact from '@/components/ContactForm';
+import Faqs from '@/components/Faqs';
 
 export default function Page() {
   const [searchResults, setSearchResults] = useState(null);
@@ -127,21 +128,54 @@ export default function Page() {
           {/* <WhyBookWithGoingbo /> */}
         </div>
 
-        {/* Popular Domestic Airlines */}
-        <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Popular Domestic Airlines</h2>
-          {/* <FlightList flights={popularDomesticAirlines} /> */}
+        {/* Popular Domestic Airlines Section */}
+        <div className="my-12 px-4">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+            Popular Domestic Airlines
+          </h2>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 justify-items-center">
+            {/* Airline Card */}
+            {[
+              { name: "IndiGo", img: "/uploads/media-1762014931155-208720630.png" },
+              { name: "Air India", img: "/uploads/media-1762014930536-136648618.png" },
+              { name: "Air India Express", img: "/uploads/media-1762014930533-605638350.png" },
+              { name: "Akasa Air", img: "/uploads/media-1762014930512-171642290.png" },
+              { name: "Alliance Air", img: "/uploads/media-1762014930526-87133052.png" },
+              { name: "SpiceJet", img: "/uploads/media-1762014930523-222083723.png" },
+            ].map((airline, index) => (
+              <div
+                key={index}
+                className="w-full max-w-[140px] flex flex-col items-center bg-[var(--container-color-in)] shadow-md rounded-xl p-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+              >
+                <div className="w-20 h-20 flex items-center justify-center">
+                  <img
+                    src={
+                      airline.img.startsWith("http")
+                        ? airline.img
+                        : `${process.env.NEXT_PUBLIC_API_URL}${airline.img}`
+                    }
+                    alt={airline.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <p className="mt-3 text-sm font-medium">{airline.name}</p>
+              </div>
+            ))}
+          </div>
         </div>
+
 
         {/* Frequently Asked Questions */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Frequently Asked Questions</h2>
           {/* <FAQ /> */}
+          <Faqs/>
         </div>
 
         {/* Contact Us */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Contact Us</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Contact Us</h2>
 
           <div className="bg-[var(--container-color-in)] rounded-2xl shadow-sm border grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-10 items-center">
             {/* Google Map */}
