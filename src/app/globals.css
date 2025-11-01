@@ -103,4 +103,10 @@ body {
   color: var(--logo-color-two) !important;
 }
 
+/* Admin panal */
+.admin-sidebar-icon > svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
 

@@ -4,19 +4,19 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
+import { FiPieChart, FiLogOut, FiMail, FiMenu, FiX } from "react-icons/fi";
 import {
-  FiUsers,
-  FiPieChart,
-  FiSettings,
-  FiLogOut,
-  FiHome,
-  FiUser,
-  FiImage,
-  FiAward,
-  FiMail,
-  FiMenu,
-  FiX,
-} from "react-icons/fi";
+  Users,
+  UserPen,
+  ChartBarStacked,
+  Package,
+  Images,
+  SmartphoneNfc,
+  Plane,
+  Hotel,
+  Car,
+  Bus,
+} from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function AdminLayout({ children }) {
@@ -77,17 +77,25 @@ export default function AdminLayout({ children }) {
 
   const navItems = [
     { name: "Dashboard", icon: <FiPieChart />, path: "/admin" },
-    { name: "Users", icon: <FiUsers />, path: "/admin/users" },
-    { name: "Profile", icon: <FiUser />, path: "/admin/profile" },
+    { name: "Users", icon: <Users />, path: "/admin/users" },
+    { name: "Profile", icon: <UserPen />, path: "/admin/profile" },
     {
       name: "Package Categories",
-      icon: <FiImage />,
+      icon: <ChartBarStacked />,
       path: "/admin/package-categories",
     },
-    { name: "Packages", icon: <FiAward />, path: "/admin/packages" },
+    { name: "Packages", icon: <Package />, path: "/admin/packages" },
+    {
+      name: "Popular Flights",
+      icon: <Plane />,
+      path: "/admin/popular-flights",
+    },
+    { name: "Popular Hotels", icon: <Hotel />, path: "/admin/popular-hotels" },
+    { name: "Popular Cabs", icon: <Car />, path: "/admin/popular-cabs" },
+    { name: "Popular Buses", icon: <Bus />, path: "/admin/popular-buses" },
     { name: "Blog", icon: <FiMail />, path: "/admin/blog" },
-    { name: "Media", icon: <FiImage />, path: "/admin/media" },
-    { name: "Contacts", icon: <FiMail />, path: "/admin/contacts" },
+    { name: "Media", icon: <Images />, path: "/admin/media" },
+    { name: "Contacts", icon: <SmartphoneNfc />, path: "/admin/contacts" },
   ];
 
   return (
@@ -128,7 +136,7 @@ export default function AdminLayout({ children }) {
                       : "text-[var(--text-color)] hover:bg-[var(--button-bg-hover)]"
                   }`}
                 >
-                  <span className="mr-3">{item.icon}</span>
+                  <span className="mr-3 admin-sidebar-icon">{item.icon}</span>
                   {item.name}
                 </Link>
               </li>

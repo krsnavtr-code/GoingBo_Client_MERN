@@ -54,13 +54,13 @@ function Navbar() {
     },
     {
       name: "Cab",
-      path: "/cab",
+      path: "/cabs",
       icon: Cab,
       color: "text-[var(--logo-color-two)]",
     },
     {
       name: "Bus",
-      path: "/bus",
+      path: "/buses",
       icon: Bus,
       color: "text-[var(--logo-color-two)]",
     },
