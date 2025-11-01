@@ -81,7 +81,7 @@ export default function Page() {
       <div className="">
         {/* Do More With GoingBo */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Do More With GoingBo</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Do More With GoingBo</h2>
           <div className="bg-[var(--container-color-in)] rounded-2xl shadow-sm border flex justify-between p-6 items-center">
             {features.map((item, index) => (
               <div key={index} className="flex flex-col items-center justify-center text-center w-1/6">
@@ -94,37 +94,37 @@ export default function Page() {
 
         {/* Popular Flights */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Popular Flights</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Flights</h2>
           {/* <FlightList flights={popularFlights} /> */}
         </div>
 
         {/* Popular Hotels */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Popular Hotels</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Hotels</h2>
           {/* <HotelList hotels={popularHotels} /> */}
         </div>
 
         {/* Popular Cabs */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Popular Cabs</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Cabs</h2>
           {/* <CabList cabs={popularCabs} /> */}
         </div>
 
         {/* Popular Buses */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Popular Buses</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Buses</h2>
           {/* <BusList buses={popularBuses} /> */}
         </div>
 
         {/* Today's Flight Offers */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Today's Flight Offers</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Today's Flight Offers</h2>
           {/* <FlightList flights={todayFlights} /> */}
         </div>
 
         {/* Why Book With goingbo? */}
         <div className="mb-10">
-          <h2 className="text-xl font-semibold mb-4">Why Book With goingbo?</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Why Book With goingbo?</h2>
           {/* <WhyBookWithGoingbo /> */}
         </div>
 

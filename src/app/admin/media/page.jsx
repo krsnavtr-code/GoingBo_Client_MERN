@@ -16,8 +16,6 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 
-const AVAILABLE_TAGS = ["Brand", "Home", "Gallery"];
-
 const MediaGallery = () => {
   const [files, setFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -27,14 +25,73 @@ const MediaGallery = () => {
   const [tagFilter, setTagFilter] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [editingTags, setEditingTags] = useState(null);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
   const fileInputRef = useRef(null);
   const dropRef = useRef(null);
   const tagMenuRef = useRef(null);
 
-  // Fetch all media files
+  // Fetch all media files and available tags
   useEffect(() => {
-    fetchMedia();
+    const fetchData = async () => {
+      await Promise.all([
+        fetchMedia(),
+        fetchAvailableTags()
+      ]);
+    };
+    fetchData();
   }, []);
+
+  // Create a new tag
+  const handleCreateTag = async (tagName) => {
+    try {
+      setIsLoadingTags(true);
+      const response = await fetch('/api/v1/admin/media-tags', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tag: tagName }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create tag');
+      }
+
+      // Refresh the tags list
+      await fetchAvailableTags();
+      toast.success('Tag created successfully');
+    } catch (error) {
+      console.error('Error creating tag:', error);
+      toast.error(error.message || 'Failed to create tag');
+    } finally {
+      setIsLoadingTags(false);
+    }
+  };
+
+  // Fetch available tags from the API
+  const fetchAvailableTags = async () => {
+    try {
+      setIsLoadingTags(true);
+      const response = await fetch('/api/v1/admin/media-tags', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch available tags');
+      }
+
+      const tags = await response.json();
+      setAvailableTags(tags);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+      toast.error('Failed to load tags');
+    } finally {
+      setIsLoadingTags(false);
+    }
+  };
 
   const fetchMedia = async () => {
     try {
@@ -405,10 +462,42 @@ const MediaGallery = () => {
               />
             </button>
             {editingTags === "filter" && (
-              <div className="absolute right-0 mt-1 w-48 bg-[var(--container-color-in)] rounded-md shadow-lg z-10 border border-[var(--border-color)]">
+              <div className="absolute right-0 mt-1 w-56 bg-[var(--container-color-in)] rounded-md shadow-lg z-10 border border-[var(--border-color)]">
                 <div className="p-2">
+                  {/* Create New Tag */}
+                  <div className="px-2 py-2 border-b border-[var(--border-color)] mb-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="New tag name"
+                        className="flex-1 px-2 py-1 text-sm text-[var(--text-color)] bg-[var(--container-color)] border border-[var(--border-color)] rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={newTagName}
+                        onChange={(e) => setNewTagName(e.target.value)}
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter' && newTagName.trim()) {
+                            await handleCreateTag(newTagName.trim());
+                            setNewTagName('');
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={async () => {
+                          if (newTagName.trim()) {
+                            await handleCreateTag(newTagName.trim());
+                            setNewTagName('');
+                          }
+                        }}
+                        className="px-2 py-1 text-sm text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none"
+                        disabled={!newTagName.trim()}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* All Files Option */}
                   <div
-                    className="px-4 py-2 cursor-pointer text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded cursor-pointer"
+                    className="px-4 py-2 cursor-pointer text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded"
                     onClick={() => {
                       setTagFilter("");
                       setEditingTags(null);
@@ -416,7 +505,7 @@ const MediaGallery = () => {
                   >
                     All Files
                   </div>
-                  {AVAILABLE_TAGS.map((tag) => (
+                  {availableTags.map((tag) => (
                     <div
                       key={tag}
                       className={`px-4 py-2 cursor-pointer text-sm ${
@@ -647,7 +736,7 @@ const MediaGallery = () => {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="p-2">
-                    {AVAILABLE_TAGS.map((tag) => (
+                    {availableTags.map((tag) => (
                       <div
                         key={tag}
                         className="flex items-center px-4 py-2 text-sm text-[var(--text-color)] hover:bg-[var(--container-color)] rounded cursor-pointer"
