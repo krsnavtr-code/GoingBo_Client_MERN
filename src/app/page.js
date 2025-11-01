@@ -10,6 +10,7 @@ import searchFlights from '@/components/FloatingSearchCard';
 import { FaPlane, FaCreditCard, FaPassport, FaUsers, FaCalendarAlt, FaBell } from 'react-icons/fa';
 import Contact from '@/components/ContactForm';
 import Faqs from '@/components/Faqs';
+import TodayFlightOffers from '@/components/TodayFlightOffers';
 
 export default function Page() {
   const [searchResults, setSearchResults] = useState(null);
@@ -118,15 +119,72 @@ export default function Page() {
 
         {/* Today's Flight Offers */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Today's Flight Offers</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">✈️ Today’s Flight Offers</h2>
           {/* <FlightList flights={todayFlights} /> */}
+          <TodayFlightOffers />
         </div>
 
         {/* Why Book With goingbo? */}
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Why Book With goingbo?</h2>
-          {/* <WhyBookWithGoingbo /> */}
+        <div className="my-12 px-4">
+          <h2 className="text-2xl font-bold text-gray-800 mb-10 text-center">
+            Why Book With goingbo?
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            {/* Card 1 */}
+            <div className="bg-[var(--container-color-in)] p-6 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-14 h-14 mx-auto mb-4 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v12a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-center mb-2">Easy Booking</h3>
+              <p className="text-sm text-center">
+                Book flights in just a few clicks with our smooth, fast, and intuitive interface.
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="bg-[var(--container-color-in)] p-6 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-14 h-14 mx-auto mb-4 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-center mb-2">Best Price Guarantee</h3>
+              <p className="text-sm text-center">
+                Get the lowest fares on domestic and international flights — guaranteed!
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="bg-[var(--container-color-in)] p-6 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-14 h-14 mx-auto mb-4 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-center mb-2">24/7 Support</h3>
+              <p className="text-sm text-center">
+                Our customer service team is available around the clock to assist you anytime.
+              </p>
+            </div>
+
+            {/* Card 4 */}
+            <div className="bg-[var(--container-color-in)] p-6 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="w-14 h-14 mx-auto mb-4 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a5 5 0 00-10 0v2m10 0a2 2 0 012 2v7a2 2 0 01-2 2H7a2 2 0 01-2-2v-7a2 2 0 012-2m10 0H7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-center mb-2">Secure Payments</h3>
+              <p className="text-sm text-center">
+                We use advanced encryption to ensure your transactions are safe and secure.
+              </p>
+            </div>
+          </div>
         </div>
+
 
         {/* Popular Domestic Airlines Section */}
         <div className="my-12 px-4">
