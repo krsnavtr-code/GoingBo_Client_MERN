@@ -16,6 +16,9 @@ const FloatingSearchCard = () => {
   ];
 
   const isActive = (path) => {
+    if (path === '/flights' && pathname === '/') {
+      return true;
+    }
     if (path === '/') {
       return pathname === path;
     }
