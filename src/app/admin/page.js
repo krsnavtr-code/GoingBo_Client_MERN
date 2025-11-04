@@ -45,7 +45,7 @@ export default function AdminDashboard() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
         <p className="text-[var(--text-color-light)]">
-          Welcome to your admin dashboard. Here's what's happening with your site.
+          Welcome to your admin dashboard. Here&apos;s what&apos;s happening with your site.
         </p>
       </div>
 
