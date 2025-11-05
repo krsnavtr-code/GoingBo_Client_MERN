@@ -32,35 +32,34 @@ export default function DashboardContent() {
 
   const tabs = [
     "Profile",
-    "Orders",
-    "Wishlist",
-    "Address",
-    "Payments",
-    "Coupons",
-    "Reviews & Ratings",
+    "Bookings",
+    "Package Wishlist",
+    "All Payments",
+    "Coupons For You",
+    "Give Ratings",
     "Notifications",
   ];
 
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen">
       <div className="max-w-7xl py-4 mx-auto">
-        <div className="bg-white shadow rounded-lg p-2 relative">
+        <div className="shadow rounded-lg px-5 py-3 relative bg-[var(--container-color-in)]">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl font-bold text-center sm:text-left">
               Welcome, {user.name}!
             </h1>
 
             <button
               onClick={handleLogout}
-              className="hidden md:block px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              className="hidden cursor-pointer md:block px-4 py-2 bg-[var(--button-bg-color)] text-[var(--button-color)] rounded-md hover:bg-[var(--button-hover-color)] focus:outline-none focus:ring-2 focus:ring-[var(--button-hover-color)] focus:ring-offset-2"
             >
               Logout
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="relative border-b border-gray-200 mb-6">
+          <div className="relative border-b border-[var(--border-color)] mb-6">
             {/* Left scroll button */}
             <button
               onClick={() => scroll("left")}
@@ -81,8 +80,8 @@ export default function DashboardContent() {
                   className={`pb-2 text-sm font-medium transition-colors relative cursor-pointer whitespace-nowrap
                     ${
                       activeTab === tab
-                        ? "after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-blue-600 text-blue-600"
-                        : "text-gray-500 hover:text-gray-700"
+                        ? "after:absolute after:left-0 after:bottom-0 after:w-full after:h-[2px] after:bg-[var(--logo-color)] text-[var(--logo-color)]"
+                        : "text-[var(--logo-color-two)] hover:text-[var(--logo-color)]"
                     }`}
                 >
                   {tab}
@@ -101,72 +100,73 @@ export default function DashboardContent() {
 
           {/* Tab Content */}
           <div className="space-y-4">
-            {activeTab === "Profile" && <ProfileInfo />}
+            {activeTab === "Profile" && (
+              <div className="p-4 bg-[var(--container-color)] rounded-md">
+                <ProfileInfo />
+              </div>
+            )}
 
-            {activeTab === "Orders" && (
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h2 className="text-lg font-medium text-gray-900">
-                  Your Orders
+            {activeTab === "Bookings" && (
+              <div className="p-4 bg-[var(--container-color)] rounded-md">
+                <h2 className="text-lg font-medium ">
+                  Your Bookings
                 </h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  View and manage your recent orders here.
+                <p className="text-sm text-[var(--text-color-light)] mt-2">
+                  View and manage your recent Bookings here.
                 </p>
               </div>
             )}
 
-            {activeTab === "Wishlist" && (
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h2 className="text-lg font-medium text-gray-900">Wishlist</h2>
-                <p className="text-sm text-gray-600 mt-2">
+            {activeTab === "Package Wishlist" && (
+              <div className="p-4 bg-[var(--container-color)] rounded-md">
+                <h2 className="text-lg font-medium ">
+                  Package Wishlist
+                </h2>
+                <p className="text-sm text-[var(--text-color-light)] mt-2">
                   Your saved items will appear here.
                 </p>
               </div>
             )}
 
-            {activeTab === "Address" && (
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h2 className="text-lg font-medium text-gray-900">Address</h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  Your saved address will appear here.
-                </p>
-              </div>
-            )}
-
-            {activeTab === "Payments" && (
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h2 className="text-lg font-medium text-gray-900">Payments</h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  Your saved payments will appear here.
-                </p>
-              </div>
-            )}
-
-            {activeTab === "Coupons" && (
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h2 className="text-lg font-medium text-gray-900">Coupons</h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  Your saved coupons will appear here.
-                </p>
-              </div>
-            )}
-
-            {activeTab === "Reviews & Ratings" && (
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h2 className="text-lg font-medium text-gray-900">
-                  Reviews & Ratings
+            {activeTab === "All Payments" && (
+              <div className="p-4 bg-[var(--container-color)] rounded-md">
+                <h2 className="text-lg font-medium ">
+                  All Payments
                 </h2>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-[var(--text-color-light)] mt-2">
+                  Your saved All Payments will appear here.
+                </p>
+              </div>
+            )}
+
+            {activeTab === "Coupons For You" && (
+              <div className="p-4 bg-[var(--container-color)] rounded-md">
+                <h2 className="text-lg font-medium ">
+                  Coupons For You
+                </h2>
+                <p className="text-sm text-[var(--text-color-light)] mt-2">
+                  Your saved Coupons For You will appear here.
+                </p>
+              </div>
+            )}
+
+            {activeTab === "Give Ratings" && (
+              <div className="p-4 bg-[var(--container-color)] rounded-md">
+                <h2 className="text-lg font-medium ">
+                  Give Ratings
+                </h2>
+                <p className="text-sm text-[var(--text-color-light)] mt-2">
                   Your saved reviews and ratings will appear here.
                 </p>
               </div>
             )}
 
             {activeTab === "Notifications" && (
-              <div className="p-4 bg-gray-50 rounded-md">
-                <h2 className="text-lg font-medium text-gray-900">
+              <div className="p-4 bg-[var(--container-color)] rounded-md">
+                <h2 className="text-lg font-medium ">
                   Notifications
                 </h2>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-[var(--text-color-light)] mt-2">
                   Your saved notifications will appear here.
                 </p>
               </div>

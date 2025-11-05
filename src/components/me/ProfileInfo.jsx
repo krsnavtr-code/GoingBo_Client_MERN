@@ -37,44 +37,40 @@ export default function ProfileInfo() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-center">
-        <h2 className="text-lg font-medium text-gray-900">
-          Personal Information
-        </h2>
+        <h2 className="text-lg font-medium">Personal Information</h2>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="px-3 py-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            className="px-3 py-1 text-sm text-[var(--button-color)] bg-[var(--button-bg-color)] rounded-md hover:bg-[var(--button-hover-color)] cursor-pointer"
           >
-            Edit Profile
+            Update Profile
           </button>
         )}
       </div>
 
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 grid grid-cols-1 lg:grid-cols-2 gap-4"
+        >
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="name"
-              className="block w-28 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="name" className="block w-28 text-sm font-medium">
               Full Name
             </label>
             <input
               type="text"
               id="name"
               name="name"
+              placeholder="Your Full Name"
               value={formData.name}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+              className="mt-1 block w-full rounded-md border-[var(--border-color)] shadow-sm focus:border-[var(--container-color)] focus:ring-[var(--container-color)] sm:text-sm p-2 border"
               required
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="gender"
-              className="block w-28 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="gender" className="block w-28 text-sm font-medium">
               Gender
             </label>
             <select
@@ -82,7 +78,7 @@ export default function ProfileInfo() {
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+              className="mt-1 block w-full rounded-md border-[var(--border-color)] shadow-sm focus:border-[var(--container-color)] focus:ring-[var(--container-color)] sm:text-sm p-2 border"
             >
               <option value="">Select Gender</option>
               <option value="male">Male</option>
@@ -93,10 +89,7 @@ export default function ProfileInfo() {
           </div>
 
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="email"
-              className="block w-28 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="block w-28 text-sm font-medium">
               Email
             </label>
             <input
@@ -105,17 +98,14 @@ export default function ProfileInfo() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm p-2 border bg-gray-300"
+              className="mt-1 block w-full rounded-md border-[var(--border-color)] shadow-sm focus:border-[var(--container-color)] focus:ring-[var(--container-color)] sm:text-sm p-2 border"
               disabled
               title="Contact Customer Support to change your email address"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="phone"
-              className="block w-28 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="phone" className="block w-28 text-sm font-medium">
               Phone Number
             </label>
             <input
@@ -124,15 +114,12 @@ export default function ProfileInfo() {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+              className="mt-1 block w-full rounded-md border-[var(--border-color)] shadow-sm focus:border-[var(--container-color)] focus:ring-[var(--container-color)] sm:text-sm p-2 border"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <label
-              htmlFor="country"
-              className="block w-28 text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="country" className="block w-28 text-sm font-medium">
               Country
             </label>
             <input
@@ -141,7 +128,7 @@ export default function ProfileInfo() {
               name="country"
               value={formData.country}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+              className="mt-1 block w-full rounded-md border-[var(--border-color)] shadow-sm focus:border-[var(--container-color)] focus:ring-[var(--container-color)] sm:text-sm p-2 border"
             />
           </div>
 
@@ -158,13 +145,13 @@ export default function ProfileInfo() {
                   country: user.country || "",
                 });
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50"
+              className="px-3 py-1 text-sm font-medium text-[var(--button-color)] bg-[var(--button-bg-color)] cursor-pointer rounded-md shadow-sm hover:bg-[var(--button-hover-color)]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700"
+              className="px-3 py-1 w-fit text-sm font-medium text-[var(--button-color)] bg-[var(--button-bg-color)] cursor-pointer rounded-md shadow-sm hover:bg-[var(--button-hover-color)]"
             >
               Save Changes
             </button>
@@ -173,30 +160,28 @@ export default function ProfileInfo() {
       ) : (
         <div className="space-y-4">
           <div className="flex items-baseline gap-2">
-            <h3 className="text-sm font-medium text-gray-500">Full Name:-</h3>
-            <p className="text-sm text-gray-900">{user.name || ""}</p>
+            <h3 className="text-sm font-medium">Full Name:-</h3>
+            <p className="text-sm">{user.name || "_______________"}</p>
           </div>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-sm font-medium text-gray-500">Gender:-</h3>
-            <p className="text-sm text-gray-900">
+            <h3 className="text-sm font-medium">Gender:-</h3>
+            <p className="text-sm">
               {user.gender
                 ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1)
-                : ""}
+                : "_______________"}
             </p>
           </div>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-sm font-medium text-gray-500">Email:-</h3>
-            <p className="text-sm text-gray-900">{user.email}</p>
+            <h3 className="text-sm font-medium">Email:-</h3>
+            <p className="text-sm">{user.email || "_______________"}</p>
           </div>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-sm font-medium text-gray-500">
-              Phone Number:-
-            </h3>
-            <p className="text-sm text-gray-900">{user.phone || ""}</p>
+            <h3 className="text-sm font-medium">Phone Number:-</h3>
+            <p className="text-sm">{user.phone || "_______________"}</p>
           </div>
           <div className="flex items-baseline gap-2">
-            <h3 className="text-sm font-medium text-gray-500">Country:-</h3>
-            <p className="text-sm text-gray-900">{user.country || ""}</p>
+            <h3 className="text-sm font-medium">Country:-</h3>
+            <p className="text-sm">{user.country || "_______________"}</p>
           </div>
         </div>
       )}
