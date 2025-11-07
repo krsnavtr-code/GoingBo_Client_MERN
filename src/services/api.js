@@ -1,5 +1,5 @@
 // Use NEXT_PUBLIC_ prefix to expose the variable to the browser
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper function to get cookie by name
 function getCookie(name) {
