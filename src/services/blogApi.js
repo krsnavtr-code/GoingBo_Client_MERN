@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 async function fetchBlogAPI(endpoint, method = 'GET', data = null, isPublic = true) {
   // Ensure endpoint starts with a forward slash
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${API_BASE_URL}/api/v1${normalizedEndpoint}`;
+  const url = `${API_BASE_URL}${normalizedEndpoint}`;
 
   const options = {
     method,
