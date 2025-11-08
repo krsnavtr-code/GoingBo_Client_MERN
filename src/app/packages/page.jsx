@@ -5,17 +5,31 @@ import PackageGallery from "@/components/PackageGallery";
 import { styleEffect } from "framer-motion";
 
 async function getPackages() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/packages?isPublished=true`,
-    { next: { revalidate: 60 } }
-  );
-  if (!res.ok) throw new Error("Failed to fetch packages");
-  return res.json();
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/packages?isPublished=true`,
+      { 
+        next: { revalidate: 60 },
+        // Add timeout to prevent hanging
+        signal: AbortSignal.timeout(5000) 
+      }
+    );
+    
+    if (!res.ok) {
+      console.error('Failed to fetch packages:', res.status, res.statusText);
+      return { data: { projects: [] }, error: 'Failed to load packages' };
+    }
+    
+    return await res.json();
+  } catch (error) {
+    console.error('Error fetching packages:', error);
+    return { data: { projects: [] }, error: error.message };
+  }
 }
 
 export default async function PackagesPage() {
-  const { data } = await getPackages();
-  const packages = data?.projects || [];
+  const result = await getPackages();
+  const packages = result.data?.projects || [];
 
   return (
     <div className="container mx-auto px-4 py-12 text-[var(--text-color)]">
@@ -26,7 +40,12 @@ export default async function PackagesPage() {
         </p>
       </div>
 
-      {packages.length === 0 ? (
+      {result.error ? (
+        <div className="text-center py-12 text-red-500">
+          <p>Error loading packages: {result.error}</p>
+          <p className="mt-2">Please try again later or contact support if the issue persists.</p>
+        </div>
+      ) : packages.length === 0 ? (
         <div className="text-center py-12">
           <p>No packages found. Check back soon!</p>
         </div>
