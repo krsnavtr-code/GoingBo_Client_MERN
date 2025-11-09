@@ -13,16 +13,15 @@ function getCookie(name) {
 // Helper function to handle API requests
 async function fetchAPI(endpoint, method = 'GET', data = null) {
   // Ensure endpoint starts with a forward slash
-  // const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  // const url = `${API_BASE_URL}${normalizedEndpoint}`;
-  // console.log(url);
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   let url = `${API_BASE_URL}${normalizedEndpoint}`;
 
-  // remove duplicate "/api/api"
-  // url = url.includes('/api/api') ? url.replace('/api/api', '/api') : url;
+  // Clean up URL to prevent duplicate /api
+  if (url.includes('//api/')) {
+    url = url.replace('//api/', '/api/');
+  }
 
-  console.log(url);
+  console.log('API Request:', { url, method });
 
   // Get the JWT token from cookies
   const token = getCookie('jwt');
@@ -31,14 +30,11 @@ async function fetchAPI(endpoint, method = 'GET', data = null) {
     method,
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
     },
-    credentials: 'include', // Important for cookies/sessions
+    credentials: 'include', // Important for sending/receiving cookies
+    mode: 'cors', // Ensure CORS mode is enabled
   };
-  
-  // Add Authorization header if token exists
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`;
-  }
 
   if (data) {
     options.body = JSON.stringify(data);
