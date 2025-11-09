@@ -13,8 +13,8 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         const [usersRes, contactsRes] = await Promise.all([
-          axios.get('/api/v1/admin/dashboard'),
-          axios.get('/api/v1/admin/contacts/stats')
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard`),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/contacts/stats`)
         ]);
 
         setStats({

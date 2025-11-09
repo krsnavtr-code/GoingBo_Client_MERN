@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FiMail, FiSearch, FiFilter, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import { fetchAPI } from "@/services/api";
 import ContactStats from '@/components/admin/ContactStats';
 import ContactListItem from '@/components/admin/ContactListItem';
 
@@ -27,30 +27,45 @@ const ContactsPage = () => {
   const fetchContacts = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get('/api/v1/admin/contacts', {
-        params: { status: statusFilter === 'all' ? '' : statusFilter }
-      });
-      setContacts(data.data.contacts);
+      const response = await fetchAPI(
+        `/admin/contacts?status=${statusFilter === "all" ? "" : statusFilter}`,
+        "GET"
+      );
+      setContacts(response.data.contacts);
     } catch (error) {
       console.error('Error fetching contacts:', error);
-      toast.error('Failed to load contacts');
+      toast.error(error.response?.data?.message || "Failed to load contacts");
+      if (error.response?.status === 401) {
+        // Redirect to login if unauthorized
+        router.push("/auth/login");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      const { data } = await axios.get('/api/v1/admin/contacts/stats');
-      setStats(data.data.stats);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+const fetchStats = async () => {
+  try {
+    const response = await fetchAPI("/admin/contacts/stats", "GET");
+    // console.log("Stats response:", response);
+
+    if (response && response.data && response.data.stats) {
+      setStats(response.data.stats); // Update this line to use response.data.stats
+    } else {
+      console.error("Unexpected response format:", response);
+      toast.error("Failed to load contact statistics: Invalid response format");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    toast.error(
+      error.response?.data?.message || "Failed to load contact statistics"
+    );
+  }
+};
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      await axios.patch(`/api/v1/admin/contacts/${id}`, { status: newStatus });
+      await fetchAPI(`/admin/contacts/${id}`, "PATCH", { status: newStatus });
       await fetchContacts();
       await fetchStats();
       toast.success('Status updated successfully');

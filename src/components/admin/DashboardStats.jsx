@@ -15,7 +15,7 @@ const DashboardStats = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch('/api/v1/admin/dashboard', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard`, {
           credentials: 'include',
         });
         

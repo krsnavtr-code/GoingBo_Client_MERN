@@ -14,7 +14,7 @@ export default function Faqs() {
     const fetchFaqs = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/v1/faqs');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faqs`);
         const data = await response.json();
         
         if (!response.ok) {

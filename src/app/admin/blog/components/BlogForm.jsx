@@ -246,7 +246,7 @@ export default function BlogForm({ blogData = null }) {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("/api/v1/blog-categories", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog-categories`, {
           credentials: "include",
         });
         if (res.ok) {
@@ -400,7 +400,7 @@ export default function BlogForm({ blogData = null }) {
 
       // Check if slug exists in the database
       try {
-        const response = await fetch(`/api/v1/blog/slug/${slug}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/slug/${slug}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -488,7 +488,7 @@ export default function BlogForm({ blogData = null }) {
     setIsSubmitting(true);
 
     try {
-      const url = isEditMode ? `/api/v1/blog/${blogData._id}` : "/api/v1/blog";
+      const url = isEditMode ? `${process.env.NEXT_PUBLIC_API_URL}/blog/${blogData._id}` : `${process.env.NEXT_PUBLIC_API_URL}/blog`;
       const method = isEditMode ? "PUT" : "POST";
 
       const categoryIds = formData.categories.map((cat) =>

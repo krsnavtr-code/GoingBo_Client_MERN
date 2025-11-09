@@ -23,7 +23,7 @@ export default function BlogPage() {
   // Fetch categories
   const fetchCategories = async () => {
     try {
-      const response = await axios.get("/api/v1/blog-categories");
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/blog-categories`);
       setCategories(response.data.data || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -183,7 +183,7 @@ export default function BlogPage() {
               >
                 All
               </button>
-              {categories.map((category) => (
+              {Array.isArray(categories) && categories.map((category) => (
                 <button
                   key={category._id}
                   onClick={() => setSelectedCategory(category._id)}

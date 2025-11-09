@@ -96,7 +96,7 @@ export default function BlogList() {
     try {
       console.log("Cookies:", document.cookie); // Debug log
 
-      const res = await fetch("/api/v1/blog", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog`, {
         credentials: "include",
       });
 
@@ -126,7 +126,7 @@ export default function BlogList() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("/api/v1/blog-categories", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog-categories`, {
         credentials: "include",
       });
 
@@ -181,7 +181,7 @@ export default function BlogList() {
     }
 
     try {
-      const res = await fetch(`/api/v1/blog-categories/${categoryId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog-categories/${categoryId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -204,7 +204,7 @@ export default function BlogList() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this blog post?")) {
       try {
-        const res = await fetch(`/api/v1/blog/${id}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/${id}`, {
           method: "DELETE",
           credentials: "include", // Important for cookies
         });

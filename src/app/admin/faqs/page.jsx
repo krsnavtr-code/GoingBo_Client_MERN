@@ -19,7 +19,7 @@ export default function FaqsPage() {
   const fetchFaqs = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/v1/faqs');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faqs`);
       const data = await res.json();
       if (data.success) {
         setFaqs(data.data);
@@ -52,8 +52,8 @@ export default function FaqsPage() {
 
     try {
       const url = currentFaq 
-        ? `/api/v1/faqs/${currentFaq._id}` 
-        : '/api/v1/faqs';
+        ? `${process.env.NEXT_PUBLIC_API_URL}/faqs/${currentFaq._id}` 
+        : `${process.env.NEXT_PUBLIC_API_URL}/faqs`;
       const method = currentFaq ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -85,7 +85,7 @@ export default function FaqsPage() {
     if (!window.confirm('Are you sure you want to delete this FAQ?')) return;
 
     try {
-      const res = await fetch(`/api/v1/faqs/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faqs/${id}`, {
         method: 'DELETE',
       });
       
@@ -106,7 +106,7 @@ export default function FaqsPage() {
   // Toggle FAQ status
   const toggleStatus = async (id, currentStatus) => {
     try {
-      const res = await fetch(`/api/v1/faqs/${id}/toggle`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/faqs/${id}/toggle`, {
         method: 'PATCH',
       });
       

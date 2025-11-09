@@ -13,7 +13,7 @@ export default function EditBlogPost() {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const res = await fetch(`/api/v1/blog/${id}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/${id}`, {
           credentials: "include",
         });
 

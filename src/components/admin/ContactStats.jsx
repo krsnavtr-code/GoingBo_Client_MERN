@@ -8,8 +8,19 @@ const statusIcons = {
 };
 
 export default function ContactStats({ stats }) {
+  // Return null if stats is not available yet
+  if (!stats || !stats.byStatus) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-24 bg-[var(--container-color-in)] rounded-lg animate-pulse"></div>
+        ))}
+      </div>
+    );
+  }
+
   const getCountByStatus = (status) => {
-    const statusData = stats.byStatus.find(s => s.status === status);
+    const statusData = Array.isArray(stats.byStatus) ? stats.byStatus.find(s => s.status === status) : null;
     return statusData ? statusData.count : 0;
   };
 

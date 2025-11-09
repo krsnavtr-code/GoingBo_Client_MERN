@@ -67,7 +67,12 @@ export default function ITCategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch("/api/v1/it-categories");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/it-categories`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await res.json();
       if (data.status === "success") setCategories(data.data.categories);
     } catch (err) {
@@ -95,8 +100,8 @@ export default function ITCategoriesPage() {
     setIsSubmitting(true);
     try {
       const url = editingCategory
-        ? `/api/v1/it-categories/${editingCategory._id}`
-        : "/api/v1/it-categories";
+        ? `${process.env.NEXT_PUBLIC_API_URL}/it-categories/${editingCategory._id}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/it-categories`;
       const method = editingCategory ? "PATCH" : "POST";
       const res = await fetch(url, {
         method,
@@ -117,7 +122,7 @@ export default function ITCategoriesPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure to delete this category?")) return;
     try {
-      const res = await fetch(`/api/v1/it-categories/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/it-categories/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete category");
@@ -154,7 +159,7 @@ export default function ITCategoriesPage() {
 
     // Update DB
     try {
-      await fetch("/api/v1/it-categories/reorder", {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/it-categories/reorder`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

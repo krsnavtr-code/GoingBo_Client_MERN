@@ -19,30 +19,34 @@ export default function ProfileManagement() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch("/api/v1/admin/profile", {
+        console.log('Fetching profile from:', `${process.env.NEXT_PUBLIC_API_URL}/admin/profile`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/profile`, {
           credentials: "include",
           headers: { "Content-Type": "application/json" },
         });
 
         const data = await res.json();
+        console.log('Profile API Response:', data);
 
         if (!res.ok) {
           throw new Error(data.message || "Failed to fetch profile");
         }
 
-        if (data) {
+        if (data.data && data.data.profile) {
+          const profile = data.data.profile;
           setFormData({
-            image: data.image || "",
-            role: data.role || "",
-            name: data.name || "",
-            description: data.description || "",
-            sortDescription: data.sortDescription || "",
-            experience: data.experience || "",
-            projects: data.projects || "",
-            cvPdf: data.cvPdf || "",
+            image: profile.image || "",
+            role: profile.role || "",
+            name: profile.name || "",
+            description: profile.description || "",
+            sortDescription: profile.sortDescription || "",
+            experience: profile.experience || "",
+            projects: profile.projects || "",
+            cvPdf: profile.cvPdf || "",
           });
         } else {
-          toast.error("Profile data not found");
+          console.error('Unexpected response format:', data);
+          toast.error("Profile data not found in the expected format");
         }
       } catch (error) {
         toast.error(error.message || "Failed to load profile data");
@@ -65,7 +69,7 @@ export default function ProfileManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/v1/admin/profile", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/profile`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

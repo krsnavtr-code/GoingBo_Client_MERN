@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { FiPieChart, FiLogOut, FiMail, FiMenu, FiX } from "react-icons/fi";
@@ -18,11 +18,13 @@ import {
   Bus,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { authAPI } from "@/services/api";
 
 export default function AdminLayout({ children }) {
   const [user, setUser] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -31,15 +33,7 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const res = await fetch("/api/v1/users/me", {
-          credentials: "include",
-        });
-
-        if (!res.ok) {
-          throw new Error("Not authorized");
-        }
-
-        const data = await res.json();
+        const data = await authAPI.getCurrentUser();
 
         if (data.data.user.role !== "admin") {
           throw new Error("Access denied. Admins only.");
@@ -48,19 +42,16 @@ export default function AdminLayout({ children }) {
         setUser(data.data.user);
       } catch (error) {
         toast.error(error.message || "Please log in as admin");
-        window.location.href = "/login";
+        router.push("/login");
       }
     };
 
     checkAdmin();
-  }, []);
+  }, [router]);
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/v1/users/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await authAPI.logout();
       window.location.href = "/";
     } catch (error) {
       toast.error("Failed to log out");

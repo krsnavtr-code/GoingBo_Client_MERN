@@ -21,7 +21,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('/api/v1/admin/users', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, {
         credentials: 'include',
       });
       
@@ -69,7 +69,7 @@ const UserManagement = () => {
 
   const handleUpdateUser = async (userId) => {
     try {
-      const res = await fetch(`/api/v1/admin/users/${userId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ const UserManagement = () => {
     }
 
     try {
-      const res = await fetch(`/api/v1/admin/users/${userId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${userId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -121,7 +121,7 @@ const UserManagement = () => {
 
   const toggleUserStatus = async (userId, currentStatus) => {
     try {
-      const res = await fetch(`/api/v1/admin/users/${userId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

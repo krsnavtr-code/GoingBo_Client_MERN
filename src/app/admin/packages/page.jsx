@@ -30,7 +30,7 @@ const PackagesPage = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/api/v1/packages?page=${currentPage}&limit=${itemsPerPage}` +
+        `${process.env.NEXT_PUBLIC_API_URL}/packages?page=${currentPage}&limit=${itemsPerPage}` +
           `&sort=${sortConfig.direction === "asc" ? "" : "-"}${
             sortConfig.key
           }` +
@@ -61,7 +61,7 @@ const PackagesPage = () => {
           label: "Yes",
           onClick: async () => {
             try {
-              const response = await fetch(`/api/v1/packages/${id}`, {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/packages/${id}`, {
                 method: "DELETE",
                 credentials: "include",
               });
@@ -88,7 +88,7 @@ const PackagesPage = () => {
 
   const togglePublish = async (id, currentStatus) => {
     try {
-      const response = await fetch(`/api/v1/packages/${id}/toggle-publish`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/packages/${id}/toggle-publish`, {
         method: "PATCH",
         credentials: "include",
       });
@@ -110,7 +110,7 @@ const PackagesPage = () => {
 
   const handleDuplicate = async (id) => {
     try {
-      const response = await fetch(`/api/v1/packages/${id}/duplicate`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/packages/${id}/duplicate`, {
         method: "POST",
         credentials: "include",
       });

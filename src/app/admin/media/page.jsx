@@ -47,7 +47,7 @@ const MediaGallery = () => {
   const handleCreateTag = async (tagName) => {
     try {
       setIsLoadingTags(true);
-      const response = await fetch('/api/v1/admin/media-tags', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/media-tags`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -75,7 +75,7 @@ const MediaGallery = () => {
   const fetchAvailableTags = async () => {
     try {
       setIsLoadingTags(true);
-      const response = await fetch('/api/v1/admin/media-tags', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/media-tags`, {
         credentials: 'include',
       });
 
@@ -95,7 +95,7 @@ const MediaGallery = () => {
 
   const fetchMedia = async () => {
     try {
-      const response = await fetch(`/api/v1/admin/media`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/media`, {
         credentials: "include",
       });
 
@@ -203,7 +203,7 @@ const MediaGallery = () => {
   // Update file tags on server
   const updateFileTags = async (fileId, tags) => {
     try {
-      const response = await fetch(`/api/v1/admin/media/${fileId}/tags`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/media/${fileId}/tags`, {
         method: "PATCH",
         credentials: "include",
         headers: {
@@ -236,7 +236,7 @@ const MediaGallery = () => {
           formData.append("tags", JSON.stringify(fileObj.tags));
         }
 
-        const response = await fetch(`/api/v1/admin/media`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/media`, {
           method: "POST",
           credentials: "include",
           body: formData,
@@ -267,7 +267,7 @@ const MediaGallery = () => {
     if (!window.confirm("Are you sure you want to delete this file?")) return;
 
     try {
-      const response = await fetch(`/api/v1/admin/media/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/media/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -636,7 +636,7 @@ const MediaGallery = () => {
                     src={
                       file.url ||
                       (file.path
-                        ? `${process.env.NEXT_PUBLIC_API_URL}${file.path}`
+                        ? `${process.env.NEXT_PUBLIC_API_URL}/uploads/${file.path.split('/').pop()}`
                         : URL.createObjectURL(file.file))
                     }
                     alt={file.name || "Uploaded file"}
