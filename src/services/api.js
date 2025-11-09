@@ -20,7 +20,7 @@ async function fetchAPI(endpoint, method = 'GET', data = null) {
   let url = `${API_BASE_URL}${normalizedEndpoint}`;
 
   // remove duplicate "/api/api"
-  url = url.includes('/api/api') ? url.replace('/api/api', '/api') : url;
+  // url = url.includes('/api/api') ? url.replace('/api/api', '/api') : url;
 
   console.log(url);
 
