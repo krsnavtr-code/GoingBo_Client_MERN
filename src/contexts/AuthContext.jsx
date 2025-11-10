@@ -12,28 +12,21 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is logged in on initial load
     const checkAuth = async () => {
       try {
-        // console.log('Checking authentication status...');
         const response = await authAPI.getCurrentUser();
-        // console.log('Current user data:', response);
-        
-        // Check the response structure and extract user data
-        if (response && response.status === 'success' && response.data && response.data.user) {
-          // console.log('Setting user data:', response.data.user);
+        if (response && response.status === "success" && response.data) {
+          console.log("User authenticated:", response.data.user);
           setUser(response.data.user);
         } else {
-          console.log('No valid user data received');
+          console.log("No active session or invalid response");
           setUser(null);
         }
       } catch (error) {
-        // 401 is expected when not logged in
+        console.error("Auth check error:", error);
+        // Only clear user if it's an actual auth error (401)
         if (error.status === 401) {
-          console.log('User not authenticated');
           setUser(null);
-        } else {
-          console.error('Auth check error:', error);
         }
       } finally {
         setLoading(false);
