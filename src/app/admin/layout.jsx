@@ -83,6 +83,7 @@ export default function AdminLayout({ children }) {
     },
     { name: "Popular Hotels", icon: <Hotel />, path: "/admin/popular-hotels" },
     { name: "Popular Cabs", icon: <Car />, path: "/admin/popular-cabs" },
+    { name: "Cabs", icon: <Car />, path: "/admin/cabs" },
     { name: "Popular Buses", icon: <Bus />, path: "/admin/popular-buses" },
     { name: "Blog", icon: <FiMail />, path: "/admin/blog" },
     { name: "FAQs", icon: <FiMail />, path: "/admin/faqs" },
