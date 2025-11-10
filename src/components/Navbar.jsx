@@ -39,7 +39,7 @@ function Navbar() {
   const isAdmin = user?.role === "admin";
 
   const navItems = [
-    // { name: "Admin", path: "/admin", hidden: !isAdmin },
+    { name: "Admin", path: "/admin", hidden: !isAdmin },
     {
       name: "Flight",
       path: "/flights",
