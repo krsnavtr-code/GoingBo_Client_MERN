@@ -45,6 +45,12 @@ export function AuthProvider({ children }) {
       if (response && response.status === 'success' && response.data && response.data.user) {
         console.log('Setting user data after login:', response.data.user);
         setUser(response.data.user);
+        
+        // Store token in localStorage if it's in the response
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+        }
+        
         return { success: true };
       } else {
         console.error('Unexpected login response format:', response);
@@ -63,6 +69,11 @@ export function AuthProvider({ children }) {
     try {
       const response = await authAPI.signup(name, email, password, passwordConfirm);
       console.log('Signup response:', response);
+      
+      // Store token in localStorage if it's in the response
+      if (response && response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
       
       if (response && response.status === 'success' && response.data && response.data.user) {
         console.log('Setting user data after signup:', response.data.user);

@@ -4,12 +4,13 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileInfo from "./ProfileInfo";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react"; 
+import Bookings from "@/components/Bookings";
 
 export default function DashboardContent() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("Profile");
+  const [activeTab, setActiveTab] = useState("Bookings");
   const scrollRef = useRef(null);
 
   const handleLogout = async () => {
@@ -43,7 +44,7 @@ export default function DashboardContent() {
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl py-4 mx-auto">
-        <div className="shadow rounded-lg px-5 py-3 relative bg-[var(--container-color-in)]">
+        <div className="shadow rounded-lg px-5 py-3 relative">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-center sm:text-left">
@@ -101,24 +102,24 @@ export default function DashboardContent() {
           {/* Tab Content */}
           <div className="space-y-4">
             {activeTab === "Profile" && (
-              <div className="p-4 bg-[var(--container-color)] rounded-md">
+              <div className="p-4 bg-[var(--container-color-in)] rounded-md">
                 <ProfileInfo />
               </div>
             )}
 
             {activeTab === "Bookings" && (
-              <div className="p-4 bg-[var(--container-color)] rounded-md">
-                <h2 className="text-lg font-medium ">
+              <div className="p-4 bg-[var(--container-color-in)] rounded-md">
+                <h2 className="text-lg font-medium mb-4">
                   Your Bookings
                 </h2>
-                <p className="text-sm text-[var(--text-color-light)] mt-2">
-                  View and manage your recent Bookings here.
-                </p>
+                <div className="mt-4">
+                  <Bookings />
+                </div>
               </div>
             )}
 
             {activeTab === "Package Wishlist" && (
-              <div className="p-4 bg-[var(--container-color)] rounded-md">
+              <div className="p-4 bg-[var(--container-color-in)] rounded-md">
                 <h2 className="text-lg font-medium ">
                   Package Wishlist
                 </h2>
@@ -129,7 +130,7 @@ export default function DashboardContent() {
             )}
 
             {activeTab === "All Payments" && (
-              <div className="p-4 bg-[var(--container-color)] rounded-md">
+              <div className="p-4 bg-[var(--container-color-in)] rounded-md">
                 <h2 className="text-lg font-medium ">
                   All Payments
                 </h2>
@@ -140,7 +141,7 @@ export default function DashboardContent() {
             )}
 
             {activeTab === "Coupons For You" && (
-              <div className="p-4 bg-[var(--container-color)] rounded-md">
+              <div className="p-4 bg-[var(--container-color-in)] rounded-md">
                 <h2 className="text-lg font-medium ">
                   Coupons For You
                 </h2>
@@ -151,7 +152,7 @@ export default function DashboardContent() {
             )}
 
             {activeTab === "Give Ratings" && (
-              <div className="p-4 bg-[var(--container-color)] rounded-md">
+              <div className="p-4 bg-[var(--container-color-in)] rounded-md">
                 <h2 className="text-lg font-medium ">
                   Give Ratings
                 </h2>
@@ -162,7 +163,7 @@ export default function DashboardContent() {
             )}
 
             {activeTab === "Notifications" && (
-              <div className="p-4 bg-[var(--container-color)] rounded-md">
+              <div className="p-4 bg-[var(--container-color-in)] rounded-md">
                 <h2 className="text-lg font-medium ">
                   Notifications
                 </h2>
