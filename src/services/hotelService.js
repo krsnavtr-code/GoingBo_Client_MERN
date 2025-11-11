@@ -73,3 +73,28 @@ export const searchHotelCodes = async (query) => {
         throw error;
     }
 };
+
+// Register a new hotel
+export const registerHotel = async (hotelData) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/register`, hotelData, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error registering hotel:', error);
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            throw new Error(error.response.data.message || 'Failed to register hotel');
+        } else if (error.request) {
+            // The request was made but no response was received
+            throw new Error('No response from server. Please check your connection.');
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            throw new Error(error.message || 'Error setting up registration');
+        }
+    }
+};

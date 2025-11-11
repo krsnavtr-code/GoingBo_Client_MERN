@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import HotelRegistrationForm from './HotelRegistrationForm';
 
 const HotelSearch = ({ onSearch, loading: externalLoading }) => {
+  const [showRegistration, setShowRegistration] = useState(false);
   const [loading, setLoading] = useState(externalLoading || false);
   const [error, setError] = useState(null);
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -66,7 +68,20 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-6 max-w-5xl mx-auto bg-[var(--container-color-in)] px-5 py-2 pb-10 rounded-xl"
     >
-      <h2 className="text-2xl font-bold mb-6">Find best stay for you</h2>
+      <div className="flex justify-between items-center mt-5">
+        <h2 className="text-2xl font-bold">Find best stay for you</h2>
+        <div>
+          <button 
+            onClick={() => setShowRegistration(true)}
+            className="px-4 py-2 bg-[var(--button-bg-color)] text-[var(--button-color)] rounded-md hover:bg-[var(--button-hover-color)] cursor-pointer"
+          >
+            Register Your Hotel
+          </button>
+          {showRegistration && (
+            <HotelRegistrationForm onClose={() => setShowRegistration(false)} />
+          )}
+        </div>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium">City</label>
