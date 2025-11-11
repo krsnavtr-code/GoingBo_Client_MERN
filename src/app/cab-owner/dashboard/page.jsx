@@ -28,7 +28,7 @@ export default function CabOwnerDashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/v1/cab-owner/dashboard', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cab-owner/dashboard`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
