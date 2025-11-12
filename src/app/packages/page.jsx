@@ -6,8 +6,7 @@ import { styleEffect } from "framer-motion";
 
 async function getPackages() {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/packages?isPublished=true`,
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL.replace('/api/api/v1','/api/v1')}/packages?isPublished=true`,
       { 
         next: { revalidate: 60 },
         // Add timeout to prevent hanging
