@@ -6,22 +6,55 @@ import { styleEffect } from "framer-motion";
 
 async function getPackages() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL.replace('/api/api/v1','/api/v1')}/packages?isPublished=true`,
-      { 
+    // Clean up any potential double /api in the URL
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL.replace(
+      /\/api\/api\//,
+      "/api/"
+    );
+    const res = await fetch(
+      `${baseUrl}${baseUrl.endsWith("/") ? "" : "/"}packages?isPublished=true`,
+      {
         next: { revalidate: 60 },
         // Add timeout to prevent hanging
-        signal: AbortSignal.timeout(5000) 
+        signal: AbortSignal.timeout(5000),
       }
     );
-    
+    console.log(`RES`, res);
+
     if (!res.ok) {
-      console.error('Failed to fetch packages:', res.status, res.statusText);
-      return { data: { projects: [] }, error: 'Failed to load packages' };
+      const errorText = await res.text();
+      console.error(`Failed to fetch packages:`, {
+        status: res.status,
+        statusText: res.statusText,
+        url: res.url,
+        response: errorText,
+      });
+
+      // If response is HTML, provide a more specific error
+      if (res.headers.get("content-type")?.includes("text/html")) {
+        return {
+          data: { projects: [] },
+          error: `Server returned HTML instead of JSON. Please check the API endpoint configuration. (Status: ${res.status})`,
+        };
+      }
+
+      return {
+        data: { projects: [] },
+        error: `Failed to load packages (${res.status} ${res.statusText})`,
+      };
     }
-    
-    return await res.json();
+
+    try {
+      return await res.json();
+    } catch (jsonError) {
+      console.error("Error parsing JSON response:", jsonError);
+      return {
+        data: { projects: [] },
+        error: "Invalid response format from server",
+      };
+    }
   } catch (error) {
-    console.error('Error fetching packages:', error);
+    console.error(`Error fetching packages:`, error);
     return { data: { projects: [] }, error: error.message };
   }
 }
