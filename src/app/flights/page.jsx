@@ -37,7 +37,8 @@ export default function FlightsPage() {
         adults: parseInt(searchParams.adults) || 1,
         children: parseInt(searchParams.children) || 0,
         infants: parseInt(searchParams.infants) || 0,
-        cabinClass: searchParams.cabinClass || 'Economy'
+        cabinClass: searchParams.cabinClass || 'Economy',
+        tripType: searchParams.tripType || 'oneway'
       };
 
       // Add return date only for round trips
@@ -50,12 +51,31 @@ export default function FlightsPage() {
 
       console.log('Searching flights with params:', searchData);
       
-      const results = await searchFlights(searchData);
+      const response = await searchFlights(searchData);
       
-      if (results.success) {
-        setSearchResults(Array.isArray(results.data) ? results.data : [results.data]);
+      if (response) {
+        // Handle different response formats
+        let results = [];
+        
+        if (Array.isArray(response)) {
+          results = response; // Direct array response
+        } else if (response.data) {
+          results = Array.isArray(response.data) ? response.data : [response.data];
+        } else if (response.results) {
+          results = Array.isArray(response.results) ? response.results : [response.results];
+        } else if (response.error) {
+          throw new Error(response.error.message || 'Error fetching flights');
+        } else {
+          throw new Error('Unexpected response format from server');
+        }
+        
+        if (results.length === 0) {
+          throw new Error('No flights found for the selected criteria');
+        }
+        
+        setSearchResults(results);
       } else {
-        throw new Error(results.error?.message || 'No flights found');
+        throw new Error('No response received from server');
       }
     } catch (err) {
       console.error('Flight search error:', err);
