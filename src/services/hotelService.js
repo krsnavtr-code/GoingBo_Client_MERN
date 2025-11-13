@@ -1,30 +1,66 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api/v1/hotels';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/hotels`;
 
-// Search hotels
-export const searchHotels = async (searchParams) => {
-    try {
-        const response = await axios.post(`${API_BASE_URL}/search`, searchParams);
-        return response.data;
-    } catch (error) {
-        console.error('Error searching hotels:', error);
-        throw error;
-    }
+// Helper function to handle API errors
+const handleApiError = (error, defaultMessage = 'An error occurred') => {
+  console.error('API Error:', error);
+  const errorMessage = error.response?.data?.message || 
+                      error.message || 
+                      defaultMessage;
+  throw new Error(errorMessage);
 };
 
-// Get hotel details
-export const getHotelDetails = async (hotelCode, checkIn, checkOut) => {
+/**
+ * Search hotels with the given parameters
+ * @param {Object} params - Search parameters
+ * @param {string} params.city - City name or ID
+ * @param {string} params.checkIn - Check-in date (YYYY-MM-DD)
+ * @param {string} params.checkOut - Check-out date (YYYY-MM-DD)
+ * @param {Object} params.guests - Guest information
+ * @param {number} params.rooms - Number of rooms
+ * @returns {Promise<Object>} Search results
+ */
+export const searchHotels = async (params) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/details`, {
-            hotelCode,
-            checkIn,
-            checkOut
+        const response = await axios.post(`${API_BASE_URL}/search`, {
+            CityId: params.city,
+            CheckIn: params.checkIn,
+            CheckOut: params.checkOut,
+            GuestNationality: 'IN',
+            PaxRooms: [{
+                Adults: params.guests?.adults || 2,
+                Children: params.guests?.children || 0,
+                ChildrenAges: params.guests?.childrenAges || []
+            }],
+            ResponseTime: 23.0,
+            IsDetailedResponse: true
         });
         return response.data;
     } catch (error) {
-        console.error('Error getting hotel details:', error);
-        throw error;
+        return handleApiError(error, 'Failed to search for hotels');
+    }
+};
+
+/**
+ * Get detailed information about a specific hotel
+ * @param {string} hotelCode - Hotel code
+ * @param {string} checkIn - Check-in date (YYYY-MM-DD)
+ * @param {string} checkOut - Check-out date (YYYY-MM-DD)
+ * @returns {Promise<Object>} Hotel details
+ */
+export const getHotelDetails = async (hotelCode, checkIn, checkOut) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}/details`, {
+            HotelCode: hotelCode,
+            CheckIn: checkIn,
+            CheckOut: checkOut,
+            GuestNationality: 'IN',
+            TokenId: process.env.NEXT_PUBLIC_TBO_AUTH_TOKEN || ''
+        });
+        return response.data;
+    } catch (error) {
+        return handleApiError(error, 'Failed to get hotel details');
     }
 };
 
@@ -61,16 +97,67 @@ export const getHotelBookingDetails = async (bookingId) => {
     }
 };
 
-// Search hotel codes
-export const searchHotelCodes = async (query) => {
+/**
+ * Fetch hotels by city code
+ * @param {string} cityCode - City code to search hotels in
+ * @param {boolean} [detailed=false] - Whether to include detailed response
+ * @returns {Promise<Object>} List of hotels
+ */
+export const fetchHotelsByCity = async (cityCode, detailed = false) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/hotel-codes`, {
-            params: { searchQuery: query }
+        const response = await axios.post(`${API_BASE_URL}/fetch-hotels`, {
+            CityCode: cityCode,
+            IsDetailedResponse: detailed,
+            TokenId: process.env.NEXT_PUBLIC_TBO_AUTH_TOKEN || ''
         });
         return response.data;
     } catch (error) {
-        console.error('Error searching hotel codes:', error);
-        throw error;
+        return handleApiError(error, 'Failed to fetch hotels');
+    }
+};
+
+/**
+ * Get list of available countries
+ * @returns {Promise<Array>} List of countries
+ */
+export const getCountries = async () => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/countries`);
+        return response.data;
+    } catch (error) {
+        return handleApiError(error, 'Failed to fetch countries');
+    }
+};
+
+/**
+ * Get list of cities in a country
+ * @param {string} countryCode - Country code (e.g., 'IN' for India)
+ * @returns {Promise<Array>} List of cities
+ */
+export const getCitiesByCountry = async (countryCode) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/cities`, {
+            params: { countryCode }
+        });
+        return response.data;
+    } catch (error) {
+        return handleApiError(error, 'Failed to fetch cities');
+    }
+};
+
+/**
+ * Search for hotels by query string
+ * @param {string} query - Search query (city or hotel name)
+ * @returns {Promise<Array>} List of matching hotels
+ */
+export const searchHotelsByQuery = async (query) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/search-hotels`, {
+            params: { query }
+        });
+        return response.data;
+    } catch (error) {
+        return handleApiError(error, 'Failed to search hotels');
     }
 };
 
