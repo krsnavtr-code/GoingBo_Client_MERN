@@ -13,16 +13,25 @@ export default function HotelsPage() {
   const [searchParams, setSearchParams] = useState(null);
 
   const handleSearch = async (params) => {
+    console.log('Starting hotel search with params:', JSON.stringify(params, null, 2));
     setLoading(true);
     setError(null);
     try {
+      console.log('Calling searchHotels service with params:', params);
       const results = await searchHotels(params);
+      console.log('Received search results:', results);
       setSearchResults(results);
       setSearchParams(params);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to search for hotels');
-      console.error('Hotel search error:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to search for hotels';
+      console.error('Hotel search error:', {
+        message: errorMessage,
+        error: err,
+        response: err.response?.data
+      });
+      setError(errorMessage);
     } finally {
+      console.log('Search completed');
       setLoading(false);
     }
   };
