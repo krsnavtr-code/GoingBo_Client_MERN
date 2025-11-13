@@ -93,22 +93,8 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
     console.log('City selection complete, cityId:', city.CityId);
   };
 
- const checkAuth = () => {
-   const token = document.cookie.split('; ').find(row => row.startsWith('jwt='));
-   if (!token) {
-     // Redirect to login page or show login modal
-     window.location.href = '/login?redirect=/hotels';
-     return false;
-   }
-   return true;
- };
-
  const onSubmit = async (data) => {
    try {
-     // Check if user is authenticated
-     if (!checkAuth()) {
-       return;
-     }
      
      setLoading(true);
      setError(null);

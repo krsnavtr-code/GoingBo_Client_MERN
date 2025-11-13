@@ -184,7 +184,9 @@ export const searchCities = async (query) => {
         const response = await axios.get(`${API_BASE_URL}/search-cities`, {
             params: { query }
         });
-        return response.data;
+        console.log('Search cities response:', response.data);
+        // Return the data array from the response
+        return response.data.data || [];
     } catch (error) {
         console.error('Error searching cities:', error);
         return [];
