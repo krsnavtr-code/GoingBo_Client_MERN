@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { toast } from "react-toastify";
 import HotelRegistrationForm from './HotelRegistrationForm';
-import { searchCities } from '@/services/hotelService';
+import { searchCities, searchHotels } from "@/services/hotelService";
 
 const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   const [showRegistration, setShowRegistration] = useState(false);
@@ -36,7 +37,8 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
   const [isCitySearching, setIsCitySearching] = useState(false);
-  
+  const [isSearching, setIsSearching] = useState(false);
+
   // Search for cities when cityQuery changes
   useEffect(() => {
     const searchCity = async () => {
@@ -48,10 +50,10 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
       setIsCitySearching(true);
       try {
         const results = await searchCities(cityQuery);
-        console.log('City search results:', results);
+        console.log("City search results:", results);
         setCities(Array.isArray(results) ? results : []);
       } catch (error) {
-        console.error('Error searching cities:', error);
+        console.error("Error searching cities:", error);
         setCities([]);
       } finally {
         setIsCitySearching(false);
@@ -64,7 +66,7 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
 
   // Update childrenAges when children count changes
   useEffect(() => {
-    setChildrenAges(prev => {
+    setChildrenAges((prev) => {
       const newAges = [...prev];
       while (newAges.length < children) {
         newAges.push(0);
@@ -74,85 +76,124 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   }, [children]);
 
   const handleCitySelect = (city) => {
-    console.log('City selected:', city);
-    
+    console.log("City selected:", city);
+
     // Update the city query and clear suggestions
     setCityQuery(city.CityName);
     setCities([]);
-    
+
     // Update the selected city
     setSelectedCity(city);
-    
+
     // Update the form field using setValue
-    setValue('city', city.CityId, { 
-      shouldValidate: true, 
+    setValue("city", city.CityId, {
+      shouldValidate: true,
       shouldDirty: true,
-      shouldTouch: true
+      shouldTouch: true,
     });
-    
-    console.log('City selection complete, cityId:', city.CityId);
+
+    console.log("City selection complete, cityId:", city.CityId);
   };
 
- const onSubmit = async (data) => {
-   try {
-     
-     setLoading(true);
-     setError(null);
-     
-     // Get city ID from the most reliable source
-     const cityId = selectedCity?.CityId || data.city;
-     
-     if (!cityId) {
-       const errorMsg = "Please select a city from the dropdown";
-       console.error(errorMsg);
-       setError(errorMsg);
-       setLoading(false);
-       return;
-     }
+  const formatDate = useCallback((date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toISOString().split("T")[0];
+  }, []);
 
-     // Format dates to YYYY-MM-DD
-     const formatDate = (date) => {
-       if (!date) return '';
-       const d = new Date(date);
-       return d.toISOString().split('T')[0];
-     };
+  const validateSearch = useCallback(() => {
+    if (!selectedCity) {
+      toast.error("Please select a city from the dropdown");
+      return false;
+    }
 
-     const searchParams = {
-       checkIn: formatDate(checkInDate) || formatDate(new Date()),
-       checkOut: formatDate(checkOutDate) || formatDate(new Date(Date.now() + 86400000)),
-       city: cityId,
-       country: "IN",
-       guests: {
-         adults: parseInt(adults) || 2,
-         children: parseInt(children) || 0,
-         childrenAges: Array.isArray(childrenAges)
-           ? childrenAges.slice(0, children).map((age) => parseInt(age) || 0)
-           : [],
-       },
-       rooms: parseInt(rooms) || 1,
-     };
-     
-     console.log("Final search params:", searchParams);
+    if (!checkInDate || !checkOutDate) {
+      toast.error("Please select both check-in and check-out dates");
+      return false;
+    }
 
-     console.log("Search params before API call:", searchParams);
+    if (checkInDate >= checkOutDate) {
+      toast.error("Check-out date must be after check-in date");
+      return false;
+    }
 
-     if (onSearch) {
-       console.log("Calling onSearch with params:", searchParams);
-       const results = await onSearch(searchParams);
-       console.log("Search results from API:", results);
-       return results;
-     }
-   } catch (err) {
-     console.error("Error in form submission:", err);
-     setError(err.message || "Failed to search hotels");
-   } finally {
-     setLoading(false);
-   }
- };
+    if (adults < 1) {
+      toast.error("At least one adult is required");
+      return false;
+    }
+
+    return true;
+  }, [selectedCity, checkInDate, checkOutDate, adults]);
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateSearch()) {
+      return;
+    }
+
+    setIsSearching(true);
+    setError(null);
+
+    try {
+      const searchParams = {
+        CheckIn: formatDate(checkInDate),
+        CheckOut: formatDate(checkOutDate),
+        CityId: selectedCity.CityId.toString(),
+        CountryCode: "IN",
+        GuestNationality: "IN",
+        ResponseTime: 23.0,
+        IsDetailedResponse: true,
+        HotelCodes: [],
+        Filters: {
+          Refundable: false,
+          NoOfRooms: parseInt(rooms) || 1,
+          MealType: 0,
+          OrderBy: 0,
+          StarRating: 0,
+        },
+        PaxRooms: [
+          {
+            RoomIndex: 1,
+            RoomId: 1,
+            Adults: parseInt(adults) || 2,
+            Children: parseInt(children) || 0,
+            ChildrenAges: childrenAges
+              .slice(0, children)
+              .map((age) => parseInt(age) || 0),
+          },
+        ],
+      };
+
+      console.log("Searching hotels with params:", searchParams);
+
+      // Call the search API
+      const response = await searchHotels(searchParams);
+
+      if (response.success) {
+        console.log("Search results:", response.data);
+        if (onSearch) {
+          onSearch(response.data);
+        }
+      } else {
+        const errorMsg = response.error?.message || "Failed to search hotels";
+        toast.error(errorMsg);
+        setError(errorMsg);
+      }
+    } catch (err) {
+      console.error("Error in hotel search:", err);
+      const errorMsg =
+        err.response?.data?.message || err.message || "Failed to search hotels";
+      toast.error(errorMsg);
+      setError(errorMsg);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={onSubmit}
       className="space-y-6 max-w-5xl mx-auto bg-[var(--container-color-in)] px-5 py-2 pb-10 rounded-xl"
     >
       <div className="flex justify-between items-center mt-5">
@@ -187,7 +228,7 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
               onFocus={() => {
                 if (cityQuery.length >= 2) {
                   // Trigger search when input is focused and has text
-                  searchCities(cityQuery).then(results => {
+                  searchCities(cityQuery).then((results) => {
                     setCities(Array.isArray(results) ? results : []);
                   });
                 }
@@ -221,14 +262,18 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
             </ul>
           )}
           {/* Hidden input for the form state */}
-          <input type="hidden" {...register('city')} />
-          
+          <input type="hidden" {...register("city")} />
+
           {/* Display the selected city */}
           <div className="text-xs text-gray-500 mt-1">
             {selectedCity ? (
-              <span>Selected: {selectedCity.CityName} ({selectedCity.CityId})</span>
+              <span>
+                Selected: {selectedCity.CityName} ({selectedCity.CityId})
+              </span>
             ) : (
-              <span className="text-red-500">Please select a city from the dropdown</span>
+              <span className="text-red-500">
+                Please select a city from the dropdown
+              </span>
             )}
           </div>
         </div>
@@ -329,28 +374,43 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
           </div>
         )}
 
-        <div className="">
+        <div className="mt-4">
           <button
             type="submit"
-            disabled={loading}
-            onClick={(e) => {
-              console.log("Button clicked, loading state:", loading);
-              console.log("Selected city:", selectedCity);
-              console.log("Form data:", {
-                checkIn: checkInDate,
-                checkOut: checkOutDate,
-                city: selectedCity?.CityId,
-                rooms,
-                adults,
-                children,
-                childrenAges,
-              });
-            }}
-            className={`w-full sm:w-auto mt-3 px-3 py-1 border border-transparent rounded-md shadow-sm text-base font-medium text-[var(--button-color)] bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
+            disabled={isSearching}
+            className={`w-full py-3 px-6 rounded-md text-white font-medium transition-colors ${
+              isSearching
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {loading ? "Searching..." : "Find Hotels"}
+            {isSearching ? (
+              <span className="flex items-center justify-center">
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Searching...
+              </span>
+            ) : (
+              "Find Hotels"
+            )}
           </button>
         </div>
       </div>
