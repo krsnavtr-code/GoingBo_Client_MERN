@@ -11,7 +11,7 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   const [showRegistration, setShowRegistration] = useState(false);
   const [loading, setLoading] = useState(externalLoading || false);
   const [error, setError] = useState(null);
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
     defaultValues: {
       city: '',
       country: 'IN',
@@ -73,51 +73,90 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   }, [children]);
 
   const handleCitySelect = (city) => {
-    setSelectedCity(city);
-    setCityQuery(`${city.CityName}, ${city.CountryName}`);
+    console.log('City selected:', city);
+    
+    // Update the city query and clear suggestions
+    setCityQuery(city.CityName);
     setCities([]);
     
-    // Update the form's city field with the city code
-    setValue('city', city.CityId, { shouldValidate: true });
+    // Update the selected city
+    setSelectedCity(city);
+    
+    // Update form values using React Hook Form's setValue
+    setValue('city', city.CityId, { shouldValidate: true, shouldDirty: true });
+    
+    console.log('City selection complete, cityId:', city.CityId);
+    
+    // Log the current form values
+    console.log('Current form values:', {
+      city: watch('city'),
+      selectedCity: city
+    });
   };
 
-  const onSubmit = async (data) => {
-    try {
-      setLoading(true);
-      setError(null);
+ const onSubmit = async (data) => {
+   try {
+     // Get the current form values directly from the form
+     const form = document.querySelector('form');
+     const formData = new FormData(form);
+     const formValues = Object.fromEntries(formData.entries());
+     
+     console.log("Raw form data:", formValues);
+     console.log("React Hook Form data:", data);
+     console.log("Selected city state:", selectedCity);
+     
+     setLoading(true);
+     setError(null);
 
-      if (!selectedCity) {
-        throw new Error('Please select a city from the dropdown');
-      }
+     // Get city ID from the most reliable source
+     const cityId = selectedCity?.CityId || data.city || formValues.city;
+     
+     if (!cityId) {
+       const errorMsg = "Please select a city from the dropdown";
+       console.error(errorMsg);
+       setError(errorMsg);
+       return;
+     }
 
-      const searchParams = {
-        checkIn: checkInDate.toISOString().split('T')[0],
-        checkOut: checkOutDate.toISOString().split('T')[0],
-        city: selectedCity.CityId, // Use the selected city's ID
-        country: 'IN', // Default to India
-        guests: {
-          adults: parseInt(adults) || 2,
-          children: parseInt(children) || 0,
-          childrenAges: Array.isArray(childrenAges) ? childrenAges.slice(0, children).map(age => parseInt(age) || 0) : []
-        },
-        rooms: parseInt(rooms) || 1
-      };
+     // Format dates to YYYY-MM-DD
+     const formatDate = (date) => {
+       if (!date) return '';
+       const d = new Date(date);
+       return d.toISOString().split('T')[0];
+     };
 
-      console.log('Search params:', searchParams);
+     const searchParams = {
+       checkIn: formatDate(checkInDate) || formatDate(new Date()),
+       checkOut: formatDate(checkOutDate) || formatDate(new Date(Date.now() + 86400000)),
+       city: cityId,
+       country: "IN",
+       guests: {
+         adults: parseInt(adults) || 2,
+         children: parseInt(children) || 0,
+         childrenAges: Array.isArray(childrenAges)
+           ? childrenAges.slice(0, children).map((age) => parseInt(age) || 0)
+           : [],
+       },
+       rooms: parseInt(rooms) || 1,
+     };
+     
+     console.log("Final search params:", searchParams);
 
-      // Call the onSearch prop passed from the parent component
-      if (onSearch) {
-        const results = await onSearch(searchParams);
-        console.log('Search results:', results);
-        return results;
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to search hotels');
-      console.error('Search error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+     console.log("Search params before API call:", searchParams);
+
+     if (onSearch) {
+       console.log("Calling onSearch with params:", searchParams);
+       const results = await onSearch(searchParams);
+       console.log("Search results from API:", results);
+       return results;
+     }
+   } catch (err) {
+     console.error("Error in form submission:", err);
+     setError(err.message || "Failed to search hotels");
+   } finally {
+     setLoading(false);
+   }
+ };
 
   return (
     <form
@@ -127,7 +166,7 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
       <div className="flex justify-between items-center mt-5">
         <h2 className="text-2xl font-bold">Find best stay for you</h2>
         <div>
-          <button 
+          <button
             onClick={() => setShowRegistration(true)}
             className="px-4 py-2 bg-[var(--button-bg-color)] text-[var(--button-color)] rounded-md hover:bg-[var(--button-hover-color)] cursor-pointer"
           >
@@ -176,9 +215,16 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
           )}
           <input
             type="hidden"
-            {...register("city", { required: "Please select a city from the dropdown" })}
-            value={selectedCity?.Code || ''}
+            name="city"
+            ref={register().ref}
+            onChange={register().onChange}
+            onBlur={register().onBlur}
+            value={selectedCity?.CityId || ''}
           />
+          {/* Debug info - can be removed later */}
+          <div className="text-xs text-gray-500 mt-1">
+            {selectedCity ? `Selected: ${selectedCity.CityName} (${selectedCity.CityId})` : 'No city selected'}
+          </div>
         </div>
 
         <div>
@@ -281,6 +327,19 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
           <button
             type="submit"
             disabled={loading}
+            onClick={(e) => {
+              console.log("Button clicked, loading state:", loading);
+              console.log("Selected city:", selectedCity);
+              console.log("Form data:", {
+                checkIn: checkInDate,
+                checkOut: checkOutDate,
+                city: selectedCity?.CityId,
+                rooms,
+                adults,
+                children,
+                childrenAges,
+              });
+            }}
             className={`w-full sm:w-auto mt-3 px-3 py-1 border border-transparent rounded-md shadow-sm text-base font-medium text-[var(--button-color)] bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
               loading ? "opacity-70 cursor-not-allowed" : ""
             }`}
