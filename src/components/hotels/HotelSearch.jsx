@@ -1,16 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import HotelRegistrationForm from './HotelRegistrationForm';
+import { searchCities } from '@/services/hotelService';
 
 const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   const [showRegistration, setShowRegistration] = useState(false);
   const [loading, setLoading] = useState(externalLoading || false);
   const [error, setError] = useState(null);
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+    defaultValues: {
+      city: '',
+      country: 'IN',
+      rooms: 1,
+      guests: {
+        adults: 2,
+        children: 0
+      }
+    }
+  });
   const [checkInDate, setCheckInDate] = useState(new Date());
   const [checkOutDate, setCheckOutDate] = useState(() => {
     const date = new Date();
@@ -21,7 +32,35 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [childrenAges, setChildrenAges] = useState(Array(children).fill(0));
+  const [cityQuery, setCityQuery] = useState('');
+  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [isCitySearching, setIsCitySearching] = useState(false);
   
+  // Search for cities when city query changes
+  useEffect(() => {
+    const searchCity = async () => {
+      if (cityQuery.length < 2) {
+        setCities([]);
+        return;
+      }
+      
+      setIsCitySearching(true);
+      try {
+        const results = await searchCities(cityQuery);
+        setCities(results);
+      } catch (error) {
+        console.error('Error searching cities:', error);
+        setCities([]);
+      } finally {
+        setIsCitySearching(false);
+      }
+    };
+
+    const timer = setTimeout(searchCity, 500);
+    return () => clearTimeout(timer);
+  }, [cityQuery]);
+
   // Update childrenAges when children count changes
   useEffect(() => {
     setChildrenAges(prev => {
@@ -33,27 +72,44 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
     });
   }, [children]);
 
+  const handleCitySelect = (city) => {
+    setSelectedCity(city);
+    setCityQuery(`${city.CityName}, ${city.CountryName}`);
+    setCities([]);
+    
+    // Update the form's city field with the city code
+    setValue('city', city.CityId, { shouldValidate: true });
+  };
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
       setError(null);
 
+      if (!selectedCity) {
+        throw new Error('Please select a city from the dropdown');
+      }
+
       const searchParams = {
         checkIn: checkInDate.toISOString().split('T')[0],
         checkOut: checkOutDate.toISOString().split('T')[0],
-        city: data.city,
-        country: data.country || 'IN',
+        city: selectedCity.CityId, // Use the selected city's ID
+        country: 'IN', // Default to India
         guests: {
-          adults,
-          children,
-          childrenAges: childrenAges.slice(0, children)
+          adults: parseInt(adults) || 2,
+          children: parseInt(children) || 0,
+          childrenAges: Array.isArray(childrenAges) ? childrenAges.slice(0, children).map(age => parseInt(age) || 0) : []
         },
-        rooms
+        rooms: parseInt(rooms) || 1
       };
+
+      console.log('Search params:', searchParams);
 
       // Call the onSearch prop passed from the parent component
       if (onSearch) {
-        await onSearch(searchParams);
+        const results = await onSearch(searchParams);
+        console.log('Search results:', results);
+        return results;
       }
     } catch (err) {
       setError(err.message || 'Failed to search hotels');
@@ -83,12 +139,45 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div>
+        <div className="relative">
           <label className="block text-sm font-medium">City</label>
           <input
             type="text"
-            {...register("city", { required: "City is required" })}
-            className="block w-full pl-10 pr-10 rounded-md border-[var(--border-color)] shadow-sm px-2 py-1 bg-[var(--container-color)] text-[var(--text-color)]"
+            value={cityQuery}
+            onChange={(e) => {
+              setCityQuery(e.target.value);
+              if (!e.target.value) setSelectedCity(null);
+            }}
+            placeholder="Search for a city..."
+            className="block w-full pl-3 pr-10 rounded-md border border-gray-300 shadow-sm py-2 px-3 bg-white text-gray-900"
+            required
+          />
+          {isCitySearching && (
+            <div className="absolute right-3 top-8">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+            </div>
+          )}
+          {cities.length > 0 && (
+            <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+              {cities.map((city) => (
+                <li
+                  key={`${city.CityId}-${city.CityName}`}
+                  className="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white"
+                  onClick={() => handleCitySelect(city)}
+                >
+                  <div className="flex items-center">
+                    <span className="font-normal ml-3 block truncate">
+                      {city.CityName}, {city.CountryName} ({city.CityId})
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <input
+            type="hidden"
+            {...register("city", { required: "Please select a city from the dropdown" })}
+            value={selectedCity?.Code || ''}
           />
         </div>
 

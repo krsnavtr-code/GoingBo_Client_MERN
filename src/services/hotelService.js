@@ -23,21 +23,28 @@ const handleApiError = (error, defaultMessage = 'An error occurred') => {
  */
 export const searchHotels = async (params) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/search`, {
-            CityId: params.city,
-            CheckIn: params.checkIn,
-            CheckOut: params.checkOut,
-            GuestNationality: 'IN',
-            PaxRooms: [{
-                Adults: params.guests?.adults || 2,
-                Children: params.guests?.children || 0,
-                ChildrenAges: params.guests?.childrenAges || []
-            }],
-            ResponseTime: 23.0,
-            IsDetailedResponse: true
-        });
+        // Prepare the request payload
+        const payload = {
+            checkIn: params.checkIn,
+            checkOut: params.checkOut,
+            city: params.city,
+            country: params.country,
+            guests: {
+                adults: parseInt(params.guests?.adults) || 2,
+                children: parseInt(params.guests?.children) || 0,
+                childrenAges: Array.isArray(params.guests?.childrenAges) 
+                    ? params.guests.childrenAges.map(age => parseInt(age) || 0)
+                    : []
+            },
+            rooms: parseInt(params.rooms) || 1
+        };
+
+        console.log('Sending hotel search request with payload:', payload);
+        
+        const response = await axios.post(`${API_BASE_URL}/search`, payload);
         return response.data;
     } catch (error) {
+        console.error('Hotel search error:', error);
         return handleApiError(error, 'Failed to search for hotels');
     }
 };
@@ -142,6 +149,23 @@ export const getCitiesByCountry = async (countryCode) => {
         return response.data;
     } catch (error) {
         return handleApiError(error, 'Failed to fetch cities');
+    }
+};
+
+/**
+ * Search for cities by name or code
+ * @param {string} query - Search query (city name or code)
+ * @returns {Promise<Array>} List of matching cities
+ */
+export const searchCities = async (query) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/search-cities`, {
+            params: { query }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error searching cities:', error);
+        return [];
     }
 };
 
