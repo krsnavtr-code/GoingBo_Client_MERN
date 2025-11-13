@@ -37,18 +37,19 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   const [selectedCity, setSelectedCity] = useState(null);
   const [isCitySearching, setIsCitySearching] = useState(false);
   
-  // Search for cities when city query changes
+  // Search for cities when cityQuery changes
   useEffect(() => {
     const searchCity = async () => {
       if (cityQuery.length < 2) {
         setCities([]);
         return;
       }
-      
+
       setIsCitySearching(true);
       try {
         const results = await searchCities(cityQuery);
-        setCities(results);
+        console.log('City search results:', results);
+        setCities(Array.isArray(results) ? results : []);
       } catch (error) {
         console.error('Error searching cities:', error);
         setCities([]);
@@ -57,7 +58,7 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
       }
     };
 
-    const timer = setTimeout(searchCity, 500);
+    const timer = setTimeout(searchCity, 300);
     return () => clearTimeout(timer);
   }, [cityQuery]);
 
@@ -82,39 +83,44 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
     // Update the selected city
     setSelectedCity(city);
     
-    // Update form values using React Hook Form's setValue
-    setValue('city', city.CityId, { shouldValidate: true, shouldDirty: true });
+    // Update the form field using setValue
+    setValue('city', city.CityId, { 
+      shouldValidate: true, 
+      shouldDirty: true,
+      shouldTouch: true
+    });
     
     console.log('City selection complete, cityId:', city.CityId);
-    
-    // Log the current form values
-    console.log('Current form values:', {
-      city: watch('city'),
-      selectedCity: city
-    });
   };
+
+ const checkAuth = () => {
+   const token = document.cookie.split('; ').find(row => row.startsWith('jwt='));
+   if (!token) {
+     // Redirect to login page or show login modal
+     window.location.href = '/login?redirect=/hotels';
+     return false;
+   }
+   return true;
+ };
 
  const onSubmit = async (data) => {
    try {
-     // Get the current form values directly from the form
-     const form = document.querySelector('form');
-     const formData = new FormData(form);
-     const formValues = Object.fromEntries(formData.entries());
-     
-     console.log("Raw form data:", formValues);
-     console.log("React Hook Form data:", data);
-     console.log("Selected city state:", selectedCity);
+     // Check if user is authenticated
+     if (!checkAuth()) {
+       return;
+     }
      
      setLoading(true);
      setError(null);
-
+     
      // Get city ID from the most reliable source
-     const cityId = selectedCity?.CityId || data.city || formValues.city;
+     const cityId = selectedCity?.CityId || data.city;
      
      if (!cityId) {
        const errorMsg = "Please select a city from the dropdown";
        console.error(errorMsg);
        setError(errorMsg);
+       setLoading(false);
        return;
      }
 
@@ -180,22 +186,37 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="relative">
           <label className="block text-sm font-medium">City</label>
-          <input
-            type="text"
-            value={cityQuery}
-            onChange={(e) => {
-              setCityQuery(e.target.value);
-              if (!e.target.value) setSelectedCity(null);
-            }}
-            placeholder="Search for a city..."
-            className="block w-full pl-3 pr-10 rounded-md border border-gray-300 shadow-sm py-2 px-3 bg-white text-gray-900"
-            required
-          />
-          {isCitySearching && (
-            <div className="absolute right-3 top-8">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-            </div>
-          )}
+          <div className="relative">
+            <input
+              type="text"
+              value={cityQuery}
+              onChange={(e) => {
+                const value = e.target.value;
+                setCityQuery(value);
+                if (!value) {
+                  setSelectedCity(null);
+                  setCities([]);
+                }
+              }}
+              onFocus={() => {
+                if (cityQuery.length >= 2) {
+                  // Trigger search when input is focused and has text
+                  searchCities(cityQuery).then(results => {
+                    setCities(Array.isArray(results) ? results : []);
+                  });
+                }
+              }}
+              placeholder="Search for a city..."
+              className="block w-full pl-3 pr-10 rounded-md border border-gray-300 shadow-sm py-2 bg-white text-gray-900"
+              required
+              autoComplete="off"
+            />
+            {isCitySearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+              </div>
+            )}
+          </div>
           {cities.length > 0 && (
             <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
               {cities.map((city) => (
@@ -213,17 +234,16 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
               ))}
             </ul>
           )}
-          <input
-            type="hidden"
-            name="city"
-            ref={register().ref}
-            onChange={register().onChange}
-            onBlur={register().onBlur}
-            value={selectedCity?.CityId || ''}
-          />
-          {/* Debug info - can be removed later */}
+          {/* Hidden input for the form state */}
+          <input type="hidden" {...register('city')} />
+          
+          {/* Display the selected city */}
           <div className="text-xs text-gray-500 mt-1">
-            {selectedCity ? `Selected: ${selectedCity.CityName} (${selectedCity.CityId})` : 'No city selected'}
+            {selectedCity ? (
+              <span>Selected: {selectedCity.CityName} ({selectedCity.CityId})</span>
+            ) : (
+              <span className="text-red-500">Please select a city from the dropdown</span>
+            )}
           </div>
         </div>
 

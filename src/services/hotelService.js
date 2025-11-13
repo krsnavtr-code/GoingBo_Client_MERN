@@ -2,6 +2,15 @@ import axios from 'axios';
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'}/hotels`;
 
+// Helper function to get cookie by name
+function getCookie(name) {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
 // Helper function to handle API errors
 const handleApiError = (error, defaultMessage = 'An error occurred') => {
   console.error('API Error:', error);
@@ -41,7 +50,20 @@ export const searchHotels = async (params) => {
 
         console.log('Sending hotel search request with payload:', payload);
         
-        const response = await axios.post(`${API_BASE_URL}/search`, payload);
+        // Get the JWT token from cookies
+        const token = getCookie('jwt');
+        
+        // Set up headers with authorization if token exists
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await axios.post(`${API_BASE_URL}/search`, payload, {
+            headers,
+            withCredentials: true // Important for sending cookies
+        });
+        
         return response.data;
     } catch (error) {
         console.error('Hotel search error:', error);
