@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
 // Create an axios instance with default config
 const api = axios.create({
@@ -14,16 +14,13 @@ const api = axios.create({
 // Add a request interceptor to include the auth token
 api.interceptors.request.use(
   (config) => {
-    // You can add auth token here if needed
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Add a response interceptor to handle common errors
@@ -66,7 +63,7 @@ export const flightService = {
       };
 
       console.log('Sending search request:', formattedParams);
-      const response = await api.post('/api/v1/flights/search', formattedParams);
+      const response = await api.post(`${API_BASE_URL}/flights/search`, formattedParams);
       return response.data;
     } catch (error) {
       console.error('Search flights error:', error);
@@ -82,7 +79,7 @@ export const flightService = {
   // Get fare rules for a specific flight
   getFareRules: async (sessionId, resultIndex) => {
     try {
-      const response = await api.post('/api/v1/flights/fare-rules', { sessionId, resultIndex });
+      const response = await api.post(`${API_BASE_URL}/flights/fare-rules`, { sessionId, resultIndex });
       return response.data;
     } catch (error) {
       console.error('Get fare rules error:', error);
@@ -93,7 +90,7 @@ export const flightService = {
   // Book a flight
   bookFlight: async (bookingData) => {
     try {
-      const response = await api.post('/api/v1/flights/book', bookingData);
+      const response = await api.post(`${API_BASE_URL}/flights/book`, bookingData);
       return response.data;
     } catch (error) {
       console.error('Book flight error:', error);
@@ -104,7 +101,7 @@ export const flightService = {
   // Get booking details
   getBookingDetails: async (bookingId) => {
     try {
-      const response = await api.get(`/api/v1/bookings/${bookingId}`);
+      const response = await api.get(`${API_BASE_URL}/bookings/${bookingId}`);
       return response.data;
     } catch (error) {
       console.error('Get booking details error:', error);
@@ -115,7 +112,7 @@ export const flightService = {
   // Cancel a booking
   cancelBooking: async (bookingId) => {
     try {
-      const response = await api.delete(`/api/v1/bookings/${bookingId}`);
+      const response = await api.delete(`${API_BASE_URL}/bookings/${bookingId}`);
       return response.data;
     } catch (error) {
       console.error('Cancel booking error:', error);
