@@ -34,35 +34,7 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   const [children, setChildren] = useState(0);
   const [childrenAges, setChildrenAges] = useState(Array(children).fill(0));
   const [cityQuery, setCityQuery] = useState('');
-  const [cities, setCities] = useState([]);
-  const [selectedCity, setSelectedCity] = useState(null);
-  const [isCitySearching, setIsCitySearching] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-
-  // Search for cities when cityQuery changes
-  useEffect(() => {
-    const searchCity = async () => {
-      if (cityQuery.length < 2) {
-        setCities([]);
-        return;
-      }
-
-      setIsCitySearching(true);
-      try {
-        const results = await searchCities(cityQuery);
-        console.log("City search results:", results);
-        setCities(Array.isArray(results) ? results : []);
-      } catch (error) {
-        console.error("Error searching cities:", error);
-        setCities([]);
-      } finally {
-        setIsCitySearching(false);
-      }
-    };
-
-    const timer = setTimeout(searchCity, 300);
-    return () => clearTimeout(timer);
-  }, [cityQuery]);
 
   // Update childrenAges when children count changes
   useEffect(() => {
@@ -75,24 +47,15 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
     });
   }, [children]);
 
-  const handleCitySelect = (city) => {
-    console.log("City selected:", city);
-
-    // Update the city query and clear suggestions
-    setCityQuery(city.CityName);
-    setCities([]);
-
-    // Update the selected city
-    setSelectedCity(city);
-
-    // Update the form field using setValue
-    setValue("city", city.CityId, {
+  // Handle city input change
+  const handleCityChange = (e) => {
+    const value = e.target.value;
+    setCityQuery(value);
+    setValue("city", value, {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true,
     });
-
-    console.log("City selection complete, cityId:", city.CityId);
   };
 
   const formatDate = useCallback((date) => {
@@ -102,8 +65,8 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
   }, []);
 
   const validateSearch = useCallback(() => {
-    if (!selectedCity) {
-      toast.error("Please select a city from the dropdown");
+    if (!cityQuery || cityQuery.trim() === '') {
+      toast.error("Please enter a city name");
       return false;
     }
 
@@ -123,7 +86,7 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
     }
 
     return true;
-  }, [selectedCity, checkInDate, checkOutDate, adults]);
+  }, [cityQuery, checkInDate, checkOutDate, adults]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -137,43 +100,29 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
 
     try {
       const searchParams = {
-        CheckIn: formatDate(checkInDate),
-        CheckOut: formatDate(checkOutDate),
-        CityId: selectedCity.CityId.toString(),
-        CountryCode: "IN",
-        GuestNationality: "IN",
-        ResponseTime: 23.0,
-        IsDetailedResponse: true,
-        HotelCodes: [],
-        Filters: {
-          Refundable: false,
-          NoOfRooms: parseInt(rooms) || 1,
-          MealType: 0,
-          OrderBy: 0,
-          StarRating: 0,
+        checkIn: formatDate(checkInDate),
+        checkOut: formatDate(checkOutDate),
+        city: cityQuery.trim(),
+        country: "IN",
+        guests: {
+          adults: parseInt(adults) || 2,
+          children: parseInt(children) || 0,
+          childrenAges: childrenAges
+            .slice(0, children)
+            .map((age) => parseInt(age) || 0),
         },
-        PaxRooms: [
-          {
-            RoomIndex: 1,
-            RoomId: 1,
-            Adults: parseInt(adults) || 2,
-            Children: parseInt(children) || 0,
-            ChildrenAges: childrenAges
-              .slice(0, children)
-              .map((age) => parseInt(age) || 0),
-          },
-        ],
+        rooms: parseInt(rooms) || 1
       };
 
       console.log("Searching hotels with params:", searchParams);
 
-      // Call the search API
+      // Call the search API directly with the city name
       const response = await searchHotels(searchParams);
 
       if (response.success) {
-        console.log("Search results:", response.data);
+        console.log("Search results:", response);
         if (onSearch) {
-          onSearch(response.data);
+          onSearch(response.data || response);
         }
       } else {
         const errorMsg = response.error?.message || "Failed to search hotels";
@@ -182,8 +131,7 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
       }
     } catch (err) {
       console.error("Error in hotel search:", err);
-      const errorMsg =
-        err.response?.data?.message || err.message || "Failed to search hotels";
+      const errorMsg = err.response?.data?.message || err.message || "Failed to search hotels";
       toast.error(errorMsg);
       setError(errorMsg);
     } finally {
@@ -216,66 +164,16 @@ const HotelSearch = ({ onSearch, loading: externalLoading }) => {
           <div className="relative">
             <input
               type="text"
+              placeholder="Enter city name (e.g., New York, Delhi)"
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={cityQuery}
-              onChange={(e) => {
-                const value = e.target.value;
-                setCityQuery(value);
-                if (!value) {
-                  setSelectedCity(null);
-                  setCities([]);
-                }
-              }}
-              onFocus={() => {
-                if (cityQuery.length >= 2) {
-                  // Trigger search when input is focused and has text
-                  searchCities(cityQuery).then((results) => {
-                    setCities(Array.isArray(results) ? results : []);
-                  });
-                }
-              }}
-              placeholder="Search for a city..."
-              className="block w-full pl-3 pr-10 rounded-md border border-gray-300 shadow-sm py-2 bg-white text-gray-900"
+              onChange={handleCityChange}
               required
               autoComplete="off"
             />
-            {isCitySearching && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-              </div>
-            )}
           </div>
-          {cities.length > 0 && (
-            <ul className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-              {cities.map((city) => (
-                <li
-                  key={`${city.CityId}-${city.CityName}`}
-                  className="text-gray-900 cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white"
-                  onClick={() => handleCitySelect(city)}
-                >
-                  <div className="flex items-center">
-                    <span className="font-normal ml-3 block truncate">
-                      {city.CityName}, {city.CountryName} ({city.CityId})
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
           {/* Hidden input for the form state */}
           <input type="hidden" {...register("city")} />
-
-          {/* Display the selected city */}
-          <div className="text-xs text-gray-500 mt-1">
-            {selectedCity ? (
-              <span>
-                Selected: {selectedCity.CityName} ({selectedCity.CityId})
-              </span>
-            ) : (
-              <span className="text-red-500">
-                Please select a city from the dropdown
-              </span>
-            )}
-          </div>
         </div>
 
         <div>

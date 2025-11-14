@@ -37,13 +37,13 @@ export const searchHotels = async (params) => {
             checkIn: params.checkIn,
             checkOut: params.checkOut,
             city: params.city,
-            country: params.country,
+            country: params.country || 'IN',
             guests: {
-                adults: parseInt(params.guests?.adults) || 2,
-                children: parseInt(params.guests?.children) || 0,
+                adults: parseInt(params.guests?.adults || params.Adults) || 2,
+                children: parseInt(params.guests?.children || params.Children) || 0,
                 childrenAges: Array.isArray(params.guests?.childrenAges) 
                     ? params.guests.childrenAges.map(age => parseInt(age) || 0)
-                    : []
+                    : (Array.isArray(params.ChildrenAges) ? params.ChildrenAges : [])
             },
             rooms: parseInt(params.rooms) || 1
         };
@@ -54,7 +54,10 @@ export const searchHotels = async (params) => {
         const token = getCookie('jwt');
         
         // Set up headers with authorization if token exists
-        const headers = {};
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }
@@ -63,6 +66,17 @@ export const searchHotels = async (params) => {
             headers,
             withCredentials: true // Important for sending cookies
         });
+        
+        // Handle both old and new response formats
+        if (response.data.HotelResults) {
+            return response.data;
+        } else if (response.data.results) {
+            return {
+                success: true,
+                data: response.data.results,
+                totalHotels: response.data.totalHotels || response.data.results.length
+            };
+        }
         
         return response.data;
     } catch (error) {
@@ -181,12 +195,14 @@ export const getCitiesByCountry = async (countryCode) => {
  */
 export const searchCities = async (query) => {
     try {
-        const response = await axios.get(`${API_BASE_URL}/search-cities`, {
-            params: { query }
-        });
-        console.log('Search cities response:', response.data);
-        // Return the data array from the response
-        return response.data.data || [];
+        const response = await axios.get(`${API_BASE_URL}/search-cities?query=${encodeURIComponent(query)}`);
+        // Handle both old and new response formats
+        if (response.data.CityList) {
+            return response.data.CityList;
+        } else if (response.data.results) {
+            return response.data.results;
+        }
+        return [];
     } catch (error) {
         console.error('Error searching cities:', error);
         return [];
