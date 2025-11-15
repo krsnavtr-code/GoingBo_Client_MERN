@@ -130,18 +130,24 @@ class FlightService {
 
       // Format date to YYYY-MM-DD format
       const formatDate = (dateString) => {
-        // Ensure the date is in YYYY-MM-DD format
-        const date = new Date(dateString);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`; // Returns YYYY-MM-DD
+        try {
+          if (!dateString) return '';
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return '';
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        } catch (e) {
+          console.error('Error formatting date:', e);
+          return '';
+        }
       };
 
       // Transform data to match backend format
       const formattedParams = {
-        origin: searchParams.origin,
-        destination: searchParams.destination,
+        origin: searchParams.origin?.toUpperCase() || '',
+        destination: searchParams.destination?.toUpperCase() || '',
         journey_type: searchParams.tripType === 'roundtrip' ? 2 : 1, // 1: OneWay, 2: Return
         adult: parseInt(searchParams.adults) || 1,
         child: parseInt(searchParams.children) || 0,
@@ -160,44 +166,61 @@ class FlightService {
       console.log('Sending search request:', formattedParams);
       const response = await this.api.post('/flights/search', formattedParams);
 
-      if (!response.data || !response.data.Response) {
-        throw new Error('Invalid response format from server');
+      // Handle different response formats
+      let results = [];
+      let responseData = response.data;
+
+      // If response has a Response property, use that (TBO format)
+      if (responseData?.Response) {
+        responseData = responseData.Response;
       }
 
-      const { Results, IsError, Error } = response.data.Response;
-
-      if (IsError) {
-        throw new Error(Error?.ErrorMessage || 'Error fetching flights');
+      // Check for error in response
+      if (responseData?.IsError) {
+        const errorMessage = responseData.Error?.ErrorMessage || 'Error fetching flights';
+        throw new Error(errorMessage);
       }
 
-      if (!Results || !Array.isArray(Results) || Results.length === 0) {
+      // Extract results based on different possible response formats
+      if (Array.isArray(responseData)) {
+        results = responseData;
+      } else if (responseData?.Results) {
+        results = Array.isArray(responseData.Results)
+          ? responseData.Results.flat()
+          : [responseData.Results];
+      }
+
+      if (!results || results.length === 0) {
+        console.warn('No flight results found in response:', responseData);
         return [];
       }
 
       // Process and format the flight results
       const formattedFlights = [];
 
-      Results.forEach((result) => {
-        if (!Array.isArray(result)) return;
+      results.forEach((flight) => {
+        if (!flight) return;
 
-        result.forEach((flight) => {
-          if (!Array.isArray(flight.Segments)) return;
+        // Handle both single segment and multi-segment flights
+        const segments = Array.isArray(flight.Segments)
+          ? flight.Segments.flat()
+          : [flight];
 
-          flight.Segments.forEach((segmentGroup) => {
-            if (!Array.isArray(segmentGroup)) return;
+        segments.forEach((segment) => {
+          if (!segment) return;
 
-            segmentGroup.forEach((segment) => {
-              if (!segment?.Origin || !segment?.Destination) return;
-
-              formattedFlights.push(
-                formatFlightData(flight, segment, searchParams)
-              );
-            });
-          });
+          try {
+            const formattedFlight = formatFlightData(flight, segment, searchParams);
+            if (formattedFlight) {
+              formattedFlights.push(formattedFlight);
+            }
+          } catch (e) {
+            console.error('Error formatting flight segment:', e, segment);
+          }
         });
       });
 
-
+      console.log(`Formatted ${formattedFlights.length} flights`);
       return formattedFlights;
     } catch (error) {
       console.error('Search flights error:', error);
