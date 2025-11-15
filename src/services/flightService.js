@@ -194,8 +194,14 @@ class FlightService {
       // Add logging for response data structure
       console.log('Response data structure:', Object.keys(responseData));
 
+      // Check for nested data structure in the response
+      if (responseData?.data?.results) {
+        // Handle the case where data is in response.data.data.results
+        responseData = responseData.data;
+        console.log('Found nested results in response.data.data.results');
+      }
       // If response has a Response property, use that (TBO format)
-      if (responseData?.Response) {
+      else if (responseData?.Response) {
         responseData = responseData.Response;
       }
 
@@ -208,7 +214,13 @@ class FlightService {
       // Extract results based on different possible response formats
       if (Array.isArray(responseData)) {
         results = responseData;
+      } else if (responseData?.results) {
+        // Handle results array in the response
+        results = Array.isArray(responseData.results)
+          ? responseData.results.flat()
+          : [responseData.results];
       } else if (responseData?.Results) {
+        // Fallback to check for Results (capital R) for backward compatibility
         results = Array.isArray(responseData.Results)
           ? responseData.Results.flat()
           : [responseData.Results];
