@@ -194,21 +194,21 @@ class FlightService {
       // Add logging for response data structure
       console.log('Response data structure:', Object.keys(responseData));
 
+      // Check for nested success wrapper
+      if (responseData?.success && responseData?.data?.success && responseData?.data?.data?.results) {
+        // Handle the case where data is in response.data.data.data.results
+        console.log('Found nested results in response.data.data.data.results');
+        responseData = responseData.data.data;
+      }
       // Check for nested data structure in the response
-      if (responseData?.data?.results) {
+      else if (responseData?.data?.results) {
         // Handle the case where data is in response.data.data.results
-        responseData = responseData.data;
         console.log('Found nested results in response.data.data.results');
+        responseData = responseData.data;
       }
       // If response has a Response property, use that (TBO format)
       else if (responseData?.Response) {
         responseData = responseData.Response;
-      }
-
-      // Check for error in response
-      if (responseData?.IsError) {
-        const errorMessage = responseData.Error?.ErrorMessage || 'Error fetching flights';
-        throw new Error(errorMessage);
       }
 
       // Extract results based on different possible response formats
@@ -216,23 +216,31 @@ class FlightService {
         results = responseData;
       } else if (responseData?.results) {
         // Handle results array in the response
-        results = Array.isArray(responseData.results)
-          ? responseData.results.flat()
-          : [responseData.results];
+        results = Array.isArray(responseData.results) 
+          ? responseData.results.flat().filter(Boolean) // Filter out any null/undefined entries
+          : [responseData.results].filter(Boolean);
       } else if (responseData?.Results) {
         // Fallback to check for Results (capital R) for backward compatibility
         results = Array.isArray(responseData.Results)
-          ? responseData.Results.flat()
-          : [responseData.Results];
+          ? responseData.Results.flat().filter(Boolean)
+          : [responseData.Results].filter(Boolean);
+      } else if (responseData?.data?.results) {
+        // Handle case where results are nested under data.results
+        results = Array.isArray(responseData.data.results)
+          ? responseData.data.results.flat().filter(Boolean)
+          : [responseData.data.results].filter(Boolean);
       } else if (responseData?.data) {
-        results = Array.isArray(responseData.data) ? responseData.data : [responseData.data];
+        results = Array.isArray(responseData.data)
+          ? responseData.data.filter(Boolean)
+          : [responseData.data].filter(Boolean);
       } else if (responseData) {
-        results = [responseData];
+        results = [responseData].filter(Boolean);
       }
 
-      // If no results found, return empty array
-      if (!results || results.length === 0) {
-        console.warn('No flight results found in response');
+      // If no results found, log the response structure for debugging
+      if (!results || results.length === 0 || (results.length === 1 && !results[0])) {
+        console.warn('No valid flight results found in response');
+        console.log('Response data structure for debugging:', JSON.stringify(responseData, null, 2).substring(0, 1000));
         return [];
       }
 
