@@ -191,50 +191,49 @@ class FlightService {
       let results = [];
       let responseData = response?.data || {};
 
-      // Add logging for response data structure
-      console.log('Response data structure:', Object.keys(responseData));
+      // Add detailed logging of the full response structure
+      console.log('Full response data structure:', JSON.stringify({
+        hasSuccess: !!responseData?.success,
+        hasData: !!responseData?.data,
+        dataKeys: responseData?.data ? Object.keys(responseData.data) : [],
+        hasDataData: !!responseData?.data?.data,
+        hasResults: !!responseData?.data?.data?.results,
+        resultsType: responseData?.data?.data?.results ?
+          (Array.isArray(responseData.data.data.results) ? 'array' : typeof responseData.data.data.results) : 'none'
+      }, null, 2));
 
-      // Check for nested success wrapper
-      if (responseData?.success && responseData?.data?.success && responseData?.data?.data?.results) {
-        // Handle the case where data is in response.data.data.data.results
-        console.log('Found nested results in response.data.data.data.results');
-        responseData = responseData.data.data;
+      // Try to extract results from the deeply nested structure
+      if (responseData?.data?.data?.results) {
+        console.log('Found results in response.data.data.results');
+        results = responseData.data.data.results;
+
+        // Handle the case where results is an array of arrays
+        if (Array.isArray(results) && results.length > 0 && Array.isArray(results[0])) {
+          console.log('Flattening nested results array');
+          results = results.flat();
+        }
       }
-      // Check for nested data structure in the response
+        // Fallback to other possible structures
       else if (responseData?.data?.results) {
-        // Handle the case where data is in response.data.data.results
-        console.log('Found nested results in response.data.data.results');
-        responseData = responseData.data;
-      }
-      // If response has a Response property, use that (TBO format)
-      else if (responseData?.Response) {
-        responseData = responseData.Response;
+        console.log('Found results in response.data.results');
+        results = responseData.data.results;
+      } 
+      else if (responseData?.results) {
+        console.log('Found results in response.results');
+        results = responseData.results;
       }
 
-      // Extract results based on different possible response formats
-      if (Array.isArray(responseData)) {
-        results = responseData;
-      } else if (responseData?.results) {
-        // Handle results array in the response
-        results = Array.isArray(responseData.results) 
-          ? responseData.results.flat().filter(Boolean) // Filter out any null/undefined entries
-          : [responseData.results].filter(Boolean);
-      } else if (responseData?.Results) {
-        // Fallback to check for Results (capital R) for backward compatibility
-        results = Array.isArray(responseData.Results)
-          ? responseData.Results.flat().filter(Boolean)
-          : [responseData.Results].filter(Boolean);
-      } else if (responseData?.data?.results) {
-        // Handle case where results are nested under data.results
-        results = Array.isArray(responseData.data.results)
-          ? responseData.data.results.flat().filter(Boolean)
-          : [responseData.data.results].filter(Boolean);
-      } else if (responseData?.data) {
-        results = Array.isArray(responseData.data)
-          ? responseData.data.filter(Boolean)
-          : [responseData.data].filter(Boolean);
-      } else if (responseData) {
-        results = [responseData].filter(Boolean);
+      // Ensure results is always an array
+      if (!Array.isArray(results)) {
+        results = results ? [results] : [];
+      }
+
+      // At this point, we should have results in the 'results' variable
+      // Log the structure of the first result for debugging
+      if (results.length > 0) {
+        console.log('First result structure:',
+          JSON.stringify(results[0], (key, value) =>
+            key === 'Segments' ? '[...segments]' : value, 2).substring(0, 1000));
       }
 
       // If no results found, log the response structure for debugging
