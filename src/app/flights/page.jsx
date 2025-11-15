@@ -53,53 +53,25 @@ export default function FlightsPage() {
       }
 
       console.log("Sending search request with data:", searchData);
-      const response = await flightService.searchFlights(searchData);
 
-      // Call the flight search API
-      console.log("Search response:", response);
+      // The flightService.searchFlights() already processes the response and returns an array of flights
+      const results = await flightService.searchFlights(searchData);
 
-      if (!response) {
-        throw new Error("No response received from the server");
+      console.log("Search response (formatted flights):", results);
+
+      if (!results) {
+        throw new Error("No results received from the server");
       }
 
-      // Handle the response based on the TBO API format
-      let results = [];
+      // Ensure results is an array
+      const formattedResults = Array.isArray(results) ? results : [results];
 
-      // Check for error in response
-      if (!response.success) {
-        throw new Error(response.message || "Error searching for flights");
-      }
-
-      // Extract results from the nested TBO response
-      if (
-        response.data &&
-        response.data.success &&
-        response.data.data &&
-        response.data.data.results
-      ) {
-        // Flatten the nested array structure from TBO
-        results = response.data.data.results
-          .flatMap((segment) => (Array.isArray(segment) ? segment : [segment]))
-          .map((flight) => ({
-            ...flight,
-            origin: searchData.origin,
-            destination: searchData.destination,
-            departureDate: searchData.departureDate,
-            returnDate: searchData.returnDate,
-          }));
-      } else if (response.data) {
-        // Fallback to other possible response formats
-        results = Array.isArray(response.data)
-          ? response.data
-          : [response.data];
-      }
-
-      if (!results || results.length === 0) {
+      if (formattedResults.length === 0) {
         throw new Error("No flights found for the selected criteria");
       }
 
-      console.log(`Found ${results.length} flights`);
-      setSearchResults(results);
+      console.log(`Found ${formattedResults.length} flights`);
+      setSearchResults(formattedResults);
     } catch (err) {
       console.error("Flight search error:", err);
       setError(
