@@ -6,11 +6,11 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import FlightSearch from '@/components/flights/FlightSearch';
 import FlightList from '@/components/flights/FlightList';
-import { searchFlights } from '@/utils/flightApi';
+import { searchFlights } from "@/services/flightService";
 
 // Dynamically import FloatingSearchCard with SSR disabled to avoid hydration issues
 const FloatingSearchCard = dynamic(
-  () => import('@/components/FloatingSearchCard'),
+  () => import("@/components/FloatingSearchCard"),
   { ssr: false }
 );
 
@@ -20,68 +20,94 @@ export default function FlightsPage() {
   const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [searchParams, setSearchParams] = useState(null);
 
   const handleSearch = useCallback(async (searchParams) => {
     setLoading(true);
     setError(null);
-    try {
-      // Validate required fields
-      if (!searchParams.origin || !searchParams.destination || !searchParams.departureDate) {
-        throw new Error('Please fill in all required fields');
-      }
+    setSearchResults(null);
 
+    try {
+      console.log("Flight search initiated with params:", searchParams);
+
+      // Format the search parameters for the API
       const searchData = {
         origin: searchParams.origin,
         destination: searchParams.destination,
         departureDate: searchParams.departureDate,
+        tripType: searchParams.tripType || "oneway",
         adults: parseInt(searchParams.adults) || 1,
         children: parseInt(searchParams.children) || 0,
         infants: parseInt(searchParams.infants) || 0,
-        cabinClass: searchParams.cabinClass || 'Economy',
-        tripType: searchParams.tripType || 'oneway'
+        cabinClass: searchParams.cabinClass,
+        currency: "INR",
+        directFlight: false,
+        oneStopFlight: true,
+        preferredAirlines: [],
+        // Add any additional parameters required by your API
       };
 
-      // Add return date only for round trips
-      if (searchParams.tripType === 'roundtrip' && searchParams.returnDate) {
+      // Add return date for round trips
+      if (searchParams.tripType === "roundtrip" && searchParams.returnDate) {
         searchData.returnDate = searchParams.returnDate;
-        searchData.journeyType = '2';
-      } else {
-        searchData.journeyType = '1';
       }
 
-      console.log('Searching flights with params:', searchData);
-      
+      console.log("Sending search request with data:", searchData);
+
+      // Call the flight search API
       const response = await searchFlights(searchData);
-      
-      if (response) {
-        // Handle different response formats
-        let results = [];
-        
-        if (Array.isArray(response)) {
-          results = response; // Direct array response
-        } else if (response.data) {
-          results = Array.isArray(response.data) ? response.data : [response.data];
-        } else if (response.results) {
-          results = Array.isArray(response.results) ? response.results : [response.results];
-        } else if (response.error) {
-          throw new Error(response.error.message || 'Error fetching flights');
-        } else {
-          throw new Error('Unexpected response format from server');
-        }
-        
-        if (results.length === 0) {
-          throw new Error('No flights found for the selected criteria');
-        }
-        
-        setSearchResults(results);
-      } else {
-        throw new Error('No response received from server');
+      console.log("Search response:", response);
+
+      if (!response) {
+        throw new Error("No response received from the server");
       }
+
+      // Handle the response based on the expected format from your API
+      let results = [];
+
+      // Check for error in response
+      if (response.error) {
+        throw new Error(
+          response.error.message || "Error searching for flights"
+        );
+      }
+
+      // Handle different response formats
+      if (response.data) {
+        results = Array.isArray(response.data)
+          ? response.data
+          : [response.data];
+      } else if (response.results) {
+        results = Array.isArray(response.results)
+          ? response.results
+          : [response.results];
+      } else if (Array.isArray(response)) {
+        results = response;
+      } else if (response.Response && response.Response.Results) {
+        // Handle TBO API response format
+        results = response.Response.Results.flatMap((segment) =>
+          segment.map((flight) => ({
+            ...flight,
+            origin: searchData.origin,
+            destination: searchData.destination,
+            departureDate: searchData.departureDate,
+            returnDate: searchData.returnDate,
+          }))
+        );
+      }
+
+      if (!results || results.length === 0) {
+        throw new Error("No flights found for the selected criteria");
+      }
+
+      console.log(`Found ${results.length} flights`);
+      setSearchResults(results);
     } catch (err) {
-      console.error('Flight search error:', err);
+      console.error("Flight search error:", err);
       setError(
-        err.message || 
-        (err.response?.data?.error?.message || 'Failed to search for flights. Please try again.')
+        err.message ||
+          err.response?.data?.error?.message ||
+          "Failed to search for flights. Please try again."
       );
       setSearchResults(null);
     } finally {
@@ -92,11 +118,37 @@ export default function FlightsPage() {
   const handleFlightSelect = (flight) => {
     if (!user) {
       // Redirect to login with a return URL
-      router.push(`/login?redirect=/flights/booking&flightId=${flight.id}`);
+      router.push(
+        `/login?redirect=/flights/booking&flightId=${
+          flight.id || flight.ResultIndex
+        }`
+      );
       return;
     }
+
+    // Prepare flight data for the booking page
+    const flightData = {
+      id: flight.id || flight.ResultIndex,
+      sessionId: flight.sessionId || flight.TraceId,
+      resultIndex: flight.resultIndex || flight.ResultIndex,
+      origin: flight.origin || flight.Origin?.Airport?.AirportCode,
+      destination:
+        flight.destination || flight.Destination?.Airport?.AirportCode,
+      departureTime: flight.departureTime || flight.DepartureTime,
+      arrivalTime: flight.arrivalTime || flight.ArrivalTime,
+      airline: flight.airline || flight.Airline?.AirlineName,
+      flightNumber: flight.flightNumber || flight.FlightNumber,
+      price: flight.price || flight.Fare?.PublishedFare,
+      cabinClass: flight.cabinClass || flight.CabinClass,
+    };
+
+    // Store flight data in session storage for the booking page
+    sessionStorage.setItem("selectedFlight", JSON.stringify(flightData));
+
     // Navigate to booking page with flight details
-    router.push(`/flights/booking?sessionId=${flight.sessionId}&resultIndex=${flight.resultIndex}`);
+    router.push(
+      `/flights/booking?sessionId=${flightData.sessionId}&resultIndex=${flightData.resultIndex}`
+    );
   };
 
   const pathname = usePathname();
@@ -112,20 +164,22 @@ export default function FlightsPage() {
       {isMounted && <FloatingSearchCard />}
       <div className="container mx-auto px-4 py-8 pt-20">
         <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 mb-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Search Flights</h1>
-          <FlightSearch 
-            onSearch={handleSearch} 
-            loading={loading} 
+          <h1 className="text-2xl font-bold text-gray-800 mb-6">
+            Search Flights
+          </h1>
+          <FlightSearch
+            onSearch={handleSearch}
+            loading={loading}
             initialValues={{
-              origin: '',
-              destination: '',
-              departureDate: new Date().toISOString().split('T')[0],
-              returnDate: '',
-              tripType: 'oneway',
+              origin: "",
+              destination: "",
+              departureDate: new Date().toISOString().split("T")[0],
+              returnDate: "",
+              tripType: "oneway",
               adults: 1,
               children: 0,
               infants: 0,
-              cabinClass: 'Economy'
+              cabinClass: "Economy",
             }}
           />
         </div>
@@ -149,17 +203,90 @@ export default function FlightsPage() {
         {searchResults && (
           <div className="mt-8">
             <h2 className="text-2xl font-semibold mb-4">Available Flights</h2>
-            {searchResults && (
-              <div className="max-w-4xl mx-auto">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  {searchResults.length} Flights Found
-                </h2>
-                <FlightList 
-                  flights={searchResults} 
-                  onSelectFlight={handleFlightSelect}
-                />
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {searchResults.length}{" "}
+                    {searchResults.length === 1 ? "Flight" : "Flights"} Found
+                  </h3>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Sort by:</span>
+                      <select
+                        className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-sm"
+                        onChange={(e) => {
+                          // Implement sorting logic here
+                          const sortedResults = [...searchResults].sort(
+                            (a, b) => {
+                              const priceA =
+                                a.Fare?.PublishedFare || a.price || 0;
+                              const priceB =
+                                b.Fare?.PublishedFare || b.price || 0;
+                              return e.target.value === "price_asc"
+                                ? priceA - priceB
+                                : priceB - priceA;
+                            }
+                          );
+                          setSearchResults(sortedResults);
+                        }}
+                      >
+                        <option value="price_asc">Price (Low to High)</option>
+                        <option value="price_desc">Price (High to Low)</option>
+                        <option value="duration">Duration</option>
+                        <option value="departure">Departure Time</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <FlightList
+                    flights={searchResults}
+                    onSelectFlight={handleFlightSelect}
+                    tripType={searchParams?.tripType || "oneway"}
+                  />
+                </div>
+
+                {searchResults.length > 5 && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      onClick={() => {
+                        // Implement pagination or "load more" functionality
+                        console.log("Load more flights");
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      Load More Flights
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 className="text-lg font-medium text-blue-800 mb-2">
+                  Need help with your booking?
+                </h3>
+                <p className="text-blue-700 text-sm">
+                  Our customer support team is available 24/7 to assist you with
+                  your flight booking. Call us at{" "}
+                  <a
+                    href="tel:+1234567890"
+                    className="font-semibold hover:underline"
+                  >
+                    +1 (234) 567-890
+                  </a>{" "}
+                  or email us at{" "}
+                  <a
+                    href="mailto:support@goingbo.com"
+                    className="font-semibold hover:underline"
+                  >
+                    support@goingbo.com
+                  </a>
+                  .
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>
