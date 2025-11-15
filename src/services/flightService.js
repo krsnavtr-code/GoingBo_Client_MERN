@@ -216,14 +216,5 @@ class FlightService {
   }
 }
 
-// Create a single instance of the service
-const flightService = new FlightService();
-
-export default flightService;
-
-// For backward compatibility, export individual functions
-export const searchFlights = (params) => flightService.searchFlights(params);
-export const getFareRules = (sessionId, resultIndex) => flightService.getFareRules(sessionId, resultIndex);
-export const bookFlight = (bookingData) => flightService.bookFlight(bookingData);
-export const getBookingDetails = (bookingId) => flightService.getBookingDetails(bookingId);
-export const cancelBooking = (bookingId) => flightService.cancelBooking(bookingId);
+// Create and export a single instance of the service
+export default new FlightService();
