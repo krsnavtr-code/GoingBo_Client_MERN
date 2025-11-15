@@ -224,15 +224,16 @@ class FlightService {
         return [];
       }
 
-      // ---- Replace the current Results processing with this robust block ----
+      // Process the results
       const formattedFlights = [];
 
       try {
-        if (!Results) {
-          console.warn('No Results returned from backend', response.data);
+        if (!results || results.length === 0) {
+          console.warn('No results returned from backend', response.data);
+          return [];
         } else {
           // Log a small sample to inspect real structure (remove in production)
-          console.debug('Results sample (first item):', Results[0]);
+          console.debug('Results sample (first item):', results[0]);
 
           // Normalise possible segment shapes into an iterable array of segments
           const normalizeSegments = (segments) => {
@@ -253,8 +254,8 @@ class FlightService {
             return segments.filter(Boolean);
           };
 
-          // Iterate safely over Results (which itself is often nested)
-          for (const resultItem of Results) {
+          // Iterate safely over results (which itself is often nested)
+          for (const resultItem of results) {
             if (!resultItem) continue;
 
             // resultItem sometimes itself is an array of flights
