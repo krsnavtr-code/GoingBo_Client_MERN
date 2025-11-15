@@ -10,7 +10,7 @@ function formatFlightData(flight, segment, searchParams = {}) {
     flightKeys: flight ? Object.keys(flight) : [],
     segmentKeys: segment ? Object.keys(segment) : []
   });
-  
+
   // Calculate duration if we have both departure and arrival times
   let duration = '';
   let durationInMinutes = 0;
@@ -223,34 +223,79 @@ class FlightService {
         return [];
       }
 
-      // Process and format the flight results
+      // ---- Replace the current Results processing with this robust block ----
       const formattedFlights = [];
 
-      for (const flight of results) {
-        if (!flight) continue;
+      try {
+        if (!Results) {
+          console.warn('No Results returned from backend', response.data);
+        } else {
+          // Log a small sample to inspect real structure (remove in production)
+          console.debug('Results sample (first item):', Results[0]);
 
-        try {
-          // Handle both single segment and multi-segment flights
-          const segments = Array.isArray(flight.Segments)
-            ? flight.Segments.flat()
-            : [flight];
+          // Normalise possible segment shapes into an iterable array of segments
+          const normalizeSegments = (segments) => {
+            // segments could be:
+            // 1) undefined/null
+            // 2) [ {Origin, Destination, ...}, { ... } ]  (simple array)
+            // 3) [ [ {Origin...} ] ]  (nested array)
+            // 4) [ [ [ ... ] ] ]  (rare deeply nested)
+            if (!segments) return [];
+            // flatten only arrays of arrays into depth 2 arrays of objects
+            if (!Array.isArray(segments)) return [];
+            // If first element is an array, flatten one level
+            if (Array.isArray(segments[0])) {
+              // segments = [ [segObj, segObj], [ ... ] ] -> flatten to array of segObjs
+              return segments.flat(2).filter(Boolean);
+            }
+            // Already array of objects
+            return segments.filter(Boolean);
+          };
 
-          for (const segment of segments) {
-            if (!segment) continue;
+          // Iterate safely over Results (which itself is often nested)
+          for (const resultItem of Results) {
+            if (!resultItem) continue;
 
-            try {
-              const formattedFlight = formatFlightData(flight, segment, searchParams);
-              if (formattedFlight) {
-                formattedFlights.push(formattedFlight);
+            // resultItem sometimes itself is an array of flights
+            const flightsArray = Array.isArray(resultItem) ? resultItem : [resultItem];
+
+            for (const flight of flightsArray) {
+              if (!flight) continue;
+
+              // Normalize Segments into flat array of segment objects
+              const rawSegments = normalizeSegments(flight.Segments);
+
+              // If still empty, try to dig deeper (defensive)
+              if (rawSegments.length === 0 && Array.isArray(flight.Segments)) {
+                // attempt to flatten any nested arrays up to depth 3
+                const deepFlat = JSON.parse(JSON.stringify(flight.Segments)).flat(3);
+                rawSegments.push(...deepFlat.filter(s => s && s.Origin && s.Destination));
               }
-            } catch (e) {
-              console.error('Error formatting flight segment:', e, segment);
+
+              // For each actual segment object, format
+              for (const segment of rawSegments) {
+                try {
+                  if (!segment || !segment.Origin || !segment.Destination) continue;
+                  const formattedFlight = formatFlightData(flight, segment, searchParams);
+                  formattedFlights.push(formattedFlight);
+                } catch (segErr) {
+                  // Protect whole flow from one bad segment
+                  console.warn('Error formatting a segment — skipping it', segErr, segment);
+                  continue;
+                }
+              }
             }
           }
-        } catch (e) {
-          console.error('Error processing flight:', e, flight);
         }
+      } catch (outerErr) {
+        console.error('Unexpected error while processing Results:', outerErr);
+        // Return whatever we collected so far instead of throwing a TDZ/minify error
+        return formattedFlights;
       }
+
+      // Return final array
+      return formattedFlights;
+
 
       console.log(`Formatted ${formattedFlights.length} flights`);
       return formattedFlights;
