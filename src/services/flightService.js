@@ -160,11 +160,17 @@ export const flightService = {
           if (!flight.Segments || !Array.isArray(flight.Segments)) return;
 
           // Create a flight object for each segment
-          flight.Segments.forEach((segment) => {
-            if (!segment.Origin || !segment.Destination) return;
+          if (!flight.Segments || !Array.isArray(flight.Segments)) return;
 
-            const formattedFlight = formatFlightData(flight, segment, searchParams);
-            formattedFlights.push(formattedFlight);
+          flight.Segments.forEach((segList) => {
+            if (!segList || !Array.isArray(segList)) return;
+
+            segList.forEach((segment) => {
+              if (!segment || !segment.Origin || !segment.Destination) return;
+
+              const formattedFlight = formatFlightData(flight, segment, searchParams);
+              formattedFlights.push(formattedFlight);
+            });
           });
         });
       });
