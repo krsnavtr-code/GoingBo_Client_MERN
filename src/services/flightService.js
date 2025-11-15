@@ -148,20 +148,25 @@ class FlightService {
       const formattedFlights = [];
 
       Results.forEach((result) => {
-        if (!result || !Array.isArray(result)) return;
+        if (!Array.isArray(result)) return;
 
         result.forEach((flight) => {
-          if (!flight.Segments || !Array.isArray(flight.Segments)) return;
+          if (!Array.isArray(flight.Segments)) return;
 
-          // Create a flight object for each segment
-          flight.Segments.forEach((segment) => {
-            if (!segment.Origin || !segment.Destination) return;
+          flight.Segments.forEach((segmentGroup) => {
+            if (!Array.isArray(segmentGroup)) return;
 
-            const formattedFlight = formatFlightData(flight, segment, searchParams);
-            formattedFlights.push(formattedFlight);
+            segmentGroup.forEach((segment) => {
+              if (!segment?.Origin || !segment?.Destination) return;
+
+              formattedFlights.push(
+                formatFlightData(flight, segment, searchParams)
+              );
+            });
           });
         });
       });
+
 
       return formattedFlights;
     } catch (error) {
