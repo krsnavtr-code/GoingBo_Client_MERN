@@ -8,46 +8,66 @@ function formatFlightData(flight, segment, searchParams = {}) {
   let duration = '';
   let durationInMinutes = 0;
 
-  if (segment?.Origin?.DepTime && segment?.Destination?.ArrTime) {
-    const depTime = new Date(segment.Origin.DepTime);
-    const arrTime = new Date(segment.Destination.ArrTime);
-    durationInMinutes = Math.round((arrTime - depTime) / (1000 * 60));
-    const hours = Math.floor(durationInMinutes / 60);
-    const minutes = durationInMinutes % 60;
-    duration = `${hours}h ${minutes}m`;
+  // Handle different segment formats
+  const origin = segment?.Origin || segment?.OriginLocation || {};
+  const destination = segment?.Destination || segment?.DestinationLocation || {};
+  const depTime = origin.DepTime || origin.DepartureTime || '';
+  const arrTime = destination.ArrTime || destination.ArrivalTime || '';
+
+  if (depTime && arrTime) {
+    try {
+      const depDate = new Date(depTime);
+      const arrDate = new Date(arrTime);
+      if (!isNaN(depDate.getTime()) && !isNaN(arrDate.getTime())) {
+        durationInMinutes = Math.round((arrDate - depDate) / (1000 * 60));
+        const hours = Math.floor(durationInMinutes / 60);
+        const minutes = durationInMinutes % 60;
+        duration = `${hours}h ${minutes}m`;
+      }
+    } catch (e) {
+      console.error('Error calculating duration:', e);
+    }
   }
 
+  // Get airline information
+  const airline = flight.Airline || {};
+  const fare = flight.Fare || {};
+
+  // Handle airport codes - check both possible locations
+  const originAirportCode = origin.Airport?.AirportCode || origin.AirportCode || searchParams.origin || '';
+  const destAirportCode = destination.Airport?.AirportCode || destination.AirportCode || searchParams.destination || '';
+
   return {
-    id: flight.ResultIndex || `${flight.Airline?.FlightNumber || 'FLT'}-${Date.now()}`,
+    id: flight.ResultIndex || `${airline.FlightNumber || 'FLT'}-${Date.now()}`,
     airline: {
-      code: flight.Airline?.AirlineCode || '',
-      name: flight.Airline?.AirlineName || 'Unknown Airline',
-      number: flight.Airline?.FlightNumber || '',
-      logo: `https://www.gstatic.com/flights/airline_logos/70px/${flight.Airline?.AirlineCode || 'default'}.png`
+      code: airline.AirlineCode || '',
+      name: airline.AirlineName || 'Unknown Airline',
+      number: airline.FlightNumber || '',
+      logo: `https://www.gstatic.com/flights/airline_logos/70px/${(airline.AirlineCode || 'default').toLowerCase()}.png`
     },
-    origin: segment?.Origin?.Airport?.AirportCode || searchParams.origin || '',
-    destination: segment?.Destination?.Airport?.AirportCode || searchParams.destination || '',
-    departureTime: segment?.Origin?.DepTime || new Date().toISOString(),
-    arrivalTime: segment?.Destination?.ArrTime || new Date().toISOString(),
+    origin: originAirportCode,
+    destination: destAirportCode,
+    departureTime: depTime || new Date().toISOString(),
+    arrivalTime: arrTime || new Date().toISOString(),
     duration,
     durationInMinutes,
     stops: segment?.StopQuantity || 0,
-    aircraftType: segment?.Equipment || 'N/A',
+    aircraftType: segment?.Equipment || segment?.AircraftType || 'N/A',
     fare: {
-      baseFare: flight.Fare?.PublishedFare || 0,
-      tax: flight.Fare?.Tax || 0,
-      totalFare: (flight.Fare?.PublishedFare || 0) + (flight.Fare?.Tax || 0),
+      baseFare: fare.PublishedFare || 0,
+      tax: fare.Tax || 0,
+      totalFare: (fare.PublishedFare || 0) + (fare.Tax || 0),
       currency: searchParams.currency || 'INR'
     },
     cabinClass: searchParams.cabinClass || 'Economy',
     bookingClass: segment?.BookingClass || '',
-    fareType: flight.Fare?.FareType || 'PUBLISHED',
-    baggage: flight.Fare?.ChargeableBaggage || 'Check Fare Rules',
-    refundable: flight.Fare?.Refundable || false,
+    fareType: fare.FareType || 'PUBLISHED',
+    baggage: fare.ChargeableBaggage || 'Check Fare Rules',
+    refundable: fare.Refundable || false,
     amenities: {
-      wifi: flight.Fare?.IsWifiAvailable || false,
-      meals: flight.Fare?.IsMealAvailable || false,
-      entertainment: flight.Fare?.IsEntertainmentAvailable || false
+      wifi: fare.IsWifiAvailable || false,
+      meals: fare.IsMealAvailable || false,
+      entertainment: fare.IsEntertainmentAvailable || false
     },
     segments: [segment],
     ...searchParams
