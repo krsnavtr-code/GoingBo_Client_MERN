@@ -121,14 +121,14 @@ export const flightService = {
         child: parseInt(searchParams.children) || 0,
         infant: parseInt(searchParams.infants) || 0,
         travelclass: cabinClassMap[searchParams.cabinClass] || 2, // Default to Economy (2) if not found
-        departure_date: formatDate(searchParams.departureDate),
+        departureDate: formatDate(searchParams.departureDate), // Changed from departure_date to match backend
         directFlight: searchParams.directFlight || false,
         oneStopFlight: searchParams.oneStopFlight || false
       };
 
       // Add return date for round trips
       if (searchParams.tripType === 'roundtrip' && searchParams.returnDate) {
-        formattedParams.return_date = formatDate(searchParams.returnDate);
+        formattedParams.returnDate = formatDate(searchParams.returnDate); // Changed from return_date to match backend
       }
 
       console.log('Sending search request:', formattedParams);
