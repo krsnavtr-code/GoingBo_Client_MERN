@@ -4,6 +4,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 
 // Helper function to format flight data - moved to top to avoid hoisting issues
 function formatFlightData(flight, segment, searchParams = {}) {
+  console.log('Formatting flight data:', { 
+    flight: flight ? 'exists' : 'null', 
+    segment: segment ? 'exists' : 'null',
+    flightKeys: flight ? Object.keys(flight) : [],
+    segmentKeys: segment ? Object.keys(segment) : []
+  });
+  
   // Calculate duration if we have both departure and arrival times
   let duration = '';
   let durationInMinutes = 0;
@@ -169,11 +176,22 @@ class FlightService {
 
       console.log('Sending search request:', formattedParams);
       const response = await this.api.post('/flights/search', formattedParams);
-      console.log('Raw API response:', response.data);
+
+      // Add detailed response logging
+      console.group('API Response Details');
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      console.log('Response data type:', typeof response.data);
+      console.log('Response data length:', response.data ? JSON.stringify(response.data).length : 0);
+      console.log('First 500 chars of response:', JSON.stringify(response.data).substring(0, 500));
+      console.groupEnd();
 
       // Handle different response formats
       let results = [];
       let responseData = response?.data || {};
+
+      // Add logging for response data structure
+      console.log('Response data structure:', Object.keys(responseData));
 
       // If response has a Response property, use that (TBO format)
       if (responseData?.Response) {
