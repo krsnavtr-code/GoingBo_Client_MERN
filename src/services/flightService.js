@@ -292,17 +292,8 @@ const flightService = new FlightService();
 export default flightService;
 
 // Export individual methods with proper binding
-const searchFlights = flightService.searchFlights.bind(flightService);
-const getFareRules = flightService.getFareRules.bind(flightService);
-const bookFlight = flightService.bookFlight.bind(flightService);
-const getBookingDetails = flightService.getBookingDetails.bind(flightService);
-const cancelBooking = flightService.cancelBooking.bind(flightService);
-
-// Export the bound methods
-export {
-  searchFlights,
-  getFareRules,
-  bookFlight,
-  getBookingDetails,
-  cancelBooking
-};
+export const searchFlights = flightService.searchFlights.bind(flightService);
+export const getFareRules = flightService.getFareRules.bind(flightService);
+export const bookFlight = flightService.bookFlight.bind(flightService);
+export const getBookingDetails = flightService.getBookingDetails.bind(flightService);
+export const cancelBooking = flightService.cancelBooking.bind(flightService);
