@@ -2,8 +2,8 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
-// Helper function to format flight data
-const formatFlightData = (flight, segment, searchParams = {}) => {
+// Helper function to format flight data - moved to top to avoid hoisting issues
+function formatFlightData(flight, segment, searchParams = {}) {
   // Calculate duration if we have both departure and arrival times
   let duration = '';
   let durationInMinutes = 0;
@@ -54,8 +54,18 @@ const formatFlightData = (flight, segment, searchParams = {}) => {
   };
 };
 
+// Singleton instance
+let instance = null;
+
 class FlightService {
   constructor() {
+    // Enforce singleton pattern
+    if (instance) {
+      return instance;
+    }
+    instance = this;
+
+    // Initialize axios instance
     this.api = axios.create({
       baseURL: API_BASE_URL,
       timeout: 30000, // 30 seconds
@@ -68,7 +78,7 @@ class FlightService {
     // Request interceptor
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -221,5 +231,15 @@ class FlightService {
   }
 }
 
-// Create and export a single instance of the service
-export default new FlightService();
+// Create a single instance of the service
+const flightService = new FlightService();
+
+// Export the instance as default
+export default flightService;
+
+// For backward compatibility, export individual methods
+export const searchFlights = (...args) => flightService.searchFlights(...args);
+export const getFareRules = (...args) => flightService.getFareRules(...args);
+export const bookFlight = (...args) => flightService.bookFlight(...args);
+export const getBookingDetails = (...args) => flightService.getBookingDetails(...args);
+export const cancelBooking = (...args) => flightService.cancelBooking(...args);
