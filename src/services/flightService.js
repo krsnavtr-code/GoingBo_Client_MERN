@@ -118,44 +118,48 @@ class FlightService {
   }
 
   async searchFlights(searchParams) {
-    // Define cabin class mapping outside try-catch to avoid hoisting issues
-    const cabinClassMap = {
-      'Economy': 2,
-      'Premium Economy': 3,
-      'Business': 4,
-      'First': 6
-    };
-
-    // Format date to YYYY-MM-DD format
-    const formatDate = (dateString) => {
-      try {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '';
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      } catch (e) {
-        console.error('Error formatting date:', e);
-        return '';
-      }
-    };
-
     try {
+      // Define cabin class mapping
+      const cabinClassMap = {
+        'Economy': 2,
+        'Premium Economy': 3,
+        'Business': 4,
+        'First': 6
+      };
+
+      // Format date to YYYY-MM-DD format
+      const formatDate = (dateString) => {
+        try {
+          if (!dateString) return '';
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return '';
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        } catch (e) {
+          console.error('Error formatting date:', e);
+          return '';
+        }
+      };
+
+      // Validate required parameters
+      if (!searchParams.origin || !searchParams.destination || !searchParams.departureDate) {
+        throw new Error('Missing required search parameters');
+      }
 
       // Transform data to match backend format
       const formattedParams = {
-        origin: searchParams.origin?.toUpperCase() || '',
-        destination: searchParams.destination?.toUpperCase() || '',
-        journey_type: searchParams.tripType === 'roundtrip' ? 2 : 1, // 1: OneWay, 2: Return
+        origin: String(searchParams.origin).toUpperCase(),
+        destination: String(searchParams.destination).toUpperCase(),
+        journey_type: searchParams.tripType === 'roundtrip' ? 2 : 1,
         adult: parseInt(searchParams.adults) || 1,
         child: parseInt(searchParams.children) || 0,
         infant: parseInt(searchParams.infants) || 0,
-        travelclass: cabinClassMap[searchParams.cabinClass] || 2, // Default to Economy (2) if not found
+        travelclass: cabinClassMap[searchParams.cabinClass] || 2,
         departureDate: formatDate(searchParams.departureDate),
-        directFlight: searchParams.directFlight || false,
-        oneStopFlight: searchParams.oneStopFlight || false
+        directFlight: Boolean(searchParams.directFlight),
+        oneStopFlight: Boolean(searchParams.oneStopFlight)
       };
 
       // Add return date for round trips
@@ -168,7 +172,11 @@ class FlightService {
 
       // Handle different response formats
       let results = [];
-      let responseData = response.data;
+      let responseData = response?.data;
+
+      if (!responseData) {
+        throw new Error('No data received from server');
+      }
 
       // If response has a Response property, use that (TBO format)
       if (responseData?.Response) {
@@ -188,6 +196,9 @@ class FlightService {
         results = Array.isArray(responseData.Results)
           ? responseData.Results.flat()
           : [responseData.Results];
+      } else if (responseData?.data) {
+        // Handle case where data is nested under a data property
+        results = Array.isArray(responseData.data) ? responseData.data : [responseData.data];
       }
 
       if (!results || results.length === 0) {
