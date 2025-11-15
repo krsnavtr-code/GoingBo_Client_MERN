@@ -226,11 +226,13 @@ export const flightService = {
   },
 };
 
-// Export individual functions for easier imports
-export const searchFlights = flightService.searchFlights;
-export const getFareRules = flightService.getFareRules;
-export const bookFlight = flightService.bookFlight;
-export const getBookingDetails = flightService.getBookingDetails;
-export const cancelBooking = flightService.cancelBooking;
-
+// Export the flightService object as default
 export default flightService;
+
+// For backward compatibility, export individual functions
+// These are now direct references to the methods, not creating new functions
+export const searchFlights = (params) => flightService.searchFlights(params);
+export const getFareRules = (sessionId, resultIndex) => flightService.getFareRules(sessionId, resultIndex);
+export const bookFlight = (bookingData) => flightService.bookFlight(bookingData);
+export const getBookingDetails = (bookingId) => flightService.getBookingDetails(bookingId);
+export const cancelBooking = (bookingId) => flightService.cancelBooking(bookingId);
