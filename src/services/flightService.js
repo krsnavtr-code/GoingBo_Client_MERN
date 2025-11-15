@@ -118,31 +118,31 @@ class FlightService {
   }
 
   async searchFlights(searchParams) {
-    try {
-      // Map cabin class to numeric values expected by the backend
-      // 1: All, 2: Economy, 3: PremiumEconomy, 4: Business, 5: PremiumBusiness, 6: First
-      const cabinClassMap = {
-        'Economy': 2,
-        'Premium Economy': 3,
-        'Business': 4,
-        'First': 6
-      };
+    // Define cabin class mapping outside try-catch to avoid hoisting issues
+    const cabinClassMap = {
+      'Economy': 2,
+      'Premium Economy': 3,
+      'Business': 4,
+      'First': 6
+    };
 
-      // Format date to YYYY-MM-DD format
-      const formatDate = (dateString) => {
-        try {
-          if (!dateString) return '';
-          const date = new Date(dateString);
-          if (isNaN(date.getTime())) return '';
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
-        } catch (e) {
-          console.error('Error formatting date:', e);
-          return '';
-        }
-      };
+    // Format date to YYYY-MM-DD format
+    const formatDate = (dateString) => {
+      try {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch (e) {
+        console.error('Error formatting date:', e);
+        return '';
+      }
+    };
+
+    try {
 
       // Transform data to match backend format
       const formattedParams = {
@@ -274,15 +274,24 @@ class FlightService {
   }
 }
 
-// Create a single instance of the service
+// Create and export the service instance
 const flightService = new FlightService();
 
 // Export the instance as default
 export default flightService;
 
-// For backward compatibility, export individual methods
-export const searchFlights = (...args) => flightService.searchFlights(...args);
-export const getFareRules = (...args) => flightService.getFareRules(...args);
-export const bookFlight = (...args) => flightService.bookFlight(...args);
-export const getBookingDetails = (...args) => flightService.getBookingDetails(...args);
-export const cancelBooking = (...args) => flightService.cancelBooking(...args);
+// Export individual methods with proper binding
+const searchFlights = flightService.searchFlights.bind(flightService);
+const getFareRules = flightService.getFareRules.bind(flightService);
+const bookFlight = flightService.bookFlight.bind(flightService);
+const getBookingDetails = flightService.getBookingDetails.bind(flightService);
+const cancelBooking = flightService.cancelBooking.bind(flightService);
+
+// Export the bound methods
+export {
+  searchFlights,
+  getFareRules,
+  bookFlight,
+  getBookingDetails,
+  cancelBooking
+};
