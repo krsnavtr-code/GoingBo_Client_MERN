@@ -2,42 +2,6 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
-// Create an axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000, // 30 seconds
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-});
-
-// Request interceptor
-api.interceptors.request.use(
-  (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor
-api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    console.error('API Error:', error.response?.data || error.message);
-    return Promise.reject(error.response?.data || error.message);
-  }
-);
-
 // Helper function to format flight data
 const formatFlightData = (flight, segment, searchParams = {}) => {
   // Calculate duration if we have both departure and arrival times
@@ -90,10 +54,40 @@ const formatFlightData = (flight, segment, searchParams = {}) => {
   };
 };
 
-// Flight Services
-export const flightService = {
-  // Search for flights
-  searchFlights: async (searchParams) => {
+class FlightService {
+  constructor() {
+    this.api = axios.create({
+      baseURL: API_BASE_URL,
+      timeout: 30000, // 30 seconds
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+
+    // Request interceptor
+    this.api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        console.error('API Error:', error.response?.data || error.message);
+        return Promise.reject(error.response?.data || error.message);
+      }
+    );
+  }
+
+  async searchFlights(searchParams) {
     try {
       // Map cabin class to numeric values expected by the backend
       // 1: All, 2: Economy, 3: PremiumEconomy, 4: Business, 5: PremiumBusiness, 6: First
@@ -123,18 +117,18 @@ export const flightService = {
         child: parseInt(searchParams.children) || 0,
         infant: parseInt(searchParams.infants) || 0,
         travelclass: cabinClassMap[searchParams.cabinClass] || 2, // Default to Economy (2) if not found
-        departureDate: formatDate(searchParams.departureDate), // Changed from departure_date to match backend
+        departureDate: formatDate(searchParams.departureDate),
         directFlight: searchParams.directFlight || false,
         oneStopFlight: searchParams.oneStopFlight || false
       };
 
       // Add return date for round trips
       if (searchParams.tripType === 'roundtrip' && searchParams.returnDate) {
-        formattedParams.returnDate = formatDate(searchParams.returnDate); // Changed from return_date to match backend
+        formattedParams.returnDate = formatDate(searchParams.returnDate);
       }
 
       console.log('Sending search request:', formattedParams);
-      const response = await api.post('/flights/search', formattedParams);
+      const response = await this.api.post('/flights/search', formattedParams);
 
       if (!response.data || !response.data.Response) {
         throw new Error('Invalid response format from server');
@@ -160,17 +154,11 @@ export const flightService = {
           if (!flight.Segments || !Array.isArray(flight.Segments)) return;
 
           // Create a flight object for each segment
-          if (!flight.Segments || !Array.isArray(flight.Segments)) return;
+          flight.Segments.forEach((segment) => {
+            if (!segment.Origin || !segment.Destination) return;
 
-          flight.Segments.forEach((segList) => {
-            if (!segList || !Array.isArray(segList)) return;
-
-            segList.forEach((segment) => {
-              if (!segment || !segment.Origin || !segment.Destination) return;
-
-              const formattedFlight = formatFlightData(flight, segment, searchParams);
-              formattedFlights.push(formattedFlight);
-            });
+            const formattedFlight = formatFlightData(flight, segment, searchParams);
+            formattedFlights.push(formattedFlight);
           });
         });
       });
@@ -185,58 +173,55 @@ export const flightService = {
       }
       throw error;
     }
-  },
+  }
 
-  // Get fare rules for a specific flight
-  getFareRules: async (sessionId, resultIndex) => {
+  async getFareRules(sessionId, resultIndex) {
     try {
-      const response = await api.post(`${API_BASE_URL}/flights/fare-rules`, { sessionId, resultIndex });
+      const response = await this.api.post('/flights/fare-rules', { sessionId, resultIndex });
       return response.data;
     } catch (error) {
       console.error('Get fare rules error:', error);
       throw error;
     }
-  },
+  }
 
-  // Book a flight
-  bookFlight: async (bookingData) => {
+  async bookFlight(bookingData) {
     try {
-      const response = await api.post(`${API_BASE_URL}/flights/book`, bookingData);
+      const response = await this.api.post('/flights/book', bookingData);
       return response.data;
     } catch (error) {
       console.error('Book flight error:', error);
       throw error;
     }
-  },
+  }
 
-  // Get booking details
-  getBookingDetails: async (bookingId) => {
+  async getBookingDetails(bookingId) {
     try {
-      const response = await api.get(`${API_BASE_URL}/bookings/${bookingId}`);
+      const response = await this.api.get(`/bookings/${bookingId}`);
       return response.data;
     } catch (error) {
       console.error('Get booking details error:', error);
       throw error;
     }
-  },
+  }
 
-  // Cancel a booking
-  cancelBooking: async (bookingId) => {
+  async cancelBooking(bookingId) {
     try {
-      const response = await api.delete(`${API_BASE_URL}/bookings/${bookingId}`);
+      const response = await this.api.delete(`/bookings/${bookingId}`);
       return response.data;
     } catch (error) {
       console.error('Cancel booking error:', error);
       throw error;
     }
-  },
-};
+  }
+}
 
-// Export the flightService object as default
+// Create a single instance of the service
+const flightService = new FlightService();
+
 export default flightService;
 
 // For backward compatibility, export individual functions
-// These are now direct references to the methods, not creating new functions
 export const searchFlights = (params) => flightService.searchFlights(params);
 export const getFareRules = (sessionId, resultIndex) => flightService.getFareRules(sessionId, resultIndex);
 export const bookFlight = (bookingData) => flightService.bookFlight(bookingData);
