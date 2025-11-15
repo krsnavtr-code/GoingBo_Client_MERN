@@ -5,73 +5,70 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 // Create an axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
-  withCredentials: true,
 });
 
-// Add a request interceptor to include the auth token
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Add auth token if available
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Add a response interceptor to handle common errors
+// Response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    return response;
+  },
   (error) => {
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('API Error:', error.response.data);
-      return Promise.reject(error.response.data);
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received:', error.request);
-      return Promise.reject({ message: 'No response received from server' });
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('Request error:', error.message);
-      return Promise.reject({ message: error.message });
-    }
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error.response?.data || error.message);
   }
 );
 
 // Helper function to format flight data
-const formatFlightData = (flight, segment, searchParams) => {
-  const departureTime = new Date(segment.Origin.DepTime);
-  const arrivalTime = new Date(segment.Destination.ArrTime);
-  const durationInMinutes = Math.round((arrivalTime - departureTime) / (1000 * 60));
-  const hours = Math.floor(durationInMinutes / 60);
-  const minutes = durationInMinutes % 60;
-  const duration = `${hours}h ${minutes}m`;
+const formatFlightData = (flight, segment, searchParams = {}) => {
+  // Calculate duration if we have both departure and arrival times
+  let duration = '';
+  let durationInMinutes = 0;
+
+  if (segment?.Origin?.DepTime && segment?.Destination?.ArrTime) {
+    const depTime = new Date(segment.Origin.DepTime);
+    const arrTime = new Date(segment.Destination.ArrTime);
+    durationInMinutes = Math.round((arrTime - depTime) / (1000 * 60));
+    const hours = Math.floor(durationInMinutes / 60);
+    const minutes = durationInMinutes % 60;
+    duration = `${hours}h ${minutes}m`;
+  }
 
   return {
-    id: flight.ResultIndex,
-    resultIndex: flight.ResultIndex,
-    sessionId: flight.ResultSession,
-    airline: segment.Airline?.AirlineName || flight.Airline?.AirlineName || 'Unknown Airline',
-    airlineCode: segment.Airline?.AirlineCode || flight.Airline?.AirlineCode || 'UA',
-    flightNumber: segment.Airline?.FlightNumber
-      ? `${segment.Airline.AirlineCode} ${segment.Airline.FlightNumber}`
-      : flight.Airline?.FlightNumber
-        ? `${flight.Airline.AirlineCode} ${flight.Airline.FlightNumber}`
-        : 'N/A',
-    origin: segment.Origin?.Airport?.AirportCode || searchParams.origin,
-    destination: segment.Destination?.Airport?.AirportCode || searchParams.destination,
-    departureTime: departureTime.toISOString(),
-    arrivalTime: arrivalTime.toISOString(),
+    id: flight.ResultIndex || `${flight.Airline?.FlightNumber || 'FLT'}-${Date.now()}`,
+    airline: {
+      code: flight.Airline?.AirlineCode || '',
+      name: flight.Airline?.AirlineName || 'Unknown Airline',
+      number: flight.Airline?.FlightNumber || '',
+      logo: `https://www.gstatic.com/flights/airline_logos/70px/${flight.Airline?.AirlineCode || 'default'}.png`
+    },
+    origin: segment?.Origin?.Airport?.AirportCode || searchParams.origin || '',
+    destination: segment?.Destination?.Airport?.AirportCode || searchParams.destination || '',
+    departureTime: segment?.Origin?.DepTime || new Date().toISOString(),
+    arrivalTime: segment?.Destination?.ArrTime || new Date().toISOString(),
     duration,
     durationInMinutes,
-    stops: segment.StopQuantity || 0,
-    aircraftType: segment.Equipment || 'N/A',
+    stops: segment?.StopQuantity || 0,
+    aircraftType: segment?.Equipment || 'N/A',
     fare: {
       baseFare: flight.Fare?.PublishedFare || 0,
       tax: flight.Fare?.Tax || 0,
@@ -79,7 +76,7 @@ const formatFlightData = (flight, segment, searchParams) => {
       currency: searchParams.currency || 'INR'
     },
     cabinClass: searchParams.cabinClass || 'Economy',
-    bookingClass: segment.BookingClass,
+    bookingClass: segment?.BookingClass || '',
     fareType: flight.Fare?.FareType || 'PUBLISHED',
     baggage: flight.Fare?.ChargeableBaggage || 'Check Fare Rules',
     refundable: flight.Fare?.Refundable || false,
