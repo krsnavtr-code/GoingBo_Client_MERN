@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import FlightSearch from '@/components/flights/FlightSearch';
 import FlightList from '@/components/flights/FlightList';
-import { searchFlights } from "@/services/flightService";
+import flightService from "@/services/flightService";
 
 // Dynamically import FloatingSearchCard with SSR disabled to avoid hydration issues
 const FloatingSearchCard = dynamic(
@@ -55,7 +55,7 @@ export default function FlightsPage() {
       console.log("Sending search request with data:", searchData);
 
       // Call the flight search API
-      const response = await searchFlights(searchData);
+      const response = await flightService.searchFlights(searchData);
       console.log("Search response:", response);
 
       if (!response) {
