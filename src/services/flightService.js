@@ -169,14 +169,11 @@ class FlightService {
 
       console.log('Sending search request:', formattedParams);
       const response = await this.api.post('/flights/search', formattedParams);
+      console.log('Raw API response:', response.data);
 
       // Handle different response formats
       let results = [];
-      let responseData = response?.data;
-
-      if (!responseData) {
-        throw new Error('No data received from server');
-      }
+      let responseData = response?.data || {};
 
       // If response has a Response property, use that (TBO format)
       if (responseData?.Response) {
@@ -197,39 +194,45 @@ class FlightService {
           ? responseData.Results.flat()
           : [responseData.Results];
       } else if (responseData?.data) {
-        // Handle case where data is nested under a data property
         results = Array.isArray(responseData.data) ? responseData.data : [responseData.data];
+      } else if (responseData) {
+        results = [responseData];
       }
 
+      // If no results found, return empty array
       if (!results || results.length === 0) {
-        console.warn('No flight results found in response:', responseData);
+        console.warn('No flight results found in response');
         return [];
       }
 
       // Process and format the flight results
       const formattedFlights = [];
 
-      results.forEach((flight) => {
-        if (!flight) return;
+      for (const flight of results) {
+        if (!flight) continue;
 
-        // Handle both single segment and multi-segment flights
-        const segments = Array.isArray(flight.Segments)
-          ? flight.Segments.flat()
-          : [flight];
+        try {
+          // Handle both single segment and multi-segment flights
+          const segments = Array.isArray(flight.Segments)
+            ? flight.Segments.flat()
+            : [flight];
 
-        segments.forEach((segment) => {
-          if (!segment) return;
+          for (const segment of segments) {
+            if (!segment) continue;
 
-          try {
-            const formattedFlight = formatFlightData(flight, segment, searchParams);
-            if (formattedFlight) {
-              formattedFlights.push(formattedFlight);
+            try {
+              const formattedFlight = formatFlightData(flight, segment, searchParams);
+              if (formattedFlight) {
+                formattedFlights.push(formattedFlight);
+              }
+            } catch (e) {
+              console.error('Error formatting flight segment:', e, segment);
             }
-          } catch (e) {
-            console.error('Error formatting flight segment:', e, segment);
           }
-        });
-      });
+        } catch (e) {
+          console.error('Error processing flight:', e, flight);
+        }
+      }
 
       console.log(`Formatted ${formattedFlights.length} flights`);
       return formattedFlights;
@@ -239,8 +242,9 @@ class FlightService {
         console.error('Response data:', error.response.data);
         console.error('Response status:', error.response.status);
         console.error('Response headers:', error.response.headers);
+        throw new Error(error.response.data?.message || 'Failed to search flights');
       }
-      throw error;
+      throw new Error(error.message || 'Failed to search flights');
     }
   }
 
