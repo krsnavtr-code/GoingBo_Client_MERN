@@ -5,81 +5,128 @@ console.log("🔥 flightService.js LOADED!!");
 
 // Helper function to format flight data - moved to top to avoid hoisting issues
 function formatFlightData(flight, segment, searchParams = {}) {
-  console.log('Formatting flight data:', { 
-    flight: flight ? 'exists' : 'null', 
-    segment: segment ? 'exists' : 'null',
-    flightKeys: flight ? Object.keys(flight) : [],
-    segmentKeys: segment ? Object.keys(segment) : []
-  });
-
-  // Calculate duration if we have both departure and arrival times
-  let duration = '';
-  let durationInMinutes = 0;
-
-  // Handle different segment formats
-  const origin = segment?.Origin || segment?.OriginLocation || {};
-  const destination = segment?.Destination || segment?.DestinationLocation || {};
-  const depTime = origin.DepTime || origin.DepartureTime || '';
-  const arrTime = destination.ArrTime || destination.ArrivalTime || '';
-
-  if (depTime && arrTime) {
-    try {
-      const depDate = new Date(depTime);
-      const arrDate = new Date(arrTime);
-      if (!isNaN(depDate.getTime()) && !isNaN(arrDate.getTime())) {
-        durationInMinutes = Math.round((arrDate - depDate) / (1000 * 60));
-        const hours = Math.floor(durationInMinutes / 60);
-        const minutes = durationInMinutes % 60;
-        duration = `${hours}h ${minutes}m`;
-      }
-    } catch (e) {
-      console.error('Error calculating duration:', e);
+  try {
+    if (!flight || !segment) {
+      console.error('Invalid flight or segment data:', { flight, segment });
+      return null;
     }
+
+    console.debug('Formatting flight data:', {
+      flightKeys: Object.keys(flight),
+      segmentKeys: Object.keys(segment),
+      searchParams: searchParams
+    });
+
+    // Safely extract origin and destination information
+    const getLocationInfo = (location) => {
+      if (!location) return {};
+
+      // Handle different possible location formats
+      if (location.Airport) {
+        return {
+          code: location.Airport.AirportCode || '',
+          name: location.Airport.AirportName || '',
+          city: location.Airport.CityName || '',
+          terminal: location.Airport.Terminal || '',
+          time: location.DepTime || location.ArrTime || ''
+        };
+      }
+
+      return {
+        code: location.AirportCode || '',
+        name: location.AirportName || '',
+        city: location.CityName || location.City || '',
+        terminal: location.Terminal || '',
+        time: location.DepTime || location.ArrTime || location.Time || ''
+      };
+    };
+
+    const origin = getLocationInfo(segment.Origin || segment.OriginLocation);
+    const destination = getLocationInfo(segment.Destination || segment.DestinationLocation);
+
+    // Calculate duration
+    let duration = '';
+    let durationInMinutes = 0;
+
+    if (origin.time && destination.time) {
+      try {
+        const depDate = new Date(origin.time);
+        const arrDate = new Date(destination.time);
+        if (!isNaN(depDate.getTime()) && !isNaN(arrDate.getTime())) {
+          durationInMinutes = Math.round((arrDate - depDate) / (1000 * 60));
+          const hours = Math.floor(durationInMinutes / 60);
+          const minutes = durationInMinutes % 60;
+          duration = `${hours}h ${minutes}m`;
+        }
+      } catch (e) {
+        console.error('Error calculating duration:', e);
+      }
+    }
+
+    // Get airline information with fallbacks
+    const airline = {
+      code: flight.Airline?.AirlineCode || flight.AirlineCode || '',
+      name: flight.Airline?.AirlineName || flight.AirlineName || 'Unknown Airline',
+      number: flight.Airline?.FlightNumber || flight.FlightNumber || '',
+      logo: `https://www.gstatic.com/flights/airline_logos/70px/${(flight.Airline?.AirlineCode || flight.AirlineCode || 'default').toLowerCase()}.png`
+    };
+
+    // Handle fare information with fallbacks
+    const fare = flight.Fare || {};
+    const baseFare = parseFloat(fare.PublishedFare || fare.BaseFare || 0);
+    const tax = parseFloat(fare.Tax || 0);
+    const totalFare = baseFare + tax;
+
+    // Build the flight object with proper fallbacks
+    const formattedFlight = {
+      id: flight.ResultIndex || flight.id || `${airline.code}${airline.number}-${Date.now()}`,
+      airline,
+      origin: {
+        code: origin.code || searchParams.origin || '',
+        name: origin.name,
+        city: origin.city,
+        terminal: origin.terminal,
+        time: origin.time
+      },
+      destination: {
+        code: destination.code || searchParams.destination || '',
+        name: destination.name,
+        city: destination.city,
+        terminal: destination.terminal,
+        time: destination.time
+      },
+      departureTime: origin.time || new Date().toISOString(),
+      arrivalTime: destination.time || new Date().toISOString(),
+      duration,
+      durationInMinutes,
+      stops: segment.StopQuantity || (segment.Segments ? segment.Segments.length - 1 : 0) || 0,
+      aircraftType: segment.Equipment || segment.AircraftType || flight.AircraftType || 'N/A',
+      fare: {
+        baseFare,
+        tax,
+        totalFare,
+        currency: fare.Currency || searchParams.currency || 'INR'
+      },
+      cabinClass: flight.CabinClass || searchParams.cabinClass || 'Economy',
+      bookingClass: segment.BookingClass || flight.BookingClass || '',
+      fareType: fare.FareType || 'PUBLISHED',
+      baggage: fare.ChargeableBaggage || fare.Baggage || 'Check Fare Rules',
+      refundable: fare.Refundable || false,
+      amenities: {
+        wifi: fare.IsWifiAvailable || false,
+        meals: fare.IsMealAvailable || false,
+        entertainment: fare.IsEntertainmentAvailable || false
+      },
+      segments: [segment],
+      rawData: { flight, segment } // Keep original data for debugging
+    };
+
+    return formattedFlight;
+  } catch (error) {
+    console.error('Error in formatFlightData:', error);
+    console.error('Flight data that caused error:', { flight, segment });
+    return null; // Return null for invalid flights instead of crashing
   }
-
-  // Get airline information
-  const airline = flight.Airline || {};
-  const fare = flight.Fare || {};
-
-  // Handle airport codes - check both possible locations
-  const originAirportCode = origin.Airport?.AirportCode || origin.AirportCode || searchParams.origin || '';
-  const destAirportCode = destination.Airport?.AirportCode || destination.AirportCode || searchParams.destination || '';
-
-  return {
-    id: flight.ResultIndex || `${airline.FlightNumber || 'FLT'}-${Date.now()}`,
-    airline: {
-      code: airline.AirlineCode || '',
-      name: airline.AirlineName || 'Unknown Airline',
-      number: airline.FlightNumber || '',
-      logo: `https://www.gstatic.com/flights/airline_logos/70px/${(airline.AirlineCode || 'default').toLowerCase()}.png`
-    },
-    origin: originAirportCode,
-    destination: destAirportCode,
-    departureTime: depTime || new Date().toISOString(),
-    arrivalTime: arrTime || new Date().toISOString(),
-    duration,
-    durationInMinutes,
-    stops: segment?.StopQuantity || 0,
-    aircraftType: segment?.Equipment || segment?.AircraftType || 'N/A',
-    fare: {
-      baseFare: fare.PublishedFare || 0,
-      tax: fare.Tax || 0,
-      totalFare: (fare.PublishedFare || 0) + (fare.Tax || 0),
-      currency: searchParams.currency || 'INR'
-    },
-    cabinClass: searchParams.cabinClass || 'Economy',
-    bookingClass: segment?.BookingClass || '',
-    fareType: fare.FareType || 'PUBLISHED',
-    baggage: fare.ChargeableBaggage || 'Check Fare Rules',
-    refundable: fare.Refundable || false,
-    amenities: {
-      wifi: fare.IsWifiAvailable || false,
-      meals: fare.IsMealAvailable || false,
-      entertainment: fare.IsEntertainmentAvailable || false
-    },
-    segments: [segment],
-    ...searchParams
-  };
 };
 
 // Singleton instance
