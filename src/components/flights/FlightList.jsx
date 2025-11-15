@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { 
-  Clock, 
-  Plane, 
-  ArrowRight, 
-  ChevronDown, 
-  ChevronUp, 
-  DollarSign, 
-  Users, 
-  Briefcase, 
+import {
+  Clock,
+  Plane,
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
+  Users,
+  Briefcase,
   PlusCircle,
   Wifi,
   Utensils,
@@ -17,25 +17,29 @@ import {
   Luggage,
   RefreshCw,
   CheckCircle2,
-  XCircle
-} from 'lucide-react';
+  XCircle,
+} from "lucide-react";
 
-const formatCurrency = (amount, currency = 'INR') => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
+const formatCurrency = (amount, currency = "INR") => {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
     currency: currency,
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(amount);
 };
 
-export default function FlightList({ flights, onSelectFlight, tripType = 'oneway' }) {
+export default function FlightList({
+  flights,
+  onSelectFlight,
+  tripType = "oneway",
+}) {
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [selectedOutbound, setSelectedOutbound] = useState(null);
   const [selectedReturn, setSelectedReturn] = useState(null);
   const [sortBy, setSortBy] = useState("price_asc");
   const [currentPage, setCurrentPage] = useState(1);
-  const flightsPerPage = 10; // Reduced for better UX
+  const flightsPerPage = 50; // Reduced for better UX
 
   // Reset to first page when flights change
   useEffect(() => {
