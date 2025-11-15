@@ -206,12 +206,6 @@ class FlightService {
       if (responseData?.data?.data?.results) {
         console.log('Found results in response.data.data.results');
         results = responseData.data.data.results;
-
-        // Handle the case where results is an array of arrays
-        if (Array.isArray(results) && results.length > 0 && Array.isArray(results[0])) {
-          console.log('Flattening nested results array');
-          results = results.flat();
-        }
       }
         // Fallback to other possible structures
       else if (responseData?.data?.results) {
@@ -221,6 +215,17 @@ class FlightService {
       else if (responseData?.results) {
         console.log('Found results in response.results');
         results = responseData.results;
+      }
+      // If we have data directly in response
+      else if (Array.isArray(responseData)) {
+        console.log('Response is directly an array of results');
+        results = responseData;
+      }
+
+      // Handle the case where results is an array of arrays (flatten it)
+      if (Array.isArray(results) && results.length > 0 && Array.isArray(results[0])) {
+        console.log('Flattening nested results array');
+        results = results.flat();
       }
 
       // Ensure results is always an array
