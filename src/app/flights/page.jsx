@@ -62,38 +62,36 @@ export default function FlightsPage() {
         throw new Error("No response received from the server");
       }
 
-      // Handle the response based on the expected format from your API
+      // Handle the response based on the TBO API format
       let results = [];
 
       // Check for error in response
-      if (response.error) {
-        throw new Error(
-          response.error.message || "Error searching for flights"
-        );
+      if (!response.success) {
+        throw new Error(response.message || "Error searching for flights");
       }
 
-      // Handle different response formats
-      if (response.data) {
-        results = Array.isArray(response.data)
-          ? response.data
-          : [response.data];
-      } else if (response.results) {
-        results = Array.isArray(response.results)
-          ? response.results
-          : [response.results];
-      } else if (Array.isArray(response)) {
-        results = response;
-      } else if (response.Response && response.Response.Results) {
-        // Handle TBO API response format
-        results = response.Response.Results.flatMap((segment) =>
-          segment.map((flight) => ({
+      // Extract results from the nested TBO response
+      if (
+        response.data &&
+        response.data.success &&
+        response.data.data &&
+        response.data.data.results
+      ) {
+        // Flatten the nested array structure from TBO
+        results = response.data.data.results
+          .flatMap((segment) => (Array.isArray(segment) ? segment : [segment]))
+          .map((flight) => ({
             ...flight,
             origin: searchData.origin,
             destination: searchData.destination,
             departureDate: searchData.departureDate,
             returnDate: searchData.returnDate,
-          }))
-        );
+          }));
+      } else if (response.data) {
+        // Fallback to other possible response formats
+        results = Array.isArray(response.data)
+          ? response.data
+          : [response.data];
       }
 
       if (!results || results.length === 0) {
