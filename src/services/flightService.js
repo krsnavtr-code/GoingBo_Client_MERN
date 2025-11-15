@@ -348,12 +348,48 @@ class FlightService {
               // For each actual segment object, format
               for (const segment of rawSegments) {
                 try {
-                  if (!segment || !segment.Origin || !segment.Destination) continue;
+                  // Validate segment before processing
+                  if (!segment) {
+                    console.warn('Skipping null/undefined segment');
+                    continue;
+                  }
+
+                  // Log segment structure for debugging
+                  console.debug('Processing segment:', {
+                    segmentKeys: Object.keys(segment),
+                    hasOrigin: !!segment.Origin,
+                    hasDestination: !!segment.Destination,
+                    originType: typeof segment.Origin,
+                    destType: typeof segment.Destination
+                  });
+
+                  if (!segment.Origin || !segment.Destination) {
+                    console.warn('Skipping segment with missing origin/destination:', {
+                      origin: segment.Origin,
+                      destination: segment.Destination,
+                      segmentId: segment.SegmentId || 'unknown'
+                    });
+                    continue;
+                  }
+
                   const formattedFlight = formatFlightData(flight, segment, searchParams);
-                  formattedFlights.push(formattedFlight);
+                  if (formattedFlight) {
+                    formattedFlights.push(formattedFlight);
+                  }
                 } catch (segErr) {
                   // Protect whole flow from one bad segment
-                  console.warn('Error formatting a segment — skipping it', segErr, segment);
+                  console.warn('Error formatting a segment — skipping it', {
+                    error: segErr.message,
+                    segment: segment ? {
+                      id: segment.SegmentId,
+                      origin: segment.Origin,
+                      destination: segment.Destination
+                    } : 'null/undefined',
+                    flight: flight ? {
+                      id: flight.ResultIndex || flight.id,
+                      airline: flight.Airline || flight.airline
+                    } : 'null/undefined'
+                  });
                   continue;
                 }
               }
@@ -369,18 +405,38 @@ class FlightService {
       console.log(`Formatted ${formattedFlights.length} flights`);
       return formattedFlights;
     } catch (error) {
-      console.error('Search flights error:', error);
+      console.error('Search flights error:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        response: error.response ? {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          headers: error.response.headers,
+          data: error.response.data ? 'Data available (see network tab)' : 'No data'
+        } : 'No response',
+        request: error.request ? 'Request object exists' : 'No request object'
+      });
+
+      // If we have a response from the server
       if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
-        console.error('Response headers:', error.response.headers);
-        throw new Error(error.response.data?.message || 'Failed to search flights');
+        const { status, data } = error.response;
+        console.error(`Server responded with status ${status}:`, data);
+        const errorMessage = data?.message ||
+          data?.error?.message ||
+          `Server error: ${status} ${error.response.statusText || 'Unknown error'}`;
+        throw new Error(errorMessage);
       }
-      // If we have a custom error message from the server, use it
-      if (error.message && error.message !== 'Request failed with status code 500') {
-        throw error; // Re-throw the error with the original message
+
+      // If it's a network error or other client-side error
+      if (error.request) {
+        console.error('No response received from server. Network error:', error.message);
+        throw new Error('Unable to connect to the server. Please check your internet connection.');
       }
-      throw new Error(error.message || 'Failed to search flights');
+
+      // For any other type of error
+      console.error('Unexpected error during flight search:', error);
+      throw new Error(error.message || 'An unexpected error occurred while searching for flights');
     }
   }
 
