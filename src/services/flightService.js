@@ -366,10 +366,6 @@ class FlightService {
         return formattedFlights;
       }
 
-      // Return final array
-      return formattedFlights;
-
-
       console.log(`Formatted ${formattedFlights.length} flights`);
       return formattedFlights;
     } catch (error) {
@@ -379,6 +375,10 @@ class FlightService {
         console.error('Response status:', error.response.status);
         console.error('Response headers:', error.response.headers);
         throw new Error(error.response.data?.message || 'Failed to search flights');
+      }
+      // If we have a custom error message from the server, use it
+      if (error.message && error.message !== 'Request failed with status code 500') {
+        throw error; // Re-throw the error with the original message
       }
       throw new Error(error.message || 'Failed to search flights');
     }
