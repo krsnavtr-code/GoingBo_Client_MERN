@@ -35,7 +35,12 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
   const [selectedReturn, setSelectedReturn] = useState(null);
   const [sortBy, setSortBy] = useState("price_asc");
   const [currentPage, setCurrentPage] = useState(1);
-  const flightsPerPage = 20;
+  const flightsPerPage = 10; // Reduced for better UX
+
+  // Reset to first page when flights change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [flights]);
 
   // Sort flights based on the selected criteria
   const sortedFlights = [...(flights || [])].sort((a, b) => {
@@ -61,9 +66,15 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
     indexOfLastFlight
   );
   const totalPages = Math.ceil(sortedFlights.length / flightsPerPage);
+  const hasFlights = sortedFlights.length > 0;
 
   // Change page
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber) => {
+    if (pageNumber < 1 || pageNumber > totalPages) return;
+    setCurrentPage(pageNumber);
+    // Scroll to top of results
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const toggleFlightDetails = (flightId) => {
     setSelectedFlight(selectedFlight === flightId ? null : flightId);
@@ -386,9 +397,9 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
                 Previous
               </button>
 
-              {/* Page numbers */}
+              {/* Show first page, current page with neighbors, and last page */}
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                // Show pages around current page
+                // Calculate page numbers to show (current page in the middle when possible)
                 let pageNum;
                 if (totalPages <= 5) {
                   pageNum = i + 1;
@@ -400,15 +411,19 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
                   pageNum = currentPage - 2 + i;
                 }
 
+                // Skip if we've gone over the total pages
+                if (pageNum > totalPages) return null;
+
                 return (
                   <button
                     key={pageNum}
                     onClick={() => paginate(pageNum)}
-                    className={`px-3 py-1 rounded-md ${
+                    className={`px-3 py-1 border-t border-b ${
                       currentPage === pageNum
-                        ? "bg-blue-600 text-white"
-                        : "text-blue-600 hover:bg-blue-50"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                     }`}
+                    aria-current={currentPage === pageNum ? "page" : undefined}
                   >
                     {pageNum}
                   </button>
@@ -418,22 +433,20 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded-md ${
-                  currentPage === totalPages
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-600 hover:bg-blue-50"
-                }`}
+                className="px-3 py-1 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Next page"
               >
-                Next
+                ›
               </button>
               <button
                 onClick={() => paginate(totalPages)}
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded-md ${
+                className={`px-3 py-1 rounded-r-md border ${
                   currentPage === totalPages
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-600 hover:bg-blue-50"
+                    ? "text-gray-400 cursor-not-allowed border-gray-300 bg-gray-100"
+                    : "text-blue-600 hover:bg-blue-50 border-gray-300 bg-white hover:border-blue-300"
                 }`}
+                aria-label="Last page"
               >
                 Last
               </button>
