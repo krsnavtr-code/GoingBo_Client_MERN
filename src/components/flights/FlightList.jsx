@@ -33,10 +33,21 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [selectedOutbound, setSelectedOutbound] = useState(null);
   const [selectedReturn, setSelectedReturn] = useState(null);
-  const [sortBy, setSortBy] = useState('price_asc');
+  const [sortBy, setSortBy] = useState("price_asc");
   const [currentPage, setCurrentPage] = useState(1);
   const flightsPerPage = 20;
-  
+
+  // Calculate pagination
+  const indexOfLastFlight = currentPage * flightsPerPage;
+  const indexOfFirstFlight = indexOfLastFlight - flightsPerPage;
+  const currentFlights = sortedFlights.slice(
+    indexOfFirstFlight,
+    indexOfLastFlight
+  );
+  const totalPages = Math.ceil(sortedFlights.length / flightsPerPage);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const toggleFlightDetails = (flightId) => {
     setSelectedFlight(selectedFlight === flightId ? null : flightId);
