@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+console.log("🔥 flightService.js LOADED!!");
 
 // Helper function to format flight data - moved to top to avoid hoisting issues
 function formatFlightData(flight, segment, searchParams = {}) {
@@ -359,7 +360,7 @@ const flightService = new FlightService();
 export default flightService;
 
 // Export individual methods with proper binding
-export const searchFlights = flightService.searchFlights.bind(flightService);
+// export const searchFlights = flightService.searchFlights.bind(flightService);
 export const getFareRules = flightService.getFareRules.bind(flightService);
 export const bookFlight = flightService.bookFlight.bind(flightService);
 export const getBookingDetails = flightService.getBookingDetails.bind(flightService);
