@@ -37,6 +37,22 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
   const [currentPage, setCurrentPage] = useState(1);
   const flightsPerPage = 20;
 
+  // Sort flights based on the selected criteria
+  const sortedFlights = [...(flights || [])].sort((a, b) => {
+    switch (sortBy) {
+      case "price_asc":
+        return (a.fare?.totalFare || 0) - (b.fare?.totalFare || 0);
+      case "price_desc":
+        return (b.fare?.totalFare || 0) - (a.fare?.totalFare || 0);
+      case "duration":
+        return (a.durationInMinutes || 0) - (b.durationInMinutes || 0);
+      case "departure":
+        return new Date(a.departureTime) - new Date(b.departureTime);
+      default:
+        return 0;
+    }
+  });
+
   // Calculate pagination
   const indexOfLastFlight = currentPage * flightsPerPage;
   const indexOfFirstFlight = indexOfLastFlight - flightsPerPage;
@@ -101,22 +117,6 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
       }
     }
   };
-
-  // Sort flights based on the selected criteria
-  const sortedFlights = [...(flights || [])].sort((a, b) => {
-    switch (sortBy) {
-      case "price_asc":
-        return (a.fare?.totalFare || 0) - (b.fare?.totalFare || 0);
-      case "price_desc":
-        return (b.fare?.totalFare || 0) - (a.fare?.totalFare || 0);
-      case "duration":
-        return (a.durationInMinutes || 0) - (b.durationInMinutes || 0);
-      case "departure":
-        return new Date(a.departureTime) - new Date(b.departureTime);
-      default:
-        return 0;
-    }
-  });
 
   if (!flights || flights.length === 0) {
     return (
