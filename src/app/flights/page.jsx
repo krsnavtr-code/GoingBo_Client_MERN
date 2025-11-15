@@ -73,12 +73,37 @@ export default function FlightsPage() {
       console.log(`Found ${formattedResults.length} flights`);
       setSearchResults(formattedResults);
     } catch (err) {
-      console.error("Flight search error:", err);
-      setError(
-        err.message ||
-          err.response?.data?.error?.message ||
-          "Failed to search for flights. Please try again."
-      );
+      console.error("Flight search error:", {
+        message: err.message,
+        name: err.name,
+        stack: err.stack,
+        response: err.response?.data
+          ? "Response data available (see network tab)"
+          : "No response data",
+      });
+
+      // Extract a more user-friendly error message
+      let errorMessage = "Failed to search for flights. ";
+
+      if (err.message.includes("network")) {
+        errorMessage += "Please check your internet connection and try again.";
+      } else if (err.message.includes("timeout")) {
+        errorMessage += "The request took too long. Please try again.";
+      } else if (
+        err.message.includes("500") ||
+        err.message.includes("server")
+      ) {
+        errorMessage +=
+          "There was a problem with our servers. Please try again later.";
+      } else if (err.message) {
+        // Use the original error message if available
+        errorMessage = err.message;
+      } else {
+        errorMessage +=
+          "Please try again or contact support if the problem persists.";
+      }
+
+      setError(errorMessage);
       setSearchResults(null);
     } finally {
       setLoading(false);

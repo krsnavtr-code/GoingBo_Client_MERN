@@ -398,8 +398,11 @@ class FlightService {
         }
       } catch (outerErr) {
         console.error('Unexpected error while processing Results:', outerErr);
-        // Return whatever we collected so far instead of throwing a TDZ/minify error
-        return formattedFlights;
+        // Instead of returning an empty array, throw a more descriptive error
+        // that includes the original error message
+        const errorMessage = `Error processing flight data: ${outerErr.message || 'Unknown error'}`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
       console.log(`Formatted ${formattedFlights.length} flights`);
