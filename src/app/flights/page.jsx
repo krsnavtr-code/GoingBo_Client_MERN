@@ -14,18 +14,77 @@ const FloatingSearchCard = dynamic(
   { ssr: false }
 );
 
-export default function FlightsPage() {
+export default function FlightsPage({ searchParams: initialSearchParams }) {
   const router = useRouter();
   const { user } = useAuth();
   const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [searchParams, setSearchParams] = useState(null);
+  const [searchParams, setSearchParams] = useState(initialSearchParams || null);
+
+  // Function to update URL with search parameters
+  const updateSearchParams = useCallback((params) => {
+    const searchParams = new URLSearchParams();
+
+    // Add all non-empty parameters to the URL
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        searchParams.set(key, value);
+      }
+    });
+
+    // Update the URL without causing a page reload
+    const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+    window.history.pushState({}, "", newUrl);
+  }, []);
+
+  // Function to read search parameters from URL
+  const getSearchParamsFromUrl = useCallback(() => {
+    if (typeof window === "undefined") return null;
+
+    const params = new URLSearchParams(window.location.search);
+    const result = {};
+
+    // Only include parameters we expect
+    const expectedParams = [
+      "origin",
+      "destination",
+      "departureDate",
+      "returnDate",
+      "tripType",
+      "adults",
+      "children",
+      "infants",
+      "cabinClass",
+    ];
+
+    expectedParams.forEach((param) => {
+      const value = params.get(param);
+      if (value !== null) {
+        result[param] = value;
+      }
+    });
+
+    return Object.keys(result).length > 0 ? result : null;
+  }, []);
+
+  // Load search parameters from URL on component mount
+  useEffect(() => {
+    const params = getSearchParamsFromUrl();
+    if (params) {
+      // If we have URL parameters, trigger a search
+      handleSearch(params);
+    }
+  }, [getSearchParamsFromUrl]);
 
   const handleSearch = useCallback(async (searchParams) => {
     setLoading(true);
     setError(null);
     setSearchResults(null);
+    setSearchParams(searchParams);
+
+    // Update URL with search parameters
+    updateSearchParams(searchParams);
 
     try {
       console.log("Flight search initiated with params:", searchParams);
