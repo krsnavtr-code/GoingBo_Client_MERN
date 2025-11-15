@@ -121,10 +121,12 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
   );
 
   const renderFlightCard = (flight, isSelected = false, isReturn = false) => (
-    <div 
-      key={`${flight.id}-${isReturn ? 'return' : 'outbound'}`}
+    <div
+      key={`${flight.id}-${isReturn ? "return" : "outbound"}`}
       className={`border rounded-lg overflow-hidden transition-all duration-200 ${
-        isSelected ? 'ring-2 ring-blue-500 border-blue-300' : 'border-gray-200 hover:border-blue-300'
+        isSelected
+          ? "ring-2 ring-blue-500 border-blue-300"
+          : "border-gray-200 hover:border-blue-300"
       }`}
     >
       <div className="p-4">
@@ -136,30 +138,46 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
               </div>
               <div className="ml-4">
                 <div className="text-sm font-medium text-gray-900">
-                  {flight.airline} • {flight.flightNumber}
+                  {typeof flight.airline === "object"
+                    ? `${flight.airline.name || "Unknown Airline"} • ${
+                        flight.airline.number || ""
+                      }`
+                    : `${flight.airline || "Unknown Airline"} • ${
+                        flight.flightNumber || ""
+                      }`}
                 </div>
-                <div className="text-xs text-gray-500">{flight.aircraftType}</div>
+                <div className="text-xs text-gray-500">
+                  {flight.aircraftType}
+                </div>
               </div>
             </div>
           </div>
-          
+
           <div className="text-right">
             <div className="text-lg font-bold text-blue-600">
-              {formatCurrency(flight.fare?.totalFare || 0, flight.fare?.currency)}
+              {formatCurrency(
+                flight.fare?.totalFare || 0,
+                flight.fare?.currency
+              )}
             </div>
             <div className="text-xs text-gray-500">
-              {flight.fareType} • {flight.refundable ? 'Refundable' : 'Non-refundable'}
+              {flight.fareType} •{" "}
+              {flight.refundable ? "Refundable" : "Non-refundable"}
             </div>
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div>
-            <div className="text-2xl font-bold">{formatTime(flight.departureTime)}</div>
+            <div className="text-2xl font-bold">
+              {formatTime(flight.departureTime)}
+            </div>
             <div className="text-sm text-gray-500">{flight.origin}</div>
-            <div className="text-xs text-gray-400">{formatDate(flight.departureTime)}</div>
+            <div className="text-xs text-gray-400">
+              {formatDate(flight.departureTime)}
+            </div>
           </div>
-          
+
           <div className="text-center">
             <div className="text-xs text-gray-500">
               <Clock className="inline-block h-3 w-3 mr-1" />
@@ -171,29 +189,37 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full bg-gray-400"></div>
             </div>
             <div className="text-xs text-blue-600">
-              {flight.stops === 0 ? 'Non-stop' : `${flight.stops} ${flight.stops === 1 ? 'stop' : 'stops'}`}
+              {flight.stops === 0
+                ? "Non-stop"
+                : `${flight.stops} ${flight.stops === 1 ? "stop" : "stops"}`}
             </div>
           </div>
-          
+
           <div className="text-right">
-            <div className="text-2xl font-bold">{formatTime(flight.arrivalTime)}</div>
+            <div className="text-2xl font-bold">
+              {formatTime(flight.arrivalTime)}
+            </div>
             <div className="text-sm text-gray-500">{flight.destination}</div>
-            <div className="text-xs text-gray-400">{formatDate(flight.arrivalTime)}</div>
+            <div className="text-xs text-gray-400">
+              {formatDate(flight.arrivalTime)}
+            </div>
           </div>
         </div>
 
         <div className="mt-4 pt-4 border-t border-gray-100">
           <div className="flex justify-between items-center">
             <div>
-              <div className="text-xs text-gray-500">Baggage: {flight.baggage || 'Check Fare Rules'}</div>
+              <div className="text-xs text-gray-500">
+                Baggage: {flight.baggage || "Check Fare Rules"}
+              </div>
               {flight.amenities && renderAmenities(flight.amenities)}
             </div>
             <button
               onClick={() => handleSelectFlight(flight)}
               className={`px-4 py-2 rounded-md text-sm font-medium ${
-                isSelected 
-                  ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                isSelected
+                  ? "bg-green-100 text-green-800 hover:bg-green-200"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
               } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
             >
               {isSelected ? (
@@ -201,7 +227,7 @@ export default function FlightList({ flights, onSelectFlight, tripType = 'oneway
                   <CheckCircle2 className="h-4 w-4 mr-1" /> Selected
                 </span>
               ) : (
-                'Select Flight'
+                "Select Flight"
               )}
             </button>
           </div>
