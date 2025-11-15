@@ -18,40 +18,19 @@ function formatFlightData(flight, segment, searchParams = {}) {
     });
 
     // Safely extract origin and destination information
-    const getLocationInfo = (location) => {
-      if (!location) return {};
-
-      // Handle different possible location formats
-      if (location.Airport) {
-        return {
-          code: location.Airport.AirportCode || '',
-          name: location.Airport.AirportName || '',
-          city: location.Airport.CityName || '',
-          terminal: location.Airport.Terminal || '',
-          time: location.DepTime || location.ArrTime || ''
-        };
-      }
-
-      return {
-        code: location.AirportCode || '',
-        name: location.AirportName || '',
-        city: location.CityName || location.City || '',
-        terminal: location.Terminal || '',
-        time: location.DepTime || location.ArrTime || location.Time || ''
-      };
-    };
-
-    const origin = getLocationInfo(segment.Origin || segment.OriginLocation);
-    const destination = getLocationInfo(segment.Destination || segment.DestinationLocation);
+    const origin = segment.Origin || {};
+    const destination = segment.Destination || {};
+    const depTime = origin.DepartureTime || origin.DepartureDateTime || '';
+    const arrTime = destination.ArrivalTime || destination.ArrivalDateTime || '';
 
     // Calculate duration
     let duration = '';
     let durationInMinutes = 0;
 
-    if (origin.time && destination.time) {
+    if (depTime && arrTime) {
       try {
-        const depDate = new Date(origin.time);
-        const arrDate = new Date(destination.time);
+        const depDate = new Date(depTime);
+        const arrDate = new Date(arrTime);
         if (!isNaN(depDate.getTime()) && !isNaN(arrDate.getTime())) {
           durationInMinutes = Math.round((arrDate - depDate) / (1000 * 60));
           const hours = Math.floor(durationInMinutes / 60);
@@ -63,55 +42,59 @@ function formatFlightData(flight, segment, searchParams = {}) {
       }
     }
 
-    // Get airline information with fallbacks
-    const airline = {
-      code: flight.Airline?.AirlineCode || flight.AirlineCode || '',
-      name: flight.Airline?.AirlineName || flight.AirlineName || 'Unknown Airline',
-      number: flight.Airline?.FlightNumber || flight.FlightNumber || '',
-      logo: `https://www.gstatic.com/flights/airline_logos/70px/${(flight.Airline?.AirlineCode || flight.AirlineCode || 'default').toLowerCase()}.png`
-    };
-
-    // Handle fare information with fallbacks
+    // Get airline information - handle different possible locations
+    const airline = flight.Airline || segment.Airline || {};
     const fare = flight.Fare || {};
-    const baseFare = parseFloat(fare.PublishedFare || fare.BaseFare || 0);
-    const tax = parseFloat(fare.Tax || 0);
+
+    // Extract airport codes with fallbacks
+    const originAirportCode = origin.Airport?.AirportCode || origin.AirportCode || searchParams.origin || '';
+    const destAirportCode = destination.Airport?.AirportCode || destination.AirportCode || searchParams.destination || '';
+
+    // Calculate base fare and taxes
+    const baseFare = fare.PublishedFare || fare.BaseFare || 0;
+    const tax = fare.Tax || 0;
     const totalFare = baseFare + tax;
 
-    // Build the flight object with proper fallbacks
+    // Build the formatted flight object
     const formattedFlight = {
-      id: flight.ResultIndex || flight.id || `${airline.code}${airline.number}-${Date.now()}`,
-      airline,
-      origin: {
-        code: origin.code || searchParams.origin || '',
-        name: origin.name,
-        city: origin.city,
-        terminal: origin.terminal,
-        time: origin.time
+      id: flight.ResultIndex || `${airline.AirlineCode || 'FLT'}-${Date.now()}`,
+      airline: {
+        code: airline.AirlineCode || '',
+        name: airline.AirlineName || airline.Name || 'Unknown Airline',
+        number: airline.FlightNumber || '',
+        logo: `https://www.gstatic.com/flights/airline_logos/70px/${(airline.AirlineCode || 'default').toLowerCase()}.png`
       },
-      destination: {
-        code: destination.code || searchParams.destination || '',
-        name: destination.name,
-        city: destination.city,
-        terminal: destination.terminal,
-        time: destination.time
+      origin: originAirportCode,
+      originInfo: {
+        code: originAirportCode,
+        city: origin.City || '',
+        airport: origin.Airport?.AirportName || origin.AirportName || '',
+        terminal: origin.Terminal || ''
       },
-      departureTime: origin.time || new Date().toISOString(),
-      arrivalTime: destination.time || new Date().toISOString(),
+      destination: destAirportCode,
+      destinationInfo: {
+        code: destAirportCode,
+        city: destination.City || '',
+        airport: destination.Airport?.AirportName || destination.AirportName || '',
+        terminal: destination.Terminal || ''
+      },
+      departureTime: depTime,
+      arrivalTime: arrTime,
       duration,
       durationInMinutes,
-      stops: segment.StopQuantity || (segment.Segments ? segment.Segments.length - 1 : 0) || 0,
-      aircraftType: segment.Equipment || segment.AircraftType || flight.AircraftType || 'N/A',
+      stops: segment.StopQuantity || 0,
+      aircraftType: segment.Equipment || segment.AircraftType || 'N/A',
       fare: {
         baseFare,
         tax,
         totalFare,
-        currency: fare.Currency || searchParams.currency || 'INR'
+        currency: fare.Currency || searchParams.currency || 'INR',
+        refundable: fare.Refundable || false
       },
       cabinClass: flight.CabinClass || searchParams.cabinClass || 'Economy',
-      bookingClass: segment.BookingClass || flight.BookingClass || '',
+      bookingClass: segment.BookingClass || '',
       fareType: fare.FareType || 'PUBLISHED',
-      baggage: fare.ChargeableBaggage || fare.Baggage || 'Check Fare Rules',
-      refundable: fare.Refundable || false,
+      baggage: fare.ChargeableBaggage || 'Check Fare Rules',
       amenities: {
         wifi: fare.IsWifiAvailable || false,
         meals: fare.IsMealAvailable || false,
