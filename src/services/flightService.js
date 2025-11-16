@@ -213,6 +213,7 @@ class FlightService {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
       console.log('Response data type:', typeof response.data);
+      console.log('Response data:', response.data);
       console.log('Response data length:', response.data ? JSON.stringify(response.data).length : 0);
       console.log('First 500 chars of response:', JSON.stringify(response.data).substring(0, 500));
       console.groupEnd();
