@@ -173,15 +173,8 @@ export default function FlightList({
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white border flex items-center justify-center overflow-hidden">
-                <img
-                  src={flight.airline.logo}
-                  alt={flight.airline.name}
-                  className="h-8 w-8 object-contain"
-                  onError={(e) =>
-                    (e.currentTarget.src = "/default-airline.png")
-                  } // fallback
-                />
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Plane className="h-5 w-5 text-blue-600" />
               </div>
               <div className="ml-4">
                 <div className="text-sm font-medium text-gray-900">
