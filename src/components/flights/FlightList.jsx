@@ -86,6 +86,7 @@ export default function FlightList({
       return date.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false, // <-- 24-hour format
       });
     } catch (e) {
       return "--:--";
@@ -172,21 +173,23 @@ export default function FlightList({
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Plane className="h-5 w-5 text-blue-600" />
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white border flex items-center justify-center overflow-hidden">
+                <img
+                  src={flight.airline.logo}
+                  alt={flight.airline.name}
+                  className="h-8 w-8 object-contain"
+                  onError={(e) =>
+                    (e.currentTarget.src = "/default-airline.png")
+                  } // fallback
+                />
               </div>
               <div className="ml-4">
                 <div className="text-sm font-medium text-gray-900">
-                  {typeof flight.airline === "object"
-                    ? `${flight.airline.name || "Unknown Airline"} • ${
-                        flight.airline.number || ""
-                      }`
-                    : `${flight.airline || "Unknown Airline"} • ${
-                        flight.flightNumber || ""
-                      }`}
+                  {flight.airline.name}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {flight.aircraftType}
+                  {flight.airline.code}
+                  {flight.airline.number}
                 </div>
               </div>
             </div>
@@ -201,20 +204,20 @@ export default function FlightList({
             </div>
             <div className="text-xs text-gray-500">
               {flight.fareType} •{" "}
-              {flight.refundable ? "Refundable" : "Non-refundable"}
+              {flight.fare?.refundable ? "Refundable" : "Non-refundable"}
             </div>
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div>
+            <div className="text-xs text-gray-400">
+              {formatDate(flight.departureTime)}
+            </div>
             <div className="text-2xl font-bold">
               {formatTime(flight.departureTime)}
             </div>
             <div className="text-sm text-gray-500">{flight.origin}</div>
-            <div className="text-xs text-gray-400">
-              {formatDate(flight.departureTime)}
-            </div>
           </div>
 
           <div className="text-center">
@@ -235,42 +238,15 @@ export default function FlightList({
           </div>
 
           <div className="text-right">
-            <div className="text-2xl font-bold">
-              {formatTime(flight.arrivalTime)}
-            </div>
-            <div className="text-sm text-gray-500">{flight.destination}</div>
             <div className="text-xs text-gray-400">
               {formatDate(flight.arrivalTime)}
             </div>
-          </div>
-        </div>
-
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="text-xs text-gray-500">
-                Baggage: {flight.baggage || "Check Fare Rules"}
-              </div>
-              {flight.amenities && renderAmenities(flight.amenities)}
+            <div className="text-2xl font-bold">
+              {formatTime(flight.arrivalTime)}
             </div>
-            <button
-              onClick={() => handleSelectFlight(flight)}
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                isSelected
-                  ? "bg-green-100 text-green-800 hover:bg-green-200"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-            >
-              {isSelected ? (
-                <span className="flex items-center">
-                  <CheckCircle2 className="h-4 w-4 mr-1" /> Selected
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <PlusCircle className="h-4 w-4 mr-1" /> Select
-                </span>
-              )}
-            </button>
+            <div className="text-sm text-gray-500">
+              {flight.destinationInfo.city} • {flight.destination.code}
+            </div>
           </div>
         </div>
       </div>
