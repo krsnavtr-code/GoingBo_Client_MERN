@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Clock,
   Plane,
@@ -18,6 +18,24 @@ import {
   RefreshCw,
   CheckCircle2,
   XCircle,
+  X,
+  MapPin,
+  Calendar,
+  Clock as ClockIcon,
+  Info,
+  ArrowLeft,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpRight,
+  ArrowDownLeft,
+  PlaneLanding,
+  PlaneTakeoff,
+  User,
+  BriefcaseMedical,
+  ShieldCheck,
+  ShieldAlert,
+  AlertCircle,
 } from "lucide-react";
 
 const formatCurrency = (amount, currency = "INR") => {
@@ -39,6 +57,9 @@ export default function FlightList({
   const [selectedReturn, setSelectedReturn] = useState(null);
   const [sortBy, setSortBy] = useState("price_asc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedFlightDetails, setSelectedFlightDetails] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const modalRef = useRef(null);
   const flightsPerPage = 50; // Reduced for better UX
 
   // Reset to first page when flights change
@@ -107,28 +128,6 @@ export default function FlightList({
     }
   };
 
-  const handleSelectFlight = (flight) => {
-    if (tripType === "roundtrip") {
-      // For round trips, we need to select both outbound and return flights
-      if (!selectedOutbound) {
-        setSelectedOutbound(flight);
-      } else if (!selectedReturn && flight.id !== selectedOutbound.id) {
-        setSelectedReturn(flight);
-        if (onSelectFlight) {
-          onSelectFlight({
-            outbound: selectedOutbound,
-            return: flight,
-          });
-        }
-      }
-    } else {
-      // For one-way trips, just select the flight
-      if (onSelectFlight) {
-        onSelectFlight(flight);
-      }
-    }
-  };
-
   if (!flights || flights.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow p-6">
@@ -143,27 +142,35 @@ export default function FlightList({
     );
   }
 
-  const renderAmenities = (amenities) => (
-    <div className="flex items-center space-x-2 mt-2">
-      {amenities.wifi && (
-        <Wifi className="h-4 w-4 text-blue-500" title="WiFi" />
-      )}
-      {amenities.meals && (
-        <Utensils className="h-4 w-4 text-green-500" title="Meals" />
-      )}
-      {amenities.entertainment && (
-        <Film className="h-4 w-4 text-purple-500" title="Entertainment" />
-      )}
-      {amenities.baggage && (
-        <Luggage className="h-4 w-4 text-amber-500" title="Baggage included" />
-      )}
-    </div>
-  );
+  // Close modal when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setIsModalOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleFlightCardClick = (flight) => {
+    setSelectedFlightDetails(flight);
+    setIsModalOpen(true);
+    document.body.style.overflow = "hidden"; // Prevent scrolling when modal is open
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    document.body.style.overflow = "auto"; // Re-enable scrolling
+  };
 
   const renderFlightCard = (flight, isSelected = false, isReturn = false) => (
     <div
       key={`${flight.id}-${isReturn ? "return" : "outbound"}`}
-      className={`border rounded-lg overflow-hidden transition-all duration-200 ${
+      onClick={() => handleFlightCardClick(flight)}
+      className={`border rounded-lg overflow-hidden transition-all duration-200 cursor-pointer ${
         isSelected
           ? "ring-2 ring-blue-500 border-blue-300"
           : "border-gray-200 hover:border-blue-300"
@@ -246,8 +253,333 @@ export default function FlightList({
     </div>
   );
 
+  const renderFlightDetailsModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div
+        ref={modalRef}
+        className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all"
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
+          <h2 className="text-xl font-bold text-gray-900">Flight Details</h2>
+          <button
+            onClick={closeModal}
+            className="text-gray-400 hover:text-gray-500 focus:outline-none"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Flight Summary */}
+        <div className="p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 bg-blue-50 p-4 rounded-lg">
+            <div>
+              <div className="flex items-center text-lg font-semibold">
+                <PlaneTakeoff className="h-5 w-5 text-blue-600 mr-2" />
+                {selectedFlightDetails?.origin} →{" "}
+                {selectedFlightDetails?.destination}
+              </div>
+              <div className="flex items-center mt-1 text-sm text-gray-600">
+                <Calendar className="h-4 w-4 mr-1" />
+                {formatDate(selectedFlightDetails?.departureTime)}
+                <span className="mx-2">•</span>
+                <ClockIcon className="h-4 w-4 mr-1" />
+                {formatTime(selectedFlightDetails?.departureTime)} -{" "}
+                {formatTime(selectedFlightDetails?.arrivalTime)}
+              </div>
+            </div>
+            <div className="mt-3 md:mt-0 text-right">
+              <div className="text-2xl font-bold text-blue-600">
+                {formatCurrency(
+                  selectedFlightDetails?.fare?.totalFare || 0,
+                  selectedFlightDetails?.fare?.currency
+                )}
+              </div>
+              <div className="text-sm text-gray-600">
+                {selectedFlightDetails?.fareType} •{" "}
+                {selectedFlightDetails?.fare?.refundable
+                  ? "Refundable"
+                  : "Non-refundable"}
+              </div>
+            </div>
+          </div>
+
+          {/* Flight Itinerary */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <Plane className="h-5 w-5 text-blue-600 mr-2" />
+              Flight Itinerary
+            </h3>
+
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              {/* Airline Header */}
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="bg-white p-1 rounded-md shadow-sm mr-3">
+                    <Plane className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium">
+                      {selectedFlightDetails?.airline?.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {selectedFlightDetails?.airline?.code}
+                      {selectedFlightDetails?.airline?.number} •{" "}
+                      {selectedFlightDetails?.aircraft}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {selectedFlightDetails?.duration}
+                </div>
+              </div>
+
+              {/* Flight Route */}
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-left">
+                    <div className="text-2xl font-bold">
+                      {formatTime(selectedFlightDetails?.departureTime)}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {formatDate(selectedFlightDetails?.departureTime)}
+                    </div>
+                    <div className="font-medium mt-1">
+                      {selectedFlightDetails?.origin}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {selectedFlightDetails?.originInfo?.city},{" "}
+                      {selectedFlightDetails?.originInfo?.country}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center px-4">
+                    <div className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full mb-1">
+                      {selectedFlightDetails?.stops === 0
+                        ? "Non-stop"
+                        : `${selectedFlightDetails?.stops} ${
+                            selectedFlightDetails?.stops === 1
+                              ? "Stop"
+                              : "Stops"
+                          }`}
+                    </div>
+                    <div className="relative w-32">
+                      <div className="h-px bg-gray-300 w-full absolute top-1/2"></div>
+                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full bg-blue-600"></div>
+                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full bg-blue-600"></div>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {selectedFlightDetails?.duration}
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-2xl font-bold">
+                      {formatTime(selectedFlightDetails?.arrivalTime)}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {formatDate(selectedFlightDetails?.arrivalTime)}
+                    </div>
+                    <div className="font-medium mt-1">
+                      {selectedFlightDetails?.destination}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {selectedFlightDetails?.destinationInfo?.city},{" "}
+                      {selectedFlightDetails?.destinationInfo?.country}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fare Details */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <DollarSign className="h-5 w-5 text-green-600 mr-2" />
+              Fare Details
+            </h3>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2">Base Fare</h4>
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>Adult (x1)</span>
+                    <span>
+                      {formatCurrency(
+                        selectedFlightDetails?.fare?.baseFare || 0,
+                        selectedFlightDetails?.fare?.currency
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600 mb-1">
+                    <span>Taxes & Fees</span>
+                    <span>
+                      {formatCurrency(
+                        (selectedFlightDetails?.fare?.totalFare || 0) -
+                          (selectedFlightDetails?.fare?.baseFare || 0),
+                        selectedFlightDetails?.fare?.currency
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <div className="border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-4">
+                  <h4 className="font-medium text-gray-700 mb-2">
+                    Total Amount
+                  </h4>
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span className="text-blue-600">
+                      {formatCurrency(
+                        selectedFlightDetails?.fare?.totalFare || 0,
+                        selectedFlightDetails?.fare?.currency
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Baggage Information */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <Luggage className="h-5 w-5 text-purple-600 mr-2" />
+              Baggage Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h4 className="font-medium text-gray-700 mb-2">
+                  Cabin Baggage
+                </h4>
+                <div className="flex items-center text-sm text-gray-600">
+                  <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                  {selectedFlightDetails?.baggage?.cabin ||
+                    "1 x 7kg (Max. 55x40x20cm)"}
+                </div>
+              </div>
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h4 className="font-medium text-gray-700 mb-2">
+                  Check-in Baggage
+                </h4>
+                {selectedFlightDetails?.baggage?.checkIn ? (
+                  <div className="flex items-center text-sm text-gray-600">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+                    {selectedFlightDetails.baggage.checkIn}
+                  </div>
+                ) : (
+                  <div className="flex items-center text-sm text-gray-600">
+                    <XCircle className="h-4 w-4 text-red-500 mr-2" />
+                    No check-in baggage included
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Amenities */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <Info className="h-5 w-5 text-yellow-600 mr-2" />
+              Onboard Amenities
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div className="flex flex-col items-center p-3 border border-gray-200 rounded-lg">
+                <Wifi className="h-6 w-6 text-blue-500 mb-1" />
+                <span className="text-sm text-center">
+                  WiFi{" "}
+                  {selectedFlightDetails?.amenities?.wifi
+                    ? "Available"
+                    : "Not Available"}
+                </span>
+              </div>
+              <div className="flex flex-col items-center p-3 border border-gray-200 rounded-lg">
+                <Utensils className="h-6 w-6 text-green-500 mb-1" />
+                <span className="text-sm text-center">
+                  {selectedFlightDetails?.amenities?.meals
+                    ? "Meal Included"
+                    : "No Meal"}
+                </span>
+              </div>
+              <div className="flex flex-col items-center p-3 border border-gray-200 rounded-lg">
+                <Film className="h-6 w-6 text-purple-500 mb-1" />
+                <span className="text-sm text-center">
+                  {selectedFlightDetails?.amenities?.entertainment
+                    ? "Entertainment"
+                    : "No Entertainment"}
+                </span>
+              </div>
+              <div className="flex flex-col items-center p-3 border border-gray-200 rounded-lg">
+                <Briefcase className="h-6 w-6 text-amber-500 mb-1" />
+                <span className="text-sm text-center">
+                  Power Outlets{" "}
+                  {selectedFlightDetails?.amenities?.powerOutlets
+                    ? "Available"
+                    : "Not Available"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Important Information */}
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Important Information
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Check-in closes 45 minutes before departure</li>
+                    <li>Valid photo ID is mandatory for check-in</li>
+                    <li>Baggage allowance may vary by fare type</li>
+                    <li>Flight schedules are subject to change</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex flex-col sm:flex-row justify-between items-center">
+          <div className="text-sm text-gray-600 mb-3 sm:mb-0">
+            Need help?{" "}
+            <a href="#" className="text-blue-600 hover:underline">
+              Contact Support
+            </a>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={closeModal}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => {
+                // Handle book now action
+                closeModal();
+                if (onSelectFlight) {
+                  onSelectFlight(selectedFlightDetails);
+                }
+              }}
+              className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Book Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
+      {isModalOpen && renderFlightDetailsModal()}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <div>
