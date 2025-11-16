@@ -70,7 +70,6 @@ export default function FlightList({
     indexOfLastFlight
   );
   const totalPages = Math.ceil(sortedFlights.length / flightsPerPage);
-  const hasFlights = sortedFlights.length > 0;
 
   // Change page
   const paginate = (pageNumber) => {
@@ -80,19 +79,30 @@ export default function FlightList({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggleFlightDetails = (flightId) => {
-    setSelectedFlight(selectedFlight === flightId ? null : flightId);
-  };
-
   const formatTime = (dateTimeString) => {
     if (!dateTimeString) return "--:--";
     try {
+      // Handle both string timestamps and ISO date strings
       const date = new Date(dateTimeString);
+      if (isNaN(date.getTime())) {
+        // Try to parse as a timestamp if it's a number string
+        const timestamp = parseInt(dateTimeString, 10);
+        if (!isNaN(timestamp)) {
+          return new Date(timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
+        }
+        return "--:--";
+      }
       return date.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
+        hour12: true,
       });
     } catch (e) {
+      console.error("Error formatting time:", e);
       return "--:--";
     }
   };
@@ -100,13 +110,27 @@ export default function FlightList({
   const formatDate = (dateString) => {
     if (!dateString) return "";
     try {
+      // Handle both string dates and timestamps
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        // Try to parse as a timestamp if it's a number string
+        const timestamp = parseInt(dateString, 10);
+        if (!isNaN(timestamp)) {
+          return new Date(timestamp).toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+          });
+        }
+        return "";
+      }
       return date.toLocaleDateString("en-US", {
         weekday: "short",
         month: "short",
         day: "numeric",
       });
     } catch (e) {
+      console.error("Error formatting date:", e);
       return "";
     }
   };
@@ -182,13 +206,22 @@ export default function FlightList({
               </div>
               <div className="ml-4">
                 <div className="text-sm font-medium text-gray-900">
-                  {typeof flight.airline === "object"
-                    ? `${flight.airline.name || "Unknown Airline"} • ${
-                        flight.airline.number || ""
+                  {flight.airline && typeof flight.airline === "object"
+                    ? `${
+                        flight.airline.name ||
+                        flight.airline.Name ||
+                        flight.airline.AirlineName ||
+                        "Unknown Airline"
+                      } • ${
+                        flight.airline.number ||
+                        flight.airline.Number ||
+                        flight.airline.FlightNumber ||
+                        flight.flightNumber ||
+                        ""
                       }`
-                    : `${flight.airline || "Unknown Airline"} • ${
-                        flight.flightNumber || ""
-                      }`}
+                    : `${
+                        flight.airline || flight.Airline || "Unknown Airline"
+                      } • ${flight.flightNumber || flight.FlightNumber || ""}`}
                 </div>
                 <div className="text-xs text-gray-500">
                   {flight.aircraftType}
@@ -214,11 +247,26 @@ export default function FlightList({
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div>
             <div className="text-2xl font-bold">
-              {formatTime(flight.departureTime)}
+              {formatTime(
+                flight.departureTime ||
+                  flight.DepartureTime ||
+                  flight.Origin?.DepartureTime ||
+                  flight.Origin?.DepartureDateTime
+              )}
             </div>
-            <div className="text-sm text-gray-500">{flight.origin}</div>
+            <div className="text-sm text-gray-500">
+              {flight.origin ||
+                flight.Origin?.Airport?.AirportCode ||
+                flight.Origin?.AirportCode ||
+                "--"}
+            </div>
             <div className="text-xs text-gray-400">
-              {formatDate(flight.departureTime)}
+              {formatDate(
+                flight.departureTime ||
+                  flight.DepartureTime ||
+                  flight.Origin?.DepartureTime ||
+                  flight.Origin?.DepartureDateTime
+              )}
             </div>
           </div>
 
@@ -241,11 +289,26 @@ export default function FlightList({
 
           <div className="text-right">
             <div className="text-2xl font-bold">
-              {formatTime(flight.arrivalTime)}
+              {formatTime(
+                flight.arrivalTime ||
+                  flight.ArrivalTime ||
+                  flight.Destination?.ArrivalTime ||
+                  flight.Destination?.ArrivalDateTime
+              )}
             </div>
-            <div className="text-sm text-gray-500">{flight.destination}</div>
+            <div className="text-sm text-gray-500">
+              {flight.destination ||
+                flight.Destination?.Airport?.AirportCode ||
+                flight.Destination?.AirportCode ||
+                "--"}
+            </div>
             <div className="text-xs text-gray-400">
-              {formatDate(flight.arrivalTime)}
+              {formatDate(
+                flight.arrivalTime ||
+                  flight.ArrivalTime ||
+                  flight.Destination?.ArrivalTime ||
+                  flight.Destination?.ArrivalDateTime
+              )}
             </div>
           </div>
         </div>
