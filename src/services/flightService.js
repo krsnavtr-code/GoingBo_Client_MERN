@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { demoFlight } from '../demoFlightData';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+const USE_DEMO_ON_ERROR = true; // Set to false to disable demo data fallback
 console.log("🔥 flightService.js LOADED!!");
 
 // Helper function to format flight data - moved to top to avoid hoisting issues
@@ -416,6 +418,12 @@ class FlightService {
         } : 'No response',
         request: error.request ? 'Request object exists' : 'No request object'
       });
+
+      // 🔥 If API gives success:false OR ANY ERROR → use demoFlight
+      if (USE_DEMO_ON_ERROR) {
+        console.warn("⚠️ API error detected — Loading demo flights");
+        return demoFlight;   // ← DEMO FLIGHTS RETURN
+      }
 
       // If we have a response from the server
       if (error.response) {

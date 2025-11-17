@@ -24,7 +24,6 @@ import {
   Clock as ClockIcon,
   Info,
   ArrowLeft,
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
   ArrowUpRight,
@@ -185,11 +184,18 @@ export default function FlightList({
               </div>
               <div className="ml-4">
                 <div className="text-sm font-medium text-gray-900">
-                  {flight.airline.name}
+                  {/* {flight.airline.name || "Unknown Airline"} */}
+                  {typeof flight.airline === "object"
+                    ? `${flight.airline.name || "Unknown Airline"} • ${
+                        flight.airline.number || ""
+                      }`
+                    : `${flight.airline || "Unknown Airline"} • ${
+                        flight.flightNumber || ""
+                      }`}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {flight.airline.code}
-                  {flight.airline.number}
+                  {flight.airline?.code || "Unknown Code"} •
+                  {flight.airline?.number || flight.flightNumber || "Unknown"}
                 </div>
               </div>
             </div>
@@ -245,7 +251,7 @@ export default function FlightList({
               {formatTime(flight.arrivalTime)}
             </div>
             <div className="text-sm text-gray-500">
-              {flight.destinationInfo.city} • {flight.destination.code}
+              {flight.destinationInfo?.city} • {flight.destinationInfo?.code}
             </div>
           </div>
         </div>
@@ -254,7 +260,7 @@ export default function FlightList({
   );
 
   const renderFlightDetailsModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-transparent z-50 flex items-center justify-center p-4">
       <div
         ref={modalRef}
         className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all"

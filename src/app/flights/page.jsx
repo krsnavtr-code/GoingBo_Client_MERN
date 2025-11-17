@@ -89,6 +89,16 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
     try {
       console.log("Flight search initiated with params:", searchParams);
 
+      // Use demo data for testing
+      if (process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true") {
+        console.log("Using demo flight data");
+        const { demoFlight } = await import("@/demoFlightData");
+        // Return the data in the format expected by the FlightList component
+        setSearchResults([demoFlight.data]);
+        setLoading(false);
+        return;
+      }
+
       // Format the search parameters for the API
       const searchData = {
         origin: searchParams.origin,
@@ -296,7 +306,13 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
 
                 <div className="space-y-4">
                   <FlightList
-                    flights={searchResults}
+                    flights={
+                      Array.isArray(searchResults?.data)
+                        ? searchResults.data
+                        : searchResults
+                        ? [searchResults.data]
+                        : []
+                    }
                     onSelectFlight={handleFlightSelect}
                     tripType={searchParams?.tripType || "oneway"}
                   />
