@@ -2,36 +2,16 @@
 
 // In the home page have a Same Flight page -> client\src\app\flights\page.jsx
 
-import { useState, useEffect } from 'react';
-import FloatingSearchCard from '@/components/FloatingSearchCard';
-import FlightSearch from '@/components/flights/FlightSearch';
-import FlightList from '@/components/flights/FlightList';
+import { useState } from 'react';
 import searchFlights from '@/components/FloatingSearchCard';
 import { FaPlane, FaCreditCard, FaPassport, FaUsers, FaCalendarAlt, FaBell } from 'react-icons/fa';
 import Contact from '@/components/ContactForm';
 import Faqs from '@/components/Faqs';
 import TodayFlightOffers from '@/components/TodayFlightOffers';
+import Main from '@/app/flights/components/Main';
 
 export default function Page() {
-  const [searchResults, setSearchResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const handleSearch = async (searchParams) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const results = await searchFlights(searchParams);
-      setSearchResults(results.data);
-    } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to search for flights');
-      console.error('Flight search error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Do More With GoingBo
+    // Do More With GoingBo
   const features = [
     { icon: <FaPlane className="text-blue-500 text-3xl" />, title: "Flight Tracker" },
     { icon: <FaCreditCard className="text-blue-500 text-3xl" />, title: "Credit Card" },
@@ -44,45 +24,14 @@ export default function Page() {
 
   return (
     <div className="container mx-auto px-4">
-      {/* Floating Search Card */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        <FloatingSearchCard />
-      </div>
-
-      <div className="pt-26 pb-8">
-        <div className="">
-          <FlightSearch onSearch={handleSearch} loading={loading} />
-        </div>
-
-        {loading && (
-          <div className="flex justify-center my-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        )}
-
-        {error && (
-          <div
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6"
-            role="alert"
-          >
-            <strong className="font-bold">Error: </strong>
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
-
-        {searchResults && (
-          <div className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4">Available Flights</h2>
-            <FlightList flights={searchResults.flights} />
-          </div>
-        )}
-      </div>
+      {/* Main Flight Page Search form with flight list */}
+      <Main/>
 
       {/* Other For Only Home */}
       <div className="">
         {/* Do More With GoingBo */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Do More With GoingBo</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Do More With GoingBo</h2>
           <div className="bg-[var(--container-color-in)] rounded-2xl shadow-sm border flex justify-between p-6 items-center">
             {features.map((item, index) => (
               <div key={index} className="flex flex-col items-center justify-center text-center w-1/6">
@@ -95,38 +44,38 @@ export default function Page() {
 
         {/* Popular Flights */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Flights</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Popular Flights</h2>
           {/* <FlightList flights={popularFlights} /> */}
         </div>
 
         {/* Popular Hotels */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Hotels</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Popular Hotels</h2>
           {/* <HotelList hotels={popularHotels} /> */}
         </div>
 
         {/* Popular Cabs */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Cabs</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Popular Cabs</h2>
           {/* <CabList cabs={popularCabs} /> */}
         </div>
 
         {/* Popular Buses */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Buses</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Popular Buses</h2>
           {/* <BusList buses={popularBuses} /> */}
         </div>
 
         {/* Today's Flight Offers */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">✈️ Today’s Flight Offers</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">✈️ Today’s Flight Offers</h2>
           {/* <FlightList flights={todayFlights} /> */}
           <TodayFlightOffers />
         </div>
 
         {/* Why Book With goingbo? */}
         <div className="my-12 px-4">
-          <h2 className="text-2xl font-bold text-gray-800 mb-10 text-center">
+          <h2 className="text-2xl font-bold mb-10 text-center">
             Why Book With goingbo?
           </h2>
 
@@ -188,7 +137,7 @@ export default function Page() {
 
         {/* Popular Domestic Airlines Section */}
         <div className="my-12 px-4">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+          <h2 className="text-2xl font-bold mb-6 text-center">
             Popular Domestic Airlines
           </h2>
 
@@ -226,14 +175,14 @@ export default function Page() {
 
         {/* Frequently Asked Questions */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Frequently Asked Questions</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Frequently Asked Questions</h2>
           {/* <FAQ /> */}
           <Faqs/>
         </div>
 
         {/* Contact Us */}
         <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Contact Us</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Contact Us</h2>
 
           <div className="bg-[var(--container-color-in)] rounded-2xl shadow-sm border grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-10 items-center">
             {/* Google Map */}

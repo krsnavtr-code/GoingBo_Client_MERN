@@ -224,13 +224,19 @@ export default function FlightSearch({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-2 max-w-5xl mx-auto bg-[var(--container-color-in)] px-5 py-2 pb-10 rounded-xl"
+      noValidate
+    >
       {/* Trip Type Toggle */}
-      <div className="flex space-x-4 mb-4">
+      <div className="flex space-x-2 mb-2">
         <button
           type="button"
-          className={`px-4 py-2 rounded-md ${
-            tripType === "oneway" ? "bg-blue-600 text-white" : "bg-gray-200"
+          className={`px-2 py-1 rounded-md text-[var(--button-color)] bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] cursor-pointer ${
+            tripType === "oneway"
+              ? "bg-[var(--logo-color-two)] hover:bg-[var(--logo-color-two)]"
+              : "bg-[var(--logo-color)]"
           }`}
           onClick={() => setValue("tripType", "oneway")}
         >
@@ -238,8 +244,10 @@ export default function FlightSearch({
         </button>
         <button
           type="button"
-          className={`px-4 py-2 rounded-md ${
-            tripType === "roundtrip" ? "bg-blue-600 text-white" : "bg-gray-200"
+          className={`px-2 py-1 rounded-md text-[var(--button-color)] bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] cursor-pointer ${
+            tripType === "roundtrip"
+              ? "bg-[var(--logo-color-two)] hover:bg-[var(--logo-color-two)]"
+              : "bg-[var(--logo-color)]"
           }`}
           onClick={() => setValue("tripType", "roundtrip")}
         >
@@ -250,14 +258,12 @@ export default function FlightSearch({
       {/* Origin and Destination */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="relative" ref={originRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            From
-          </label>
+          <label className="block text-sm font-medium mb-1">From</label>
           <div className="relative">
-            <PlaneTakeoff className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <PlaneTakeoff className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" />
             <input
               type="text"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="City or Airport"
               onChange={handleOriginChange}
               value={
@@ -280,11 +286,11 @@ export default function FlightSearch({
             )}
           </div>
           {showOriginSuggestions && originSuggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm max-h-60 overflow-auto">
+            <div className="absolute z-10 mt-1 w-full bg-[var(--container-color)] shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm max-h-60 overflow-auto">
               {originSuggestions.map((airport) => (
                 <div
                   key={`${airport.code}-${airport.name}`}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  className="px-4 py-2 hover:bg-[var(--container-color-in)] cursor-pointer"
                   onClick={() => {
                     setSelectedOrigin(airport);
                     setValue("origin", airport.code);
@@ -294,7 +300,7 @@ export default function FlightSearch({
                   <div className="font-medium">
                     {airport.city} ({airport.code})
                   </div>
-                  <div className="text-sm text-gray-500">{airport.name}</div>
+                  <div className="text-sm text-[var(--text-color-light)]">{airport.name}</div>
                 </div>
               ))}
             </div>
@@ -309,14 +315,12 @@ export default function FlightSearch({
         </div>
 
         <div className="relative" ref={destinationRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            To
-          </label>
+          <label className="block text-sm font-medium mb-1">To</label>
           <div className="relative">
-            <PlaneLanding className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <PlaneLanding className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" />
             <input
               type="text"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="City or Airport"
               onChange={handleDestinationChange}
               value={
@@ -339,11 +343,11 @@ export default function FlightSearch({
             )}
           </div>
           {showDestinationSuggestions && destinationSuggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm max-h-60 overflow-auto">
+            <div className="absolute z-10 mt-1 w-full bg-[var(--container-color)] shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm max-h-60 overflow-auto">
               {destinationSuggestions.map((airport) => (
                 <div
                   key={`${airport.code}-${airport.name}`}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  className="px-4 py-2 hover:bg-[var(--container-color-in)] cursor-pointer"
                   onClick={() => {
                     setSelectedDestination(airport);
                     setValue("destination", airport.code);
@@ -375,15 +379,13 @@ export default function FlightSearch({
       {/* Dates */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Departure
-          </label>
+          <label className="block text-sm font-medium mb-1">Departure</label>
           <div className="relative">
-            <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" />
             <input
               type="date"
               min={new Date().toISOString().split("T")[0]}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full pl-10 pr-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
               {...register("departureDate", {
                 required: "Departure date is required",
                 validate: {
@@ -408,17 +410,17 @@ export default function FlightSearch({
         </div>
 
         <div className={tripType === "oneway" ? "opacity-50" : ""}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium mb-1">
             Return
           </label>
           <div className="relative">
-            <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" />
             <input
               type="date"
               min={
                 watch("departureDate") || new Date().toISOString().split("T")[0]
               }
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full pl-10 pr-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
               disabled={tripType === "oneway" || loading}
               {...register("returnDate", {
                 required:
@@ -452,11 +454,9 @@ export default function FlightSearch({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Adults
-            </label>
+            <label className="block text-sm font-medium mb-1">Adults</label>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
               {...register("adults", {
                 valueAsNumber: true,
                 min: { value: 1, message: "At least 1 adult required" },
@@ -472,11 +472,9 @@ export default function FlightSearch({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Children
-            </label>
+            <label className="block text-sm font-medium mb-1">Children</label>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
               {...register("children", {
                 valueAsNumber: true,
                 min: { value: 0, message: "Cannot be negative" },
@@ -492,11 +490,9 @@ export default function FlightSearch({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Infants
-            </label>
+            <label className="block text-sm font-medium mb-1">Infants</label>
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
               {...register("infants", {
                 valueAsNumber: true,
                 min: { value: 0, message: "Cannot be negative" },
@@ -514,11 +510,9 @@ export default function FlightSearch({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Cabin Class
-          </label>
+          <label className="block text-sm font-medium mb-1">Cabin Class</label>
           <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
             {...register("cabinClass")}
             disabled={loading}
           >
@@ -531,16 +525,16 @@ export default function FlightSearch({
       </div>
 
       {/* Submit Button */}
-      <div className="pt-2">
+      <div className="pt-2 flex justify-center">
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex justify-center py-2 px-4 rounded-md shadow-sm text-sm font-medium text-[var(--button-color)] bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-color)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {loading ? (
             <>
               <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-[var(--button-color)]"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
