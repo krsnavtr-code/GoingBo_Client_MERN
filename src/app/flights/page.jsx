@@ -307,14 +307,22 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
                 </div>
 
                 <div className="space-y-4">
-                  <FlightList
-                    flights={searchResults?.data || []}
-                    onSelectFlight={handleFlightSelect}
-                    tripType={searchParams?.tripType || "oneway"}
-                  />
+                  {searchResults && (
+                    <FlightList
+                      flights={
+                        Array.isArray(searchResults)
+                          ? searchResults
+                          : searchResults.data || []
+                      }
+                      onSelectFlight={handleFlightSelect}
+                      tripType={searchParams?.tripType || "oneway"}
+                    />
+                  )}
                 </div>
 
-                {searchResults?.data?.length > 5 && (
+                {(Array.isArray(searchResults)
+                  ? searchResults.length
+                  : searchResults?.data?.length || 0) > 5 && (
                   <div className="mt-6 flex justify-center">
                     <button
                       onClick={() => {
