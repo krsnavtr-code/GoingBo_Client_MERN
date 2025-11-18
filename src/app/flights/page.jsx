@@ -93,8 +93,10 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
       if (process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true") {
         console.log("Using demo flight data");
         const { demoFlight } = await import("@/demoFlightData");
-        // Return the data in the format expected by the FlightList component
-        setSearchResults([demoFlight.data]);
+        setSearchResults({
+          data: [demoFlight.data], // Wrap in array as FlightList expects an array
+          success: true,
+        });
         setLoading(false);
         return;
       }
@@ -306,19 +308,13 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
 
                 <div className="space-y-4">
                   <FlightList
-                    flights={
-                      Array.isArray(searchResults?.data)
-                        ? searchResults.data
-                        : searchResults
-                        ? [searchResults.data]
-                        : []
-                    }
+                    flights={searchResults?.data || []}
                     onSelectFlight={handleFlightSelect}
                     tripType={searchParams?.tripType || "oneway"}
                   />
                 </div>
 
-                {searchResults.length > 5 && (
+                {searchResults?.data?.length > 5 && (
                   <div className="mt-6 flex justify-center">
                     <button
                       onClick={() => {
