@@ -29,6 +29,7 @@ export default function FlightSearch({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [isRoundTrip, setIsRoundTrip] = useState(true);
 
   const {
     register,
@@ -300,7 +301,9 @@ export default function FlightSearch({
                   <div className="font-medium">
                     {airport.city} ({airport.code})
                   </div>
-                  <div className="text-sm text-[var(--text-color-light)]">{airport.name}</div>
+                  <div className="text-sm text-[var(--text-color-light)]">
+                    {airport.name}
+                  </div>
                 </div>
               ))}
             </div>
@@ -410,10 +413,18 @@ export default function FlightSearch({
         </div>
 
         <div className={tripType === "oneway" ? "opacity-50" : ""}>
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium mb-1 cursor-pointer">
             Return
           </label>
-          <div className="relative">
+          <div
+            className="relative"
+            onClick={(e) => {
+              if (tripType === "oneway") {
+                e.stopPropagation();
+                setValue("tripType", "roundtrip");
+              }
+            }}
+          >
             <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5" />
             <input
               type="date"
@@ -421,7 +432,7 @@ export default function FlightSearch({
                 watch("departureDate") || new Date().toISOString().split("T")[0]
               }
               className="w-full pl-10 pr-3 py-2 border border-[var(--border-color)] bg-[var(--container-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
-              disabled={tripType === "oneway" || loading}
+              disabled={loading}
               {...register("returnDate", {
                 required:
                   tripType === "roundtrip" ? "Return date is required" : false,
@@ -430,23 +441,29 @@ export default function FlightSearch({
                   if (!value) return "Return date is required";
 
                   const departureDate = watch("departureDate");
-                  if (
-                    departureDate &&
-                    new Date(value) < new Date(departureDate)
-                  ) {
-                    return "Return date must be after departure date";
+                  if (departureDate) {
+                    const returnDate = new Date(value);
+                    const depDate = new Date(departureDate);
+
+                    // Set both dates to start of day for accurate comparison
+                    returnDate.setHours(0, 0, 0, 0);
+                    depDate.setHours(0, 0, 0, 0);
+
+                    if (returnDate < depDate) {
+                      return "Return date must be after departure date";
+                    }
                   }
 
                   return true;
                 },
               })}
             />
+            {errors.returnDate && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.returnDate.message}
+              </p>
+            )}
           </div>
-          {errors.returnDate && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.returnDate.message}
-            </p>
-          )}
         </div>
       </div>
 
