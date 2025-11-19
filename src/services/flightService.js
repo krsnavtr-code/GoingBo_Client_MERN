@@ -296,8 +296,6 @@ class FlightService {
       // Process the results
       const formattedFlights = [];
       const isRoundTrip = searchParams.tripType === 'roundtrip';
-      const outboundFlights = [];
-      const returnFlights = [];
 
       try {
         if (!results || results.length === 0) {
@@ -361,11 +359,7 @@ class FlightService {
                     hasOrigin: !!segment.Origin,
                     hasDestination: !!segment.Destination,
                     originType: typeof segment.Origin,
-                    destType: typeof segment.Destination,
-                    origin: segment.Origin?.Airport?.AirportCode || segment.Origin?.AirportCode,
-                    destination: segment.Destination?.Airport?.AirportCode || segment.Destination?.AirportCode,
-                    departureDate: segment.Origin?.DepTime || segment.Origin?.DepartureTime,
-                    arrivalDate: segment.Destination?.ArrTime || segment.Destination?.ArrivalTime
+                    destType: typeof segment.Destination
                   });
 
                   if (!segment.Origin || !segment.Destination) {
@@ -379,31 +373,7 @@ class FlightService {
 
                   const formattedFlight = formatFlightData(flight, segment, searchParams);
                   if (formattedFlight) {
-                    // For round-trip, check if this is an outbound or return flight
-                    if (isRoundTrip) {
-                      console.log('Checking flight direction:', {
-                        flightOrigin: formattedFlight.origin,
-                        flightDest: formattedFlight.destination,
-                        searchOrigin: searchParams.origin,
-                        searchDest: searchParams.destination,
-                        isReturn: formattedFlight.origin === searchParams.destination &&
-                          formattedFlight.destination === searchParams.origin
-                      });
-
-                      const isReturnFlight = 
-                        formattedFlight.origin === searchParams.destination &&
-                        formattedFlight.destination === searchParams.origin;
-
-                      if (isReturnFlight) {
-                        console.log('Found return flight:', formattedFlight);
-                        returnFlights.push(formattedFlight);
-                      } else {
-                        console.log('Found outbound flight:', formattedFlight);
-                        outboundFlights.push(formattedFlight);
-                      }
-                    } else {
-                      formattedFlights.push(formattedFlight);
-                    }
+                    formattedFlights.push(formattedFlight);
                   }
                 } catch (segErr) {
                   // Protect whole flow from one bad segment
@@ -422,108 +392,6 @@ class FlightService {
                   continue;
                 }
               }
-            }
-          }
-
-          // For round-trip, check if we need to fetch return flights
-          if (isRoundTrip) {
-            console.log('Search parameters:', searchParams);
-
-        // Check if return flights are in a different part of the response
-        if (returnFlights.length === 0 && responseData?.data?.returnFlights) {
-          console.log('Found return flights in response.data.returnFlights');
-          const returnResults = responseData.data.returnFlights;
-          // Process return flights
-          for (const flight of Array.isArray(returnResults) ? returnResults : []) {
-            const segments = this.normalizeSegments(flight.Segments);
-            for (const segment of segments) {
-              const formattedFlight = this.formatFlightData(flight, segment, {
-                ...searchParams,
-                origin: searchParams.destination,
-                destination: searchParams.origin
-              });
-              if (formattedFlight) {
-                returnFlights.push(formattedFlight);
-              }
-            }
-          }
-        }
-
-        console.log(`Found ${outboundFlights.length} outbound and ${returnFlights.length} return flights`);
-
-        // Log sample flights if available
-        if (outboundFlights.length > 0) {
-          console.log('Sample outbound flight:', {
-            origin: outboundFlights[0].origin,
-            destination: outboundFlights[0].destination,
-            departureTime: outboundFlights[0].departureTime,
-            flightNumber: outboundFlights[0].airline?.code + ' ' + outboundFlights[0].airline?.number
-          });
-        } else {
-          console.warn('No outbound flights found for the selected dates');
-        }
-
-        if (returnFlights.length > 0) {
-          console.log('Sample return flight:', {
-            origin: returnFlights[0].origin,
-            destination: returnFlights[0].destination,
-            departureTime: returnFlights[0].departureTime,
-            flightNumber: returnFlights[0].airline?.code + ' ' + returnFlights[0].airline?.number
-          });
-        } else if (searchParams.returnDate) {
-          console.warn('No return flights found for the selected return date. You may need to make a separate API call.');
-          console.log('To fetch return flights, you may need to make a separate API call with:', {
-            origin: searchParams.destination,
-            destination: searchParams.origin,
-            departureDate: searchParams.returnDate,
-            tripType: 'oneway'
-          });
-        }
-
-            // If we have both outbound and return flights, create pairs
-            if (outboundFlights.length > 0 && returnFlights.length > 0) {
-              // For each outbound flight, find a matching return flight
-              outboundFlights.forEach(outbound => {
-                // Find return flights with the same airline first
-                const matchingReturns = returnFlights.filter(ret =>
-                  ret.airline.code === outbound.airline.code
-                );
-
-                // If no matching airline, use any return flight
-                const returnFlight = matchingReturns.length > 0
-                  ? matchingReturns[0]
-                  : returnFlights[0];
-
-                if (returnFlight) {
-                  // Create a combined flight object
-                  const roundTripFlight = {
-                    ...outbound,
-                    isRoundTrip: true,
-                    returnFlight: returnFlight,
-                    totalPrice: outbound.fare.totalFare + (returnFlight?.fare?.totalFare || 0),
-                    // Add combined duration
-                    totalDurationInMinutes: (outbound.durationInMinutes || 0) + (returnFlight.durationInMinutes || 0)
-                  };
-                  formattedFlights.push(roundTripFlight);
-                }
-              });
-            } else if (outboundFlights.length > 0) {
-              // If only outbound flights, still include them but mark as one-way
-              console.warn('No return flights found for round-trip search');
-              formattedFlights.push(...outboundFlights.map(flight => ({
-                ...flight,
-                isRoundTrip: false,
-                returnFlight: null
-              })));
-            } else if (returnFlights.length > 0) {
-              // If only return flights, still include them but mark as one-way
-              console.warn('No outbound flights found for round-trip search');
-              formattedFlights.push(...returnFlights.map(flight => ({
-                ...flight,
-                isRoundTrip: false,
-                isReturnLeg: true,
-                returnFlight: null
-              })));
             }
           }
         }
