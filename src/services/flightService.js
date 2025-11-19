@@ -425,26 +425,60 @@ class FlightService {
             }
           }
 
-          // For round-trip, pair outbound and return flights
+          // For round-trip, check if we need to fetch return flights
           if (isRoundTrip) {
             console.log('Search parameters:', searchParams);
-            console.log(`Found ${outboundFlights.length} outbound and ${returnFlights.length} return flights`);
 
-            // Log sample flights if available
-            if (outboundFlights.length > 0) {
-              console.log('Sample outbound flight:', {
-                origin: outboundFlights[0].origin,
-                destination: outboundFlights[0].destination,
-                departureTime: outboundFlights[0].departureTime
+        // Check if return flights are in a different part of the response
+        if (returnFlights.length === 0 && responseData?.data?.returnFlights) {
+          console.log('Found return flights in response.data.returnFlights');
+          const returnResults = responseData.data.returnFlights;
+          // Process return flights
+          for (const flight of Array.isArray(returnResults) ? returnResults : []) {
+            const segments = this.normalizeSegments(flight.Segments);
+            for (const segment of segments) {
+              const formattedFlight = this.formatFlightData(flight, segment, {
+                ...searchParams,
+                origin: searchParams.destination,
+                destination: searchParams.origin
               });
+              if (formattedFlight) {
+                returnFlights.push(formattedFlight);
+              }
             }
-            if (returnFlights.length > 0) {
-              console.log('Sample return flight:', {
-                origin: returnFlights[0].origin,
-                destination: returnFlights[0].destination,
-                departureTime: returnFlights[0].departureTime
-              });
-            }
+          }
+        }
+
+        console.log(`Found ${outboundFlights.length} outbound and ${returnFlights.length} return flights`);
+
+        // Log sample flights if available
+        if (outboundFlights.length > 0) {
+          console.log('Sample outbound flight:', {
+            origin: outboundFlights[0].origin,
+            destination: outboundFlights[0].destination,
+            departureTime: outboundFlights[0].departureTime,
+            flightNumber: outboundFlights[0].airline?.code + ' ' + outboundFlights[0].airline?.number
+          });
+        } else {
+          console.warn('No outbound flights found for the selected dates');
+        }
+
+        if (returnFlights.length > 0) {
+          console.log('Sample return flight:', {
+            origin: returnFlights[0].origin,
+            destination: returnFlights[0].destination,
+            departureTime: returnFlights[0].departureTime,
+            flightNumber: returnFlights[0].airline?.code + ' ' + returnFlights[0].airline?.number
+          });
+        } else if (searchParams.returnDate) {
+          console.warn('No return flights found for the selected return date. You may need to make a separate API call.');
+          console.log('To fetch return flights, you may need to make a separate API call with:', {
+            origin: searchParams.destination,
+            destination: searchParams.origin,
+            departureDate: searchParams.returnDate,
+            tripType: 'oneway'
+          });
+        }
 
             // If we have both outbound and return flights, create pairs
             if (outboundFlights.length > 0 && returnFlights.length > 0) {
