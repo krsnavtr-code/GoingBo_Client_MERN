@@ -249,9 +249,9 @@ export default function CabsPage() {
   );
 
   return (
-    <div className="container mx-auto px-4">
-      {/* Floating Search Card */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2">
+    <div className="container text-[var(--text-color)] mx-auto px-4 py-8">
+      {/* {isMounted && <FloatingSearchCard />} */}
+      <div className="absolute top-[160px] left-1/2 -translate-x-1/2 -translate-y-1/2">
         <FloatingSearchCard />
       </div>
 
