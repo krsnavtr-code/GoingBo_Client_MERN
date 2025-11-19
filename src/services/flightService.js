@@ -361,7 +361,11 @@ class FlightService {
                     hasOrigin: !!segment.Origin,
                     hasDestination: !!segment.Destination,
                     originType: typeof segment.Origin,
-                    destType: typeof segment.Destination
+                    destType: typeof segment.Destination,
+                    origin: segment.Origin?.Airport?.AirportCode || segment.Origin?.AirportCode,
+                    destination: segment.Destination?.Airport?.AirportCode || segment.Destination?.AirportCode,
+                    departureDate: segment.Origin?.DepTime || segment.Origin?.DepartureTime,
+                    arrivalDate: segment.Destination?.ArrTime || segment.Destination?.ArrivalTime
                   });
 
                   if (!segment.Origin || !segment.Destination) {
@@ -377,13 +381,24 @@ class FlightService {
                   if (formattedFlight) {
                     // For round-trip, check if this is an outbound or return flight
                     if (isRoundTrip) {
-                      const isReturnFlight =
+                      console.log('Checking flight direction:', {
+                        flightOrigin: formattedFlight.origin,
+                        flightDest: formattedFlight.destination,
+                        searchOrigin: searchParams.origin,
+                        searchDest: searchParams.destination,
+                        isReturn: formattedFlight.origin === searchParams.destination &&
+                          formattedFlight.destination === searchParams.origin
+                      });
+
+                      const isReturnFlight = 
                         formattedFlight.origin === searchParams.destination &&
                         formattedFlight.destination === searchParams.origin;
 
                       if (isReturnFlight) {
+                        console.log('Found return flight:', formattedFlight);
                         returnFlights.push(formattedFlight);
                       } else {
+                        console.log('Found outbound flight:', formattedFlight);
                         outboundFlights.push(formattedFlight);
                       }
                     } else {
@@ -412,7 +427,24 @@ class FlightService {
 
           // For round-trip, pair outbound and return flights
           if (isRoundTrip) {
+            console.log('Search parameters:', searchParams);
             console.log(`Found ${outboundFlights.length} outbound and ${returnFlights.length} return flights`);
+
+            // Log sample flights if available
+            if (outboundFlights.length > 0) {
+              console.log('Sample outbound flight:', {
+                origin: outboundFlights[0].origin,
+                destination: outboundFlights[0].destination,
+                departureTime: outboundFlights[0].departureTime
+              });
+            }
+            if (returnFlights.length > 0) {
+              console.log('Sample return flight:', {
+                origin: returnFlights[0].origin,
+                destination: returnFlights[0].destination,
+                departureTime: returnFlights[0].departureTime
+              });
+            }
 
             // If we have both outbound and return flights, create pairs
             if (outboundFlights.length > 0 && returnFlights.length > 0) {
