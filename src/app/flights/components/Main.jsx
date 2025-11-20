@@ -267,44 +267,8 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
 
       {searchResults && (
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-4">Available Flights</h2>
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {searchResults.length}{" "}
-                  {searchResults.length === 1 ? "Flight" : "Flights"} Found
-                </h3>
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">Sort by:</span>
-                    <select
-                      className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-sm"
-                      onChange={(e) => {
-                        // Implement sorting logic here
-                        const sortedResults = [...searchResults].sort(
-                          (a, b) => {
-                            const priceA =
-                              a.Fare?.PublishedFare || a.price || 0;
-                            const priceB =
-                              b.Fare?.PublishedFare || b.price || 0;
-                            return e.target.value === "price_asc"
-                              ? priceA - priceB
-                              : priceB - priceA;
-                          }
-                        );
-                        setSearchResults(sortedResults);
-                      }}
-                    >
-                      <option value="price_asc">Price (Low to High)</option>
-                      <option value="price_desc">Price (High to Low)</option>
-                      <option value="duration">Duration</option>
-                      <option value="departure">Departure Time</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
+            <div className="rounded-lg shadow-md p-4 mb-6">
               <div className="space-y-4">
                 {searchResults && (
                   <FlightList

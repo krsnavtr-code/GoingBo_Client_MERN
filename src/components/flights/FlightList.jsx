@@ -46,14 +46,10 @@ const formatCurrency = (amount, currency = "INR") => {
   }).format(amount);
 };
 
-export default function FlightList({
-  flights,
-  onSelectFlight,
-  tripType = "oneway",
-}) {
-  const [selectedFlight, setSelectedFlight] = useState(null);
+export default function FlightList({ flights, onSelectFlight, tripType = "oneway" }) {
   const [selectedOutbound, setSelectedOutbound] = useState(null);
   const [selectedReturn, setSelectedReturn] = useState(null);
+  const [currentSelection, setCurrentSelection] = useState("outbound"); // 'outbound' or 'return'
   const [sortBy, setSortBy] = useState("price_asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedFlightDetails, setSelectedFlightDetails] = useState(null);
@@ -127,6 +123,39 @@ export default function FlightList({
     }
   };
 
+  // Show selection status for round-trip
+  const renderSelectionStatus = () => {
+    if (tripType !== "roundtrip") return null;
+
+    return (
+      <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+        <p className="text-sm text-blue-700">
+          {!selectedOutbound && "Select your outbound flight"}
+          {selectedOutbound &&
+            !selectedReturn &&
+            "Now select your return flight"}
+          {selectedOutbound && selectedReturn && "Your trip is ready!"}
+        </p>
+        {selectedOutbound && (
+          <div className="mt-2 text-sm text-gray-600">
+            <p>
+              Outbound: {selectedOutbound.airline.name}{" "}
+              {selectedOutbound.airline.number} •{" "}
+              {formatDate(selectedOutbound.departureTime)}
+            </p>
+            {selectedReturn && (
+              <p>
+                Return: {selectedReturn.airline.name}{" "}
+                {selectedReturn.airline.number} •{" "}
+                {formatDate(selectedReturn.departureTime)}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (!flights || flights.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow p-6">
@@ -155,6 +184,23 @@ export default function FlightList({
   }, []);
 
   const handleFlightCardClick = (flight) => {
+    if (tripType === "roundtrip") {
+      // In round-trip mode, select the flight for the current selection (outbound/return)
+      if (currentSelection === "outbound") {
+        setSelectedOutbound(flight);
+        setCurrentSelection("return");
+      } else {
+        setSelectedReturn(flight);
+        // Notify parent component about the selection
+        onSelectFlight({ outbound: selectedOutbound, return: flight });
+      }
+    } else {
+      // In one-way mode, just select the flight
+      setSelectedOutbound(flight);
+      onSelectFlight(flight);
+    }
+
+    // Show flight details
     setSelectedFlightDetails(flight);
     setIsModalOpen(true);
     document.body.style.overflow = "hidden"; // Prevent scrolling when modal is open
@@ -163,101 +209,129 @@ export default function FlightList({
   const closeModal = () => {
     setIsModalOpen(false);
     document.body.style.overflow = "auto"; // Re-enable scrolling
+
+    // If in round-trip mode and we just selected an outbound flight,
+    // show a message about selecting return flight
+    if (tripType === "roundtrip" && selectedOutbound && !selectedReturn) {
+      // You can add a toast notification here if you have one
+      console.log("Please select your return flight");
+    }
   };
 
-  const renderFlightCard = (flight, isSelected = false, isReturn = false) => (
-    <div
-      key={`${flight.id}-${isReturn ? "return" : "outbound"}`}
-      onClick={() => handleFlightCardClick(flight)}
-      className={`border rounded-lg overflow-hidden transition-all duration-200 cursor-pointer ${
-        isSelected
-          ? "ring-2 ring-blue-500 border-blue-300"
-          : "border-gray-200 hover:border-blue-300"
-      }`}
-    >
-      <div className="p-4">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Plane className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <div className="text-sm font-medium text-gray-900">
-                  {/* {flight.airline.name || "Unknown Airline"} */}
-                  {typeof flight.airline === "object"
-                    ? `${flight.airline.name || "Unknown Airline"} • ${
-                        flight.airline.number || ""
-                      }`
-                    : `${flight.airline || "Unknown Airline"} • ${
-                        flight.flightNumber || ""
-                      }`}
+  // Reset selection when trip type changes
+  useEffect(() => {
+    setSelectedOutbound(null);
+    setSelectedReturn(null);
+    setCurrentSelection("outbound");
+  }, [tripType]);
+
+  const renderFlightCard = (flight, isSelected = false, isReturn = false) => {
+    // Determine if this flight is selected for the current selection
+    const isCurrentSelection =
+      (currentSelection === "outbound" && !isReturn) ||
+      (currentSelection === "return" && isReturn);
+
+    const isOutboundSelected =
+      selectedOutbound && selectedOutbound.id === flight.id && !isReturn;
+    const isReturnSelected =
+      selectedReturn && selectedReturn.id === flight.id && isReturn;
+
+    return (
+      <div
+        key={`${flight.id}-${isReturn ? "return" : "outbound"}`}
+        onClick={() => handleFlightCardClick(flight)}
+        className={`border rounded-lg overflow-hidden transition-all duration-200 cursor-pointer ${
+          isOutboundSelected || isReturnSelected
+            ? "ring-2 ring-blue-500 border-blue-300"
+            : isCurrentSelection
+            ? "border-blue-200 hover:border-blue-300"
+            : "border-gray-200 hover:border-gray-300"
+        }`}
+      >
+        <div className="p-4">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Plane className="h-5 w-5 text-blue-600" />
                 </div>
-                <div className="text-xs text-gray-500">
-                  {flight.airline?.code || "Unknown Code"} •
-                  {flight.airline?.number || flight.flightNumber || "Unknown"}
+                <div className="ml-4">
+                  <div className="text-sm font-medium text-gray-900">
+                    {/* {flight.airline.name || "Unknown Airline"} */}
+                    {typeof flight.airline === "object"
+                      ? `${flight.airline.name || "Unknown Airline"} • ${
+                          flight.airline.number || ""
+                        }`
+                      : `${flight.airline || "Unknown Airline"} • ${
+                          flight.flightNumber || ""
+                        }`}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {flight.airline?.code || "Unknown Code"} •
+                    {flight.airline?.number || flight.flightNumber || "Unknown"}
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <div className="text-lg font-bold text-blue-600">
+                {formatCurrency(
+                  flight.fare?.totalFare || 0,
+                  flight.fare?.currency
+                )}
+              </div>
+              <div className="text-xs text-gray-500">
+                {flight.fareType} •{" "}
+                {flight.fare?.refundable ? "Refundable" : "Non-refundable"}
               </div>
             </div>
           </div>
 
-          <div className="text-right">
-            <div className="text-lg font-bold text-blue-600">
-              {formatCurrency(
-                flight.fare?.totalFare || 0,
-                flight.fare?.currency
-              )}
+          <div className="mt-4 grid grid-cols-3 gap-4">
+            <div>
+              <div className="text-xs text-gray-400">
+                {formatDate(flight.departureTime)}
+              </div>
+              <div className="text-2xl font-bold">
+                {formatTime(flight.departureTime)}
+              </div>
+              <div className="text-sm text-gray-500">{flight.origin}</div>
             </div>
-            <div className="text-xs text-gray-500">
-              {flight.fareType} •{" "}
-              {flight.fare?.refundable ? "Refundable" : "Non-refundable"}
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-4">
-          <div>
-            <div className="text-xs text-gray-400">
-              {formatDate(flight.departureTime)}
+            <div className="text-center">
+              <div className="text-xs text-gray-500">
+                <Clock className="inline-block h-3 w-3 mr-1" />
+                {flight.duration}
+              </div>
+              <div className="relative h-px bg-gray-300 my-2">
+                <div className="absolute left-0 top-1/2 w-full h-0.5 bg-gray-300"></div>
+                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full bg-gray-400"></div>
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full bg-gray-400"></div>
+              </div>
+              <div className="text-xs text-blue-600">
+                {flight.stops === 0
+                  ? "Non-stop"
+                  : `${flight.stops} ${flight.stops === 1 ? "stop" : "stops"}`}
+              </div>
             </div>
-            <div className="text-2xl font-bold">
-              {formatTime(flight.departureTime)}
-            </div>
-            <div className="text-sm text-gray-500">{flight.origin}</div>
-          </div>
 
-          <div className="text-center">
-            <div className="text-xs text-gray-500">
-              <Clock className="inline-block h-3 w-3 mr-1" />
-              {flight.duration}
-            </div>
-            <div className="relative h-px bg-gray-300 my-2">
-              <div className="absolute left-0 top-1/2 w-full h-0.5 bg-gray-300"></div>
-              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full bg-gray-400"></div>
-              <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 rounded-full bg-gray-400"></div>
-            </div>
-            <div className="text-xs text-blue-600">
-              {flight.stops === 0
-                ? "Non-stop"
-                : `${flight.stops} ${flight.stops === 1 ? "stop" : "stops"}`}
-            </div>
-          </div>
-
-          <div className="text-right">
-            <div className="text-xs text-gray-400">
-              {formatDate(flight.arrivalTime)}
-            </div>
-            <div className="text-2xl font-bold">
-              {formatTime(flight.arrivalTime)}
-            </div>
-            <div className="text-sm text-gray-500">
-              {flight.destinationInfo?.city} • {flight.destinationInfo?.code}
+            <div className="text-right">
+              <div className="text-xs text-gray-400">
+                {formatDate(flight.arrivalTime)}
+              </div>
+              <div className="text-2xl font-bold">
+                {formatTime(flight.arrivalTime)}
+              </div>
+              <div className="text-sm text-gray-500">
+                {flight.destinationInfo?.city} • {flight.destinationInfo?.code}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderFlightDetailsModal = () => (
     <div className="fixed inset-0 bg-transparent z-50 flex items-center justify-center p-4">
@@ -587,39 +661,7 @@ export default function FlightList({
     <div className="space-y-4">
       {isModalOpen && renderFlightDetailsModal()}
       <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-          <div>
-            <h2 className="text-lg font-semibold">
-              {flights.length} {flights.length === 1 ? "Flight" : "Flights"}{" "}
-              Found
-            </h2>
-            {flights.length > 0 && (
-              <p className="text-sm text-gray-500 mt-1">
-                Showing {indexOfFirstFlight + 1}-
-                {Math.min(indexOfLastFlight, flights.length)} of{" "}
-                {flights.length} flights
-              </p>
-            )}
-          </div>
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <span className="text-sm text-gray-600 whitespace-nowrap">
-              Sort by:
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value);
-                setCurrentPage(1); // Reset to first page when sorting changes
-              }}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
-            >
-              <option value="price_asc">Price (Low to High)</option>
-              <option value="price_desc">Price (High to Low)</option>
-              <option value="duration">Duration</option>
-              <option value="departure">Departure Time</option>
-            </select>
-          </div>
-        </div>
+        {/* Filters */}
 
         <div className="space-y-4">
           {tripType === "roundtrip" && (
