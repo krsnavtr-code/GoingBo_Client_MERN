@@ -184,18 +184,46 @@ export default function FlightList({ flights, onSelectFlight, tripType = "oneway
   }, []);
 
   const handleFlightCardClick = (flight) => {
+    console.log("=== FLIGHT CARD CLICKED ===");
+    console.log("Current Trip Type:", tripType);
+    console.log("Current Selection:", currentSelection);
+    console.log("Selected Flight:", {
+      id: flight.id,
+      airline: flight.airline?.name,
+      flightNumber: flight.flightNumber,
+      departure: flight.departureTime,
+      arrival: flight.arrivalTime,
+      price: flight.fare?.totalFare,
+    });
+
     if (tripType === "roundtrip") {
-      // In round-trip mode, select the flight for the current selection (outbound/return)
       if (currentSelection === "outbound") {
+        console.log(
+          "Setting outbound flight, waiting for return flight selection"
+        );
         setSelectedOutbound(flight);
         setCurrentSelection("return");
       } else {
+        console.log("Setting return flight, completing round-trip selection");
+        console.log("Outbound Flight:", {
+          id: selectedOutbound?.id,
+          airline: selectedOutbound?.airline?.name,
+          departure: selectedOutbound?.departureTime,
+        });
+        console.log("Return Flight:", {
+          id: flight.id,
+          airline: flight.airline?.name,
+          departure: flight.departureTime,
+        });
+
         setSelectedReturn(flight);
-        // Notify parent component about the selection
-        onSelectFlight({ outbound: selectedOutbound, return: flight });
+        onSelectFlight({
+          outbound: selectedOutbound,
+          return: flight,
+        });
       }
     } else {
-      // In one-way mode, just select the flight
+      console.log("One-way flight selected");
       setSelectedOutbound(flight);
       onSelectFlight(flight);
     }
@@ -203,7 +231,7 @@ export default function FlightList({ flights, onSelectFlight, tripType = "oneway
     // Show flight details
     setSelectedFlightDetails(flight);
     setIsModalOpen(true);
-    document.body.style.overflow = "hidden"; // Prevent scrolling when modal is open
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
@@ -220,6 +248,10 @@ export default function FlightList({ flights, onSelectFlight, tripType = "oneway
 
   // Reset selection when trip type changes
   useEffect(() => {
+    console.log("=== TRIP TYPE CHANGED ===");
+    console.log("New Trip Type:", tripType);
+    console.log("Resetting flight selections");
+
     setSelectedOutbound(null);
     setSelectedReturn(null);
     setCurrentSelection("outbound");

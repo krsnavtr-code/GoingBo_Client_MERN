@@ -170,6 +170,22 @@ class FlightService {
   }
 
   async searchFlights(searchParams) {
+    console.group('=== FLIGHT SEARCH REQUEST ===');
+    console.log('Search Parameters:');
+    console.log('- Trip Type:', searchParams.tripType || 'oneway');
+    console.log('- Origin:', searchParams.origin);
+    console.log('- Destination:', searchParams.destination);
+    console.log('- Departure Date:', searchParams.departureDate);
+    console.log('- Return Date:', searchParams.returnDate || 'N/A');
+    console.log('- Journey Type:', searchParams.journey_type || (searchParams.tripType === 'roundtrip' ? '2' : '1'));
+    console.log('- Passengers:', {
+      adults: searchParams.adults || 1,
+      children: searchParams.children || 0,
+      infants: searchParams.infants || 0
+    });
+    console.log('- Cabin Class:', searchParams.cabinClass || 'Economy');
+    console.groupEnd();
+
     try {
       // Define cabin class mapping
       const cabinClassMap = {
@@ -220,7 +236,50 @@ class FlightService {
       }
 
       console.log('Sending search request:', formattedParams);
-      const response = await this.api.post('/flights/search', formattedParams);
+      const response = await this.api.post('/flights/search', searchParams);
+
+      console.group('=== FLIGHT SEARCH RESPONSE ===');
+      console.log('Status:', response.status);
+      console.log('Trip Type:', searchParams.tripType || 'oneway');
+
+      if (response.data && Array.isArray(response.data)) {
+        console.log(`Found ${response.data.length} flight options`);
+
+        // Log outbound and return flight counts
+        const outboundFlights = response.data.filter(f => !f.isReturnFlight);
+        const returnFlights = response.data.filter(f => f.isReturnFlight);
+
+        console.log(`- Outbound Flights: ${outboundFlights.length}`);
+        console.log(`- Return Flights: ${returnFlights.length}`);
+
+        // Log sample of each type
+        if (outboundFlights.length > 0) {
+          console.log('Sample Outbound Flight:', {
+            id: outboundFlights[0].id,
+            airline: outboundFlights[0].airline?.name || 'Unknown',
+            flightNumber: outboundFlights[0].flightNumber,
+            departure: outboundFlights[0].departureTime,
+            arrival: outboundFlights[0].arrivalTime,
+            price: outboundFlights[0].fare?.totalFare
+          });
+        }
+
+        if (returnFlights.length > 0) {
+          console.log('Sample Return Flight:', {
+            id: returnFlights[0].id,
+            airline: returnFlights[0].airline?.name || 'Unknown',
+            flightNumber: returnFlights[0].flightNumber,
+            departure: returnFlights[0].departureTime,
+            arrival: returnFlights[0].arrivalTime,
+            price: returnFlights[0].fare?.totalFare
+          });
+        } else if (searchParams.tripType === 'roundtrip') {
+          console.warn('No return flights found for round-trip search');
+        }
+      } else {
+        console.log('No flight data in response');
+      }
+      console.groupEnd();
 
       // Add detailed response logging
       console.group('API Response Details');
