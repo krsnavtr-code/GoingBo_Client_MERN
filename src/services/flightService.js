@@ -218,25 +218,52 @@ class FlightService {
 
       // Transform data to match backend format
       const formattedParams = {
-        origin: String(searchParams.origin).toUpperCase(),
-        destination: String(searchParams.destination).toUpperCase(),
+        origin: String(searchParams.origin).toUpperCase().trim(),
+        destination: String(searchParams.destination).toUpperCase().trim(),
         journey_type: searchParams.tripType === 'roundtrip' ? 2 : 1,
         adult: parseInt(searchParams.adults) || 1,
         child: parseInt(searchParams.children) || 0,
         infant: parseInt(searchParams.infants) || 0,
         travelclass: cabinClassMap[searchParams.cabinClass] || 2,
         departureDate: formatDate(searchParams.departureDate),
-        directFlight: Boolean(searchParams.directFlight),
-        oneStopFlight: Boolean(searchParams.oneStopFlight)
+        directFlight: searchParams.directFlight || false,
+        oneStopFlight: searchParams.oneStopFlight || true,
+        currency: 'INR',  // Explicitly set currency
+        preferredAirlines: []  // Add empty array for preferred airlines
       };
 
-      // Add return date for round trips
-      if (searchParams.tripType === 'roundtrip' && searchParams.returnDate) {
-        formattedParams.returnDate = formatDate(searchParams.returnDate);
+      // Add return date for round trips with validation
+      if (searchParams.tripType === 'roundtrip') {
+        if (!searchParams.returnDate) {
+          throw new Error('Return date is required for round-trip flights');
+        }
+        const returnDate = formatDate(searchParams.returnDate);
+        if (!returnDate) {
+          throw new Error('Invalid return date format');
+        }
+        formattedParams.returnDate = returnDate;
       }
 
-      console.log('Sending search request:', formattedParams);
-      const response = await this.api.post('/flights/search', searchParams);
+      // Log the final request payload for debugging
+      console.log('Sending search request to server:', JSON.stringify(formattedParams, null, 2));
+
+      try {
+        const response = await this.api.post('/flights/search', formattedParams);
+        console.log('Search request successful, processing response...');
+        return response;
+      } catch (error) {
+        console.error('Search request failed:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            data: error.config?.data
+          }
+        });
+        throw error;
+      }
 
       console.group('=== FLIGHT SEARCH RESPONSE ===');
       console.log('Status:', response.status);
