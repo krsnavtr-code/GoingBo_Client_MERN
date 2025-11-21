@@ -17,17 +17,10 @@ const FloatingSearchCard = dynamic(
 export default function FlightsPage({ searchParams: initialSearchParams }) {
   const router = useRouter();
   const { user } = useAuth();
-  const [searchResults, setSearchResults] = useState({
-    outbound: [],
-    return: [],
-    isRoundTrip: false,
-    selectedOutbound: null,
-    selectedReturn: null
-  });
-  const [searchParams, setSearchParams] = useState(initialSearchParams || {});
+  const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("outbound");
+  const [searchParams, setSearchParams] = useState(initialSearchParams || null);
 
   // Function to update URL with search parameters
   const updateSearchParams = useCallback((params) => {
@@ -80,37 +73,29 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
     const params = getSearchParamsFromUrl();
     if (params) {
       // If we have URL parameters, trigger a search
-      handleSearch(params || {});
+      handleSearch(params);
     }
   }, [getSearchParamsFromUrl]);
 
   const handleSearch = useCallback(async (searchParams) => {
     setLoading(true);
     setError(null);
-    setSearchResults({
-      outbound: [],
-      return: [],
-      isRoundTrip: false,
-      selectedOutbound: null,
-      selectedReturn: null,
-    });
-    setActiveTab("outbound");
+    setSearchResults(null);
+    setSearchParams(searchParams);
 
     // Update URL with search parameters
     updateSearchParams(searchParams);
 
     try {
       console.log("Flight search initiated with params:", searchParams);
-      const isRoundTrip = searchParams.tripType === "roundtrip";
 
       // Use demo data for testing
       if (process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true") {
         console.log("Using demo flight data");
         const { demoFlight } = await import("@/demoFlightData");
         setSearchResults({
-          outbound: demoFlight.data || [],
-          return: isRoundTrip ? demoFlight.returnData || [] : [],
-          isRoundTrip,
+          data: [demoFlight.data], // Wrap in array as FlightList expects an array
+          success: true,
         });
         setLoading(false);
         return;
@@ -130,82 +115,34 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
         directFlight: false,
         oneStopFlight: true,
         preferredAirlines: [],
+        // Add any additional parameters required by your API
       };
 
       // Add return date for round trips
-      if (isRoundTrip && searchParams.returnDate) {
+      if (searchParams.tripType === "roundtrip" && searchParams.returnDate) {
         searchData.returnDate = searchParams.returnDate;
       }
 
       console.log("Sending search request with data:", searchData);
 
-      // Get flight results
+      // The flightService.searchFlights() already processes the response and returns an array of flights
       const results = await flightService.searchFlights(searchData);
-      console.log("Search response:", results);
+
+      console.log("Search response (formatted flights):", results);
 
       if (!results) {
         throw new Error("No results received from the server");
       }
 
-      // Handle both new and legacy response formats
-      const formattedResults = {
-        outbound: [],
-        return: [],
-        isRoundTrip,
-        selectedOutbound: null,
-        selectedReturn: null,
-      };
+      // Ensure results is an array
+      const formattedResults = Array.isArray(results) ? results : [results];
 
-      try {
-        console.log("Raw search results:", results); // Debug log
-
-        // Handle case where results is already in the correct format
-        if (results && (results.outbound || results.return)) {
-          formattedResults.outbound = Array.isArray(results.outbound)
-            ? results.outbound
-            : [];
-          formattedResults.return =
-            isRoundTrip && Array.isArray(results.return) ? results.return : [];
-        }
-        // Handle case where results is an array (legacy format)
-        else if (Array.isArray(results)) {
-          // Check if this is a round-trip with both outbound and return in the same array
-          const hasReturnFlights = results.some(
-            (flight) =>
-              flight &&
-              flight.Segments &&
-              flight.Segments.some((segment) => segment && segment.IsReturn)
-          );
-
-          if (isRoundTrip && hasReturnFlights) {
-            // Split into outbound and return flights
-            formattedResults.outbound = results.filter(
-              (flight) =>
-                !flight.Segments ||
-                !flight.Segments.some((s) => s && s.IsReturn)
-            );
-            formattedResults.return = results.filter(
-              (flight) =>
-                flight.Segments && flight.Segments.some((s) => s && s.IsReturn)
-            );
-          } else {
-            // All flights are outbound
-            formattedResults.outbound = results;
-          }
-        }
-        // Handle single flight result
-        else if (results) {
-          formattedResults.outbound = [results];
-        }
-
-        console.log(
-          `Found ${formattedResults.outbound.length} outbound and ${formattedResults.return.length} return flights`
-        );
-        setSearchResults(formattedResults);
-      } catch (err) {
-        console.error("Error processing flight results:", err);
-        setError("Error processing flight results. Please try again.");
+      if (formattedResults.length === 0) {
+        throw new Error("No flights found for the selected criteria");
       }
+
+      console.log(`Found ${formattedResults.length} flights`);
+      setSearchResults(formattedResults);
     } catch (err) {
       console.error("Flight search error:", {
         message: err.message,
@@ -230,6 +167,7 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
         errorMessage +=
           "There was a problem with our servers. Please try again later.";
       } else if (err.message) {
+        // Use the original error message if available
         errorMessage = err.message;
       } else {
         errorMessage +=
@@ -237,35 +175,11 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
       }
 
       setError(errorMessage);
-      setSearchResults({
-        outbound: [],
-        return: [],
-        isRoundTrip: false,
-        selectedOutbound: null,
-        selectedReturn: null,
-      });
+      setSearchResults(null);
     } finally {
       setLoading(false);
     }
   }, []);
-
-  const handleSelectFlight = (flight, flightType) => {
-    // Handle flight selection
-    console.log(`Selected ${flightType} flight:`, flight);
-
-    // Update selected flights in state
-    setSearchResults((prev) => ({
-      ...prev,
-      selectedOutbound:
-        flightType === "outbound" ? flight : prev.selectedOutbound,
-      selectedReturn: flightType === "return" ? flight : prev.selectedReturn,
-    }));
-
-    // If this is the outbound flight and we're in round-trip mode, switch to return tab
-    if (flightType === "outbound" && searchResults.isRoundTrip) {
-      setActiveTab("return");
-    }
-  };
 
   const handleFlightSelect = (flight) => {
     if (!user) {
@@ -353,103 +267,18 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
 
       {searchResults && (
         <div className="mt-8">
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          ) : error ? (
-            <div
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-              role="alert"
-            >
-              <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">{error}</span>
-            </div>
-          ) : searchResults.outbound.length > 0 ||
-            searchResults.return.length > 0 ? (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                {searchResults.isRoundTrip
-                  ? "Select Your Flights"
-                  : "Available Flights"}
-              </h2>
-
-              {/* Tab Navigation for Round Trips */}
-              {searchResults.isRoundTrip && (
-                <div className="border-b border-gray-200">
-                  <nav className="-mb-px flex space-x-8">
-                    <button
-                      onClick={() => setActiveTab("outbound")}
-                      className={`${
-                        activeTab === "outbound"
-                          ? "border-blue-500 text-blue-600"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      } 
-    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                    >
-                      Outbound: {searchParams?.origin || "Origin"} →{" "}
-                      {searchParams?.destination || "Destination"}
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("return")}
-                      className={`${
-                        activeTab === "return"
-                          ? "border-blue-500 text-blue-600"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                      } 
-    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                    >
-                      Return: {searchParams?.destination || "Destination"} →{" "}
-                      {searchParams?.origin || "Origin"}
-                    </button>
-                  </nav>
-                </div>
-              )}
-
-              {/* Flight List */}
+          <div className="max-w-4xl mx-auto">
+            <div className="rounded-lg shadow-md p-4 mb-6">
               <div className="space-y-4">
-                {searchResults.isRoundTrip ? (
-                  <>
-                    {activeTab === "outbound" && (
-                      <FlightList
-                        flights={searchResults.outbound}
-                        searchParams={{
-                          ...searchParams,
-                          isReturn: false,
-                          date: searchParams.departureDate,
-                        }}
-                        onSelectFlight={(flight) =>
-                          handleSelectFlight(flight, "outbound")
-                        }
-                      />
-                    )}
-                    {activeTab === "return" && (
-                      <FlightList
-                        flights={searchResults.return}
-                        searchParams={{
-                          ...searchParams,
-                          isReturn: true,
-                          date: searchParams.returnDate,
-                          origin: searchParams.destination,
-                          destination: searchParams.origin,
-                        }}
-                        onSelectFlight={(flight) =>
-                          handleSelectFlight(flight, "return")
-                        }
-                      />
-                    )}
-                  </>
-                ) : (
+                {searchResults && (
                   <FlightList
-                    flights={searchResults.outbound}
-                    searchParams={{
-                      ...searchParams,
-                      isReturn: false,
-                      date: searchParams.departureDate,
-                    }}
-                    onSelectFlight={(flight) =>
-                      handleSelectFlight(flight, "outbound")
+                    flights={
+                      Array.isArray(searchResults)
+                        ? searchResults
+                        : searchResults.data || []
                     }
+                    onSelectFlight={handleFlightSelect}
+                    tripType={searchParams?.tripType || "oneway"}
                   />
                 )}
               </div>
@@ -470,16 +299,31 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
                 </div>
               )}
             </div>
-          ) : (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900">
-                No flights found
+
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h3 className="text-lg font-medium text-blue-800 mb-2">
+                Need help with your booking?
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Try adjusting your search criteria
+              <p className="text-blue-700 text-sm">
+                Our customer support team is available 24/7 to assist you with
+                your flight booking. Call us at{" "}
+                <a
+                  href="tel:+1234567890"
+                  className="font-semibold hover:underline"
+                >
+                  +1 (234) 567-890
+                </a>{" "}
+                or email us at{" "}
+                <a
+                  href="mailto:support@goingbo.com"
+                  className="font-semibold hover:underline"
+                >
+                  support@goingbo.com
+                </a>
+                .
               </p>
             </div>
-          )}
+          </div>
         </div>
       )}
       {/* </div> */}

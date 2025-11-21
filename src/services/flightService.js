@@ -243,21 +243,12 @@ class FlightService {
         dataKeys: responseData?.data ? Object.keys(responseData.data) : [],
         hasDataData: !!responseData?.data?.data,
         hasResults: !!responseData?.data?.data?.results,
-        hasOutboundReturn: !!(responseData?.data?.data?.outbound || responseData?.data?.data?.return),
         resultsType: responseData?.data?.data?.results ?
           (Array.isArray(responseData.data.data.results) ? 'array' : typeof responseData.data.data.results) : 'none'
       }, null, 2));
 
-      // Check if we have the nested outbound/return structure
-      if (responseData?.data?.data?.outbound || responseData?.data?.data?.return) {
-        console.log('Found outbound/return in response.data.data');
-        return {
-          outbound: Array.isArray(responseData.data.data.outbound) ? responseData.data.data.outbound : [],
-          return: Array.isArray(responseData.data.data.return) ? responseData.data.data.return : []
-        };
-      }
       // Try to extract results from the deeply nested structure
-      else if (responseData?.data?.data?.results) {
+      if (responseData?.data?.data?.results) {
         console.log('Found results in response.data.data.results');
         results = responseData.data.data.results;
       }
@@ -287,92 +278,49 @@ class FlightService {
         results = results ? [results] : [];
       }
 
-      // Log the structure of the results for debugging
-      if (results) {
-        console.log('Results structure:', {
-          hasOutbound: results && 'outbound' in results,
-          outboundCount: results.outbound?.length || 0,
-          hasReturn: results && 'return' in results,
-          returnCount: results.return?.length || 0,
-          isRoundTrip: searchParams.tripType === 'roundtrip',
-          responseStructure: {
-            hasOutbound: results && 'outbound' in results,
-            hasReturn: results && 'return' in results,
-            isArray: Array.isArray(results),
-            keys: results ? Object.keys(results) : []
-          }
-        });
-
-        // If no results found, log the response structure for debugging
-        if ((!results.outbound || results.outbound.length === 0) &&
-          (!results.return || results.return.length === 0)) {
-          console.warn('No valid flight results found in response');
-          console.log('Response data structure for debugging:', JSON.stringify(responseData, null, 2).substring(0, 1000));
-          return searchParams.tripType === 'roundtrip' ? { outbound: [], return: [] } : [];
-        }
+      // At this point, we should have results in the 'results' variable
+      // Log the structure of the first result for debugging
+      if (results.length > 0) {
+        console.log('First result structure:',
+          JSON.stringify(results[0], (key, value) =>
+            key === 'Segments' ? '[...segments]' : value, 2).substring(0, 1000));
       }
 
-      // Initialize variables at the top to prevent TDZ issues
-      const formattedFlights = { outbound: [], return: [] };
+      // If no results found, log the response structure for debugging
+      if (!results || results.length === 0 || (results.length === 1 && !results[0])) {
+        console.warn('No valid flight results found in response');
+        console.log('Response data structure for debugging:', JSON.stringify(responseData, null, 2).substring(0, 1000));
+        return [];
+      }
+
+      // Process the results
+      const formattedFlights = [];
       const isRoundTrip = searchParams.tripType === 'roundtrip';
 
       try {
-        // If results is an object with outbound/return, use it directly
-        if (results && (results.outbound || results.return)) {
-          console.debug('Processing structured results with outbound/return');
-
-          // Process outbound flights
-          if (results.outbound && Array.isArray(results.outbound)) {
-            for (const flight of results.outbound) {
-              if (!flight || !flight.Segments) continue;
-
-              // Process each segment in the flight
-              const segments = Array.isArray(flight.Segments) ? flight.Segments : [flight.Segments];
-              for (const segment of segments) {
-                if (!segment) continue;
-                const formattedFlight = formatFlightData(flight, segment, searchParams);
-                if (formattedFlight) {
-                  formattedFlights.outbound.push(formattedFlight);
-                }
-              }
-            }
-          }
-
-          // Process return flights for round-trip
-          if (isRoundTrip && results.return && Array.isArray(results.return)) {
-            for (const flight of results.return) {
-              if (!flight || !flight.Segments) continue;
-
-              // Process each segment in the flight
-              const segments = Array.isArray(flight.Segments) ? flight.Segments : [flight.Segments];
-              for (const segment of segments) {
-                if (!segment) continue;
-                const formattedFlight = formatFlightData(flight, segment, searchParams);
-                if (formattedFlight) {
-                  formattedFlights.return.push(formattedFlight);
-                }
-              }
-            }
-          }
-
-          return isRoundTrip ? formattedFlights : formattedFlights.outbound;
-        }
-
-        // Handle array of results (legacy format)
-        if (!results || (Array.isArray(results) && results.length === 0)) {
+        if (!results || results.length === 0) {
           console.warn('No results returned from backend', response.data);
           return isRoundTrip ? { outbound: [], return: [] } : [];
         } else {
-          // Process legacy array format
-          console.debug('Processing legacy array format results');
+          // Log a small sample to inspect real structure (remove in production)
+          console.debug('Results sample (first item):', results[0]);
 
           // Normalise possible segment shapes into an iterable array of segments
           const normalizeSegments = (segments) => {
+            // segments could be:
+            // 1) undefined/null
+            // 2) [ {Origin, Destination, ...}, { ... } ]  (simple array)
+            // 3) [ [ {Origin...} ] ]  (nested array)
+            // 4) [ [ [ ... ] ] ]  (rare deeply nested)
             if (!segments) return [];
+            // flatten only arrays of arrays into depth 2 arrays of objects
             if (!Array.isArray(segments)) return [];
+            // If first element is an array, flatten one level
             if (Array.isArray(segments[0])) {
+              // segments = [ [segObj, segObj], [ ... ] ] -> flatten to array of segObjs
               return segments.flat(2).filter(Boolean);
             }
+            // Already array of objects
             return segments.filter(Boolean);
           };
 
