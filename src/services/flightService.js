@@ -243,12 +243,21 @@ class FlightService {
         dataKeys: responseData?.data ? Object.keys(responseData.data) : [],
         hasDataData: !!responseData?.data?.data,
         hasResults: !!responseData?.data?.data?.results,
+        hasOutboundReturn: !!(responseData?.data?.data?.outbound || responseData?.data?.data?.return),
         resultsType: responseData?.data?.data?.results ?
           (Array.isArray(responseData.data.data.results) ? 'array' : typeof responseData.data.data.results) : 'none'
       }, null, 2));
 
+      // Check if we have the nested outbound/return structure
+      if (responseData?.data?.data?.outbound || responseData?.data?.data?.return) {
+        console.log('Found outbound/return in response.data.data');
+        return {
+          outbound: Array.isArray(responseData.data.data.outbound) ? responseData.data.data.outbound : [],
+          return: Array.isArray(responseData.data.data.return) ? responseData.data.data.return : []
+        };
+      }
       // Try to extract results from the deeply nested structure
-      if (responseData?.data?.data?.results) {
+      else if (responseData?.data?.data?.results) {
         console.log('Found results in response.data.data.results');
         results = responseData.data.data.results;
       }
