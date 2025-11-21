@@ -238,21 +238,32 @@ class FlightService {
 
       // Add detailed logging of the full response structure
       console.log('Full response data structure:', JSON.stringify({
-        hasSuccess: !!responseData?.success,
+        hasSuccess: responseData?.success,
         hasData: !!responseData?.data,
         dataKeys: responseData?.data ? Object.keys(responseData.data) : [],
-        hasDataData: !!responseData?.data?.data,
-        hasResults: !!responseData?.data?.data?.results,
-        resultsType: responseData?.data?.data?.results ?
-          (Array.isArray(responseData.data.data.results) ? 'array' : typeof responseData.data.data.results) : 'none'
+        hasDataData: responseData?.data?.data !== undefined,
+        dataDataKeys: responseData?.data?.data ? Object.keys(responseData.data.data) : [],
+        hasOutbound: responseData?.data?.data?.outbound !== undefined,
+        hasReturn: responseData?.data?.data?.return !== undefined,
+        isRoundTrip: responseData?.data?.data?.isRoundTrip,
+        responseTime: responseData?.data?.data?.metadata?.responseTime
       }, null, 2));
 
-      // Try to extract results from the deeply nested structure
-      if (responseData?.data?.data?.results) {
+      // Check for the new response structure with outbound/return directly in data.data
+      if (responseData?.data?.data &&
+        (responseData.data.data.outbound !== undefined || responseData.data.data.return !== undefined)) {
+        console.log('Found structured results in response.data.data');
+        results = {
+          outbound: responseData.data.data.outbound || [],
+          return: responseData.data.data.return || [],
+          isRoundTrip: responseData.data.data.isRoundTrip || false
+        };
+      }
+      // Fallback to older structures
+      else if (responseData?.data?.data?.results) {
         console.log('Found results in response.data.data.results');
         results = responseData.data.data.results;
       }
-        // Fallback to other possible structures
       else if (responseData?.data?.results) {
         console.log('Found results in response.data.results');
         results = responseData.data.results;
@@ -275,34 +286,40 @@ class FlightService {
 
       // Ensure results is always an array
       if (!Array.isArray(results)) {
-        results = results ? [results] : [];
-      }
 
-      // Log the structure of the results for debugging
-      if (results) {
-        console.log('Results structure:', {
-          hasOutbound: results && 'outbound' in results,
-          outboundCount: results.outbound?.length || 0,
-          hasReturn: results && 'return' in results,
-          returnCount: results.return?.length || 0,
-          isRoundTrip: searchParams.tripType === 'roundtrip',
-          responseStructure: {
-            hasOutbound: results && 'outbound' in results,
-            hasReturn: results && 'return' in results,
-            isArray: Array.isArray(results),
-            keys: results ? Object.keys(results) : []
+        // Log the structure of the results for debugging
+        if (results) {
+          const isStructuredResponse = results && (results.outbound !== undefined || results.return !== undefined);
+
+          console.log('Results structure:', {
+            isStructuredResponse,
+            hasOutbound: isStructuredResponse && Array.isArray(results.outbound),
+            outboundCount: isStructuredResponse ? (results.outbound?.length || 0) : 0,
+            hasReturn: isStructuredResponse && Array.isArray(results.return),
+            returnCount: isStructuredResponse ? (results.return?.length || 0) : 0,
+            isRoundTrip: isStructuredResponse ? results.isRoundTrip : searchParams.tripType === 'roundtrip',
+            responseStructure: {
+              hasOutbound: isStructuredResponse && 'outbound' in results,
+              hasReturn: isStructuredResponse && 'return' in results,
+              isArray: Array.isArray(results),
+              keys: results ? Object.keys(results) : []
+            }
+          });
+
+          // If no results found in structured response
+          if (isStructuredResponse &&
+            (!results.outbound || results.outbound.length === 0) &&
+            (!results.return || results.return.length === 0)) {
+            console.warn('No valid flight results found in structured response');
+            return searchParams.tripType === 'roundtrip' ? { outbound: [], return: [] } : [];
           }
-        });
-
-        // If no results found, log the response structure for debugging
-        if ((!results.outbound || results.outbound.length === 0) &&
-          (!results.return || results.return.length === 0)) {
-          console.warn('No valid flight results found in response');
-          console.log('Response data structure for debugging:', JSON.stringify(responseData, null, 2).substring(0, 1000));
-          return searchParams.tripType === 'roundtrip' ? { outbound: [], return: [] } : [];
+          // If no results found in array response
+          else if (Array.isArray(results) && results.length === 0) {
+            console.warn('No flight results found in array response');
+            return [];
+          }
         }
       }
-
       // Initialize variables at the top to prevent TDZ issues
       const formattedFlights = { outbound: [], return: [] };
       const isRoundTrip = searchParams.tripType === 'roundtrip';
