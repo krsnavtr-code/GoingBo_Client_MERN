@@ -242,7 +242,7 @@ class FlightService {
         child: parseInt(searchParams.children) || 0,
         infant: parseInt(searchParams.infants) || 0,
         travelclass: cabinClassMap[searchParams.cabinClass] || 2,
-        departureDate: formatDate(searchParams.departureDate),
+        departureDate: this.formatDate(searchParams.departureDate),
         directFlight: Boolean(searchParams.directFlight),
         oneStopFlight: Boolean(searchParams.oneStopFlight)
       };
