@@ -125,57 +125,33 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
 
       console.log("Sending search request with data:", searchData);
 
-      // The flightService.searchFlights() already processes the response and returns an array of flights
-      const results = await flightService.searchFlights(searchData);
+      // Call the flight service
+      const response = await flightService.searchFlights(searchData);
 
-      console.log("Search response (formatted flights):", results);
+      console.log("Search response (formatted flights):", response);
 
-      if (!results) {
-        throw new Error("No results received from the server");
-      }
-
-      // Ensure results is an array
-      const formattedResults = Array.isArray(results) ? results : [results];
-
-      if (formattedResults.length === 0) {
-        throw new Error("No flights found for the selected criteria");
-      }
-
-      console.log(`Found ${formattedResults.length} flights`);
-      setSearchResults(formattedResults);
-    } catch (err) {
-      console.error("Flight search error:", {
-        message: err.message,
-        name: err.name,
-        stack: err.stack,
-        response: err.response?.data
-          ? "Response data available (see network tab)"
-          : "No response data",
-      });
-
-      // Extract a more user-friendly error message
-      let errorMessage = "Failed to search for flights. ";
-
-      if (err.message.includes("network")) {
-        errorMessage += "Please check your internet connection and try again.";
-      } else if (err.message.includes("timeout")) {
-        errorMessage += "The request took too long. Please try again.";
-      } else if (
-        err.message.includes("500") ||
-        err.message.includes("server")
-      ) {
-        errorMessage +=
-          "There was a problem with our servers. Please try again later.";
-      } else if (err.message) {
-        // Use the original error message if available
-        errorMessage = err.message;
+      // Process the response based on trip type
+      if (searchParams.tripType === "roundtrip") {
+        // For round trips, we expect both outbound and return flights
+        setSearchResults({
+          outbound: response.outbound || [],
+          return: response.return || [],
+          isRoundTrip: true,
+        });
       } else {
-        errorMessage +=
-          "Please try again or contact support if the problem persists.";
+        // For one-way trips, just set the outbound flights
+        setSearchResults({
+          outbound: Array.isArray(response)
+            ? response
+            : [response].filter(Boolean),
+          return: [],
+          isRoundTrip: false,
+        });
       }
-
-      setError(errorMessage);
-      setSearchResults(null);
+    } catch (err) {
+      console.error("Search error:", err);
+      setError(err.message || "Failed to search flights. Please try again.");
+      toast.error(err.message || "Failed to search flights. Please try again.");
     } finally {
       setLoading(false);
     }

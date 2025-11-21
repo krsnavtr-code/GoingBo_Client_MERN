@@ -4,38 +4,175 @@ import { useState, useEffect, useRef } from "react";
 import {
   Clock,
   Plane,
-  ArrowRight,
-  ChevronDown,
-  ChevronUp,
   DollarSign,
-  Users,
   Briefcase,
-  PlusCircle,
   Wifi,
   Utensils,
   Film,
   Luggage,
-  RefreshCw,
   CheckCircle2,
   XCircle,
   X,
-  MapPin,
   Calendar,
   Clock as ClockIcon,
   Info,
-  ArrowLeft,
+  PlaneTakeoff,
+  AlertCircle,
   ChevronLeft,
   ChevronRight,
-  ArrowUpRight,
-  ArrowDownLeft,
-  PlaneLanding,
-  PlaneTakeoff,
-  User,
-  BriefcaseMedical,
-  ShieldCheck,
-  ShieldAlert,
-  AlertCircle,
 } from "lucide-react";
+
+// Reusable Pagination Component
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total pages is less than or equal to max visible pages
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // Always show first page
+      pageNumbers.push(1);
+
+      // Calculate start and end of the middle section
+      let startPage = Math.max(2, currentPage - 1);
+      let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+      // Adjust if we're at the start or end
+      if (currentPage <= 3) {
+        endPage = 4;
+      } else if (currentPage >= totalPages - 2) {
+        startPage = totalPages - 3;
+      }
+
+      // Add ellipsis if needed
+      if (startPage > 2) {
+        pageNumbers.push("...");
+      }
+
+      // Add middle pages
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i);
+      }
+
+      // Add ellipsis if needed
+      if (endPage < totalPages - 1) {
+        pageNumbers.push("...");
+      }
+
+      // Always show last page
+      if (totalPages > 1) {
+        pageNumbers.push(totalPages);
+      }
+    }
+
+    return pageNumbers;
+  };
+
+  return (
+    <div className="flex items-center justify-between mt-6 border-t border-gray-200 pt-4">
+      <div className="flex-1 flex justify-between sm:hidden">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
+      </div>
+      <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm text-gray-700">
+            Page <span className="font-medium">{currentPage}</span> of{" "}
+            <span className="font-medium">{totalPages}</span>
+          </p>
+        </div>
+        <nav
+          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+          aria-label="Pagination"
+        >
+          <button
+            onClick={() => onPageChange(1)}
+            disabled={currentPage === 1}
+            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+              currentPage === 1
+                ? "text-gray-300"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <span className="sr-only">First</span>
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            <ChevronLeft className="h-5 w-5 -ml-2" aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+              currentPage === 1
+                ? "text-gray-300"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <span className="sr-only">Previous</span>
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          </button>
+
+          {/* Page numbers */}
+          {getPageNumbers().map((page, index) => (
+            <button
+              key={index}
+              onClick={() => typeof page === "number" && onPageChange(page)}
+              disabled={page === "..."}
+              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                page === currentPage
+                  ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                  : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+              } ${page === "..." ? "cursor-default" : "cursor-pointer"}`}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium ${
+              currentPage === totalPages
+                ? "text-gray-300"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <span className="sr-only">Next</span>
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => onPageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+              currentPage === totalPages
+                ? "text-gray-300"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <span className="sr-only">Last</span>
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            <ChevronRight className="h-5 w-5 -mr-2" aria-hidden="true" />
+          </button>
+        </nav>
+      </div>
+    </div>
+  );
+};
 
 const formatCurrency = (amount, currency = "INR") => {
   return new Intl.NumberFormat("en-IN", {
@@ -51,52 +188,112 @@ export default function FlightList({
   onSelectFlight,
   tripType = "oneway",
 }) {
-  const [selectedFlight, setSelectedFlight] = useState(null);
+  // Handle both array and object response formats
+  const outboundFlights = Array.isArray(flights?.outbound)
+    ? flights.outbound
+    : [];
+  const returnFlights = Array.isArray(flights?.return) ? flights.return : [];
+  const isRoundTrip = tripType === "roundtrip";
+
   const [selectedOutbound, setSelectedOutbound] = useState(null);
   const [selectedReturn, setSelectedReturn] = useState(null);
+  const [currentSelection, setCurrentSelection] = useState("outbound");
   const [sortBy, setSortBy] = useState("price_asc");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState({ outbound: 1, return: 1 });
   const [selectedFlightDetails, setSelectedFlightDetails] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const modalRef = useRef(null);
-  const flightsPerPage = 50; // Reduced for better UX
+  const flightsPerPage = 10; // Show 10 flights per page
+
+  // Handle flight selection
+  const handleFlightSelect = (flight, type = "outbound") => {
+    if (type === "outbound") {
+      setSelectedOutbound(flight);
+      if (isRoundTrip) {
+        setCurrentSelection("return");
+        // Reset return selection when changing outbound flight
+        setSelectedReturn(null);
+      } else {
+        onSelectFlight(flight);
+      }
+    } else {
+      setSelectedReturn(flight);
+      onSelectFlight({
+        outbound: selectedOutbound,
+        return: flight,
+      });
+    }
+  };
+
+  // Check if we have any flights to display
+  const hasFlights =
+    outboundFlights.length > 0 || (isRoundTrip && returnFlights.length > 0);
 
   // Reset to first page when flights change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [flights]);
+    setCurrentPage({ outbound: 1, return: 1 });
+  }, [outboundFlights, returnFlights]);
 
   // Sort flights based on the selected criteria
-  const sortedFlights = [...(flights || [])].sort((a, b) => {
-    switch (sortBy) {
-      case "price_asc":
-        return (a.fare?.totalFare || 0) - (b.fare?.totalFare || 0);
-      case "price_desc":
-        return (b.fare?.totalFare || 0) - (a.fare?.totalFare || 0);
-      case "duration":
-        return (a.durationInMinutes || 0) - (b.durationInMinutes || 0);
-      case "departure":
-        return new Date(a.departureTime) - new Date(b.departureTime);
-      default:
-        return 0;
-    }
-  });
+  const sortFlights = (flights) => {
+    return [...flights].sort((a, b) => {
+      switch (sortBy) {
+        case "price_asc":
+          return (a.fare?.totalFare || 0) - (b.fare?.totalFare || 0);
+        case "price_desc":
+          return (b.fare?.totalFare || 0) - (a.fare?.totalFare || 0);
+        case "duration":
+          return (a.durationInMinutes || 0) - (b.durationInMinutes || 0);
+        case "departure":
+          return new Date(a.departureTime) - new Date(b.departureTime);
+        default:
+          return 0;
+      }
+    });
+  };
 
-  // Calculate pagination
-  const indexOfLastFlight = currentPage * flightsPerPage;
-  const indexOfFirstFlight = indexOfLastFlight - flightsPerPage;
-  const currentFlights = sortedFlights.slice(
-    indexOfFirstFlight,
-    indexOfLastFlight
+  // Sort outbound and return flights
+  const sortedOutboundFlights = sortFlights(outboundFlights);
+  const sortedReturnFlights = sortFlights(returnFlights);
+
+  // Calculate pagination for outbound flights
+  const indexOfLastOutbound = currentPage.outbound * flightsPerPage;
+  const indexOfFirstOutbound = indexOfLastOutbound - flightsPerPage;
+  const currentOutboundFlights = sortedOutboundFlights.slice(
+    indexOfFirstOutbound,
+    indexOfLastOutbound
   );
-  const totalPages = Math.ceil(sortedFlights.length / flightsPerPage);
+  const totalOutboundPages =
+    Math.ceil(sortedOutboundFlights.length / flightsPerPage) || 1;
 
-  // Change page
-  const paginate = (pageNumber) => {
-    if (pageNumber < 1 || pageNumber > totalPages) return;
-    setCurrentPage(pageNumber);
+  // Calculate pagination for return flights
+  const indexOfLastReturn = currentPage.return * flightsPerPage;
+  const indexOfFirstReturn = indexOfLastReturn - flightsPerPage;
+  const currentReturnFlights = sortedReturnFlights.slice(
+    indexOfFirstReturn,
+    indexOfLastReturn
+  );
+  const totalReturnPages =
+    Math.ceil(sortedReturnFlights.length / flightsPerPage) || 1;
+
+  // Change page for outbound or return flights
+  const paginate = (pageNumber, flightType = "outbound") => {
+    const pageKey = flightType === "return" ? "return" : "outbound";
+    const maxPage =
+      flightType === "return" ? totalReturnPages : totalOutboundPages;
+
+    if (pageNumber < 1 || pageNumber > maxPage) return;
+
+    setCurrentPage((prev) => ({
+      ...prev,
+      [pageKey]: pageNumber,
+    }));
+
     // Scroll to top of results
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const resultsElement = document.getElementById(`${flightType}-flights`);
+    if (resultsElement) {
+      resultsElement.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const formatTime = (dateTimeString) => {
@@ -127,7 +324,7 @@ export default function FlightList({
     }
   };
 
-  if (!flights || flights.length === 0) {
+  if (!hasFlights) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow p-6">
         <Plane className="mx-auto h-12 w-12 text-gray-400" />
@@ -584,149 +781,161 @@ export default function FlightList({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {isModalOpen && renderFlightDetailsModal()}
       <div className="bg-white rounded-lg shadow p-4">
-        {/* Filters */}
-
-        <div className="space-y-4">
-          {tripType === "roundtrip" && (
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">
+        <div className="space-y-8">
+          {/* Outbound Flights Section */}
+          <div id="outbound-flights">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
                 Outbound Flights
+                {isRoundTrip && selectedOutbound && (
+                  <span className="ml-2 text-sm font-normal text-green-600">
+                    {currentSelection === "outbound"
+                      ? "(Selecting)"
+                      : "(Selected)"}
+                  </span>
+                )}
               </h3>
-              <div className="space-y-4">
-                {currentFlights
-                  .filter((flight) => !flight.isReturn)
-                  .map((flight) =>
-                    renderFlightCard(
-                      flight,
-                      selectedOutbound?.id === flight.id,
-                      false
-                    )
-                  )}
-              </div>
+              {outboundFlights.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">Sort by:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="price_asc">Price (Low to High)</option>
+                    <option value="price_desc">Price (High to Low)</option>
+                    <option value="duration">Duration</option>
+                    <option value="departure">Departure Time</option>
+                  </select>
+                </div>
+              )}
             </div>
-          )}
 
-          {tripType === "roundtrip" && selectedOutbound && (
-            <div className="mt-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">
-                Return Flights
-              </h3>
+            {outboundFlights.length > 0 ? (
               <div className="space-y-4">
-                {currentFlights
-                  .filter((flight) => flight.isReturn)
-                  .map((flight) =>
+                {currentOutboundFlights.map((flight) =>
+                  renderFlightCard(
+                    flight,
+                    selectedOutbound?.id === flight.id,
+                    false
+                  )
+                )}
+
+                {/* Outbound Pagination */}
+                {totalOutboundPages > 1 && (
+                  <Pagination
+                    currentPage={currentPage.outbound}
+                    totalPages={totalOutboundPages}
+                    onPageChange={(page) => paginate(page, "outbound")}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-lg">
+                <p className="text-gray-500">No outbound flights found</p>
+              </div>
+            )}
+          </div>
+
+          {/* Return Flights Section - Only show for round trips */}
+          {isRoundTrip && (
+            <div
+              id="return-flights"
+              className={`pt-6 border-t border-gray-200 ${
+                !selectedOutbound ? "opacity-50" : ""
+              }`}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Return Flights
+                  {selectedOutbound && (
+                    <span className="ml-2 text-sm font-normal text-blue-600">
+                      {currentSelection === "return"
+                        ? "(Selecting...)"
+                        : selectedReturn
+                        ? "(Selected)"
+                        : ""}
+                    </span>
+                  )}
+                </h3>
+                {returnFlights.length > 0 && selectedOutbound && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500">Sort by:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="price_asc">Price (Low to High)</option>
+                      <option value="price_desc">Price (High to Low)</option>
+                      <option value="duration">Duration</option>
+                      <option value="departure">Departure Time</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {!selectedOutbound ? (
+                <div className="text-center py-8 bg-yellow-50 rounded-lg">
+                  <p className="text-yellow-700">
+                    Please select an outbound flight first
+                  </p>
+                </div>
+              ) : returnFlights.length > 0 ? (
+                <div className="space-y-4">
+                  {currentReturnFlights.map((flight) =>
                     renderFlightCard(
                       flight,
                       selectedReturn?.id === flight.id,
                       true
                     )
                   )}
-              </div>
+
+                  {/* Return Pagination */}
+                  {totalReturnPages > 1 && (
+                    <Pagination
+                      currentPage={currentPage.return}
+                      totalPages={totalReturnPages}
+                      onPageChange={(page) => paginate(page, "return")}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500">No return flights found</p>
+                </div>
+              )}
             </div>
           )}
 
-          {tripType !== "roundtrip" &&
-            currentFlights.map((flight) =>
-              renderFlightCard(
-                flight,
-                selectedOutbound?.id === flight.id,
-                false
-              )
-            )}
+          {/* One-way flights (when not in round-trip mode) */}
+          {!isRoundTrip && outboundFlights.length > 0 && (
+            <div className="space-y-4">
+              {currentOutboundFlights.map((flight) =>
+                renderFlightCard(
+                  flight,
+                  selectedOutbound?.id === flight.id,
+                  false
+                )
+              )}
+
+              {/* One-way Pagination */}
+              {totalOutboundPages > 1 && (
+                <Pagination
+                  currentPage={currentPage.outbound}
+                  totalPages={totalOutboundPages}
+                  onPageChange={(page) => paginate(page, "outbound")}
+                />
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4">
-            <div className="mb-2 sm:mb-0">
-              <p className="text-sm text-gray-700">
-                Page <span className="font-medium">{currentPage}</span> of{" "}
-                <span className="font-medium">{totalPages}</span>
-              </p>
-            </div>
-            <nav className="flex items-center space-x-1">
-              <button
-                onClick={() => paginate(1)}
-                disabled={currentPage === 1}
-                className={`px-3 py-1 rounded-md ${
-                  currentPage === 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-600 hover:bg-blue-50"
-                }`}
-              >
-                First
-              </button>
-              <button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-3 py-1 rounded-md ${
-                  currentPage === 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-600 hover:bg-blue-50"
-                }`}
-              >
-                Previous
-              </button>
-
-              {/* Show first page, current page with neighbors, and last page */}
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                // Calculate page numbers to show (current page in the middle when possible)
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-
-                // Skip if we've gone over the total pages
-                if (pageNum > totalPages) return null;
-
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => paginate(pageNum)}
-                    className={`px-3 py-1 border-t border-b ${
-                      currentPage === pageNum
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
-                    aria-current={currentPage === pageNum ? "page" : undefined}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Next page"
-              >
-                ›
-              </button>
-              <button
-                onClick={() => paginate(totalPages)}
-                disabled={currentPage === totalPages}
-                className={`px-3 py-1 rounded-r-md border ${
-                  currentPage === totalPages
-                    ? "text-gray-400 cursor-not-allowed border-gray-300 bg-gray-100"
-                    : "text-blue-600 hover:bg-blue-50 border-gray-300 bg-white hover:border-blue-300"
-                }`}
-                aria-label="Last page"
-              >
-                Last
-              </button>
-            </nav>
-          </div>
-        )}
+        {/* Pagination component is now included in each flight section */}
       </div>
     </div>
   );
