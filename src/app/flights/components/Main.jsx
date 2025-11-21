@@ -24,10 +24,10 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
     selectedOutbound: null,
     selectedReturn: null
   });
-  const [searchParams, setSearchParams] = useState(initialSearchParams || null);
+  const [searchParams, setSearchParams] = useState(initialSearchParams || {});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('outbound');
+  const [activeTab, setActiveTab] = useState("outbound");
 
   // Function to update URL with search parameters
   const updateSearchParams = useCallback((params) => {
@@ -80,7 +80,7 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
     const params = getSearchParamsFromUrl();
     if (params) {
       // If we have URL parameters, trigger a search
-      handleSearch(params);
+      handleSearch(params || {});
     }
   }, [getSearchParamsFromUrl]);
 
@@ -92,9 +92,9 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
       return: [],
       isRoundTrip: false,
       selectedOutbound: null,
-      selectedReturn: null
+      selectedReturn: null,
     });
-    setActiveTab('outbound');
+    setActiveTab("outbound");
 
     // Update URL with search parameters
     updateSearchParams(searchParams);
@@ -109,8 +109,8 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
         const { demoFlight } = await import("@/demoFlightData");
         setSearchResults({
           outbound: demoFlight.data || [],
-          return: isRoundTrip ? (demoFlight.returnData || []) : [],
-          isRoundTrip
+          return: isRoundTrip ? demoFlight.returnData || [] : [],
+          isRoundTrip,
         });
         setLoading(false);
         return;
@@ -151,26 +151,30 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
       const formattedResults = {
         outbound: [],
         return: [],
-        isRoundTrip
+        isRoundTrip,
       };
 
       // New format with outbound/return properties
       if (results.outbound || results.return) {
-        formattedResults.outbound = Array.isArray(results.outbound) ? results.outbound : [];
-        formattedResults.return = isRoundTrip && Array.isArray(results.return) ? results.return : [];
-      } 
+        formattedResults.outbound = Array.isArray(results.outbound)
+          ? results.outbound
+          : [];
+        formattedResults.return =
+          isRoundTrip && Array.isArray(results.return) ? results.return : [];
+      }
       // Legacy array format
       else if (Array.isArray(results)) {
         formattedResults.outbound = results;
-      } 
+      }
       // Single result
       else if (results) {
         formattedResults.outbound = [results];
       }
 
-      console.log(`Found ${formattedResults.outbound.length} outbound and ${formattedResults.return.length} return flights`);
+      console.log(
+        `Found ${formattedResults.outbound.length} outbound and ${formattedResults.return.length} return flights`
+      );
       setSearchResults(formattedResults);
-      
     } catch (err) {
       console.error("Flight search error:", {
         message: err.message,
@@ -188,12 +192,17 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
         errorMessage += "Please check your internet connection and try again.";
       } else if (err.message.includes("timeout")) {
         errorMessage += "The request took too long. Please try again.";
-      } else if (err.message.includes("500") || err.message.includes("server")) {
-        errorMessage += "There was a problem with our servers. Please try again later.";
+      } else if (
+        err.message.includes("500") ||
+        err.message.includes("server")
+      ) {
+        errorMessage +=
+          "There was a problem with our servers. Please try again later.";
       } else if (err.message) {
         errorMessage = err.message;
       } else {
-        errorMessage += "Please try again or contact support if the problem persists.";
+        errorMessage +=
+          "Please try again or contact support if the problem persists.";
       }
 
       setError(errorMessage);
@@ -202,7 +211,7 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
         return: [],
         isRoundTrip: false,
         selectedOutbound: null,
-        selectedReturn: null
+        selectedReturn: null,
       });
     } finally {
       setLoading(false);
@@ -212,17 +221,18 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
   const handleSelectFlight = (flight, flightType) => {
     // Handle flight selection
     console.log(`Selected ${flightType} flight:`, flight);
-    
+
     // Update selected flights in state
-    setSearchResults(prev => ({
+    setSearchResults((prev) => ({
       ...prev,
-      selectedOutbound: flightType === 'outbound' ? flight : prev.selectedOutbound,
-      selectedReturn: flightType === 'return' ? flight : prev.selectedReturn
+      selectedOutbound:
+        flightType === "outbound" ? flight : prev.selectedOutbound,
+      selectedReturn: flightType === "return" ? flight : prev.selectedReturn,
     }));
-    
+
     // If this is the outbound flight and we're in round-trip mode, switch to return tab
-    if (flightType === 'outbound' && searchResults.isRoundTrip) {
-      setActiveTab('return');
+    if (flightType === "outbound" && searchResults.isRoundTrip) {
+      setActiveTab("return");
     }
   };
 
@@ -346,8 +356,8 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
                       } 
                         whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                     >
-                      Outbound: {searchParams.origin} →{" "}
-                      {searchParams.destination}
+                      Outbound: {searchParams.origin || "N/A"} →{" "}
+                      {searchParams.destination || "N/A"}
                     </button>
                     <button
                       onClick={() => setActiveTab("return")}
@@ -358,7 +368,8 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
                       } 
                         whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                     >
-                      Return: {searchParams.destination} → {searchParams.origin}
+                      Return: {searchParams.destination || "N/A"} →{" "}
+                      {searchParams.origin || "N/A"}
                     </button>
                   </nav>
                 </div>
