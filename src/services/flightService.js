@@ -279,29 +279,31 @@ class FlightService {
       }
 
       // Log the structure of the results for debugging
-      console.log('Results structure:', {
-        hasOutbound: Array.isArray(formattedFlights.outbound),
-        outboundCount: formattedFlights.outbound.length,
-        hasReturn: Array.isArray(formattedFlights.return),
-        returnCount: formattedFlights.return.length,
-        isRoundTrip,
-        responseStructure: {
+      if (results) {
+        console.log('Results structure:', {
           hasOutbound: results && 'outbound' in results,
+          outboundCount: results.outbound?.length || 0,
           hasReturn: results && 'return' in results,
-          isArray: Array.isArray(results),
-          keys: results ? Object.keys(results) : []
-        }
-      });
+          returnCount: results.return?.length || 0,
+          isRoundTrip: searchParams.tripType === 'roundtrip',
+          responseStructure: {
+            hasOutbound: results && 'outbound' in results,
+            hasReturn: results && 'return' in results,
+            isArray: Array.isArray(results),
+            keys: results ? Object.keys(results) : []
+          }
+        });
 
-      // If no results found, log the response structure for debugging
-      if ((!formattedFlights.outbound || formattedFlights.outbound.length === 0) &&
-        (!formattedFlights.return || formattedFlights.return.length === 0)) {
-        console.warn('No valid flight results found in response');
-        console.log('Response data structure for debugging:', JSON.stringify(responseData, null, 2).substring(0, 1000));
-        return isRoundTrip ? { outbound: [], return: [] } : [];
+        // If no results found, log the response structure for debugging
+        if ((!results.outbound || results.outbound.length === 0) &&
+          (!results.return || results.return.length === 0)) {
+          console.warn('No valid flight results found in response');
+          console.log('Response data structure for debugging:', JSON.stringify(responseData, null, 2).substring(0, 1000));
+          return searchParams.tripType === 'roundtrip' ? { outbound: [], return: [] } : [];
+        }
       }
 
-      // Process the results
+      // Initialize variables at the top to prevent TDZ issues
       const formattedFlights = { outbound: [], return: [] };
       const isRoundTrip = searchParams.tripType === 'roundtrip';
 
