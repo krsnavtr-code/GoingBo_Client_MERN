@@ -183,22 +183,6 @@ export default function FlightSearch({
       return;
     }
 
-    // Validate return date for round trips
-    if (data.tripType === "roundtrip") {
-      if (!data.returnDate) {
-        setFormError("Return date is required for round trips");
-        return;
-      }
-
-      const departureDate = new Date(data.departureDate);
-      const returnDate = new Date(data.returnDate);
-
-      if (returnDate < departureDate) {
-        setFormError("Return date must be after departure date");
-        return;
-      }
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -208,7 +192,6 @@ export default function FlightSearch({
         destination: data.destination,
         departureDate: formatDateForAPI(data.departureDate),
         tripType: data.tripType,
-        journey_type: data.tripType === "roundtrip" ? 2 : 1, // 1 for one-way, 2 for round-trip
         adults: parseInt(data.adults) || 1,
         children: parseInt(data.children) || 0,
         infants: parseInt(data.infants) || 0,

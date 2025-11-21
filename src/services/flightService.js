@@ -170,22 +170,6 @@ class FlightService {
   }
 
   async searchFlights(searchParams) {
-    console.group('=== FLIGHT SEARCH REQUEST ===');
-    console.log('Search Parameters:');
-    console.log('- Trip Type:', searchParams.tripType || 'oneway');
-    console.log('- Origin:', searchParams.origin);
-    console.log('- Destination:', searchParams.destination);
-    console.log('- Departure Date:', searchParams.departureDate);
-    console.log('- Return Date:', searchParams.returnDate || 'N/A');
-    console.log('- Journey Type:', searchParams.journey_type || (searchParams.tripType === 'roundtrip' ? '2' : '1'));
-    console.log('- Passengers:', {
-      adults: searchParams.adults || 1,
-      children: searchParams.children || 0,
-      infants: searchParams.infants || 0
-    });
-    console.log('- Cabin Class:', searchParams.cabinClass || 'Economy');
-    console.groupEnd();
-
     try {
       // Define cabin class mapping
       const cabinClassMap = {
@@ -218,147 +202,25 @@ class FlightService {
 
       // Transform data to match backend format
       const formattedParams = {
-        origin: String(searchParams.origin).toUpperCase().trim(),
-        destination: String(searchParams.destination).toUpperCase().trim(),
+        origin: String(searchParams.origin).toUpperCase(),
+        destination: String(searchParams.destination).toUpperCase(),
         journey_type: searchParams.tripType === 'roundtrip' ? 2 : 1,
         adult: parseInt(searchParams.adults) || 1,
         child: parseInt(searchParams.children) || 0,
         infant: parseInt(searchParams.infants) || 0,
         travelclass: cabinClassMap[searchParams.cabinClass] || 2,
         departureDate: formatDate(searchParams.departureDate),
-        directFlight: searchParams.directFlight || false,
-        oneStopFlight: searchParams.oneStopFlight || true,
-        currency: 'INR',  // Explicitly set currency
-        preferredAirlines: []  // Add empty array for preferred airlines
+        directFlight: Boolean(searchParams.directFlight),
+        oneStopFlight: Boolean(searchParams.oneStopFlight)
       };
 
-      // Add return date for round trips with validation
-      if (searchParams.tripType === 'roundtrip') {
-        if (!searchParams.returnDate) {
-          throw new Error('Return date is required for round-trip flights');
-        }
-        const returnDate = formatDate(searchParams.returnDate);
-        if (!returnDate) {
-          throw new Error('Invalid return date format');
-        }
-        formattedParams.returnDate = returnDate;
+      // Add return date for round trips
+      if (searchParams.tripType === 'roundtrip' && searchParams.returnDate) {
+        formattedParams.returnDate = formatDate(searchParams.returnDate);
       }
 
-      // Log the final request payload for debugging
-      console.log('Sending search request to server:', JSON.stringify(formattedParams, null, 2));
-
-      try {
-        const response = await this.api.post('/flights/search', formattedParams);
-        console.log('Search request successful, processing response...');
-
-        // Debug: Log the raw response structure
-        console.log('Raw API response structure:', {
-          hasData: !!response.data,
-          dataKeys: response.data ? Object.keys(response.data) : [],
-          hasResults: !!(response.data?.data?.results)
-        });
-
-        // If we have nested results, flatten them
-        if (response.data?.data?.results) {
-          // Flatten the nested arrays of results
-          const allFlights = response.data.data.results.flat(2);
-          console.log(`Found ${allFlights.length} total flight options after flattening`);
-
-          // Try to identify return flights by checking segments
-          const flightsWithReturnInfo = allFlights.map(flight => {
-            if (!flight.Segments) return { ...flight, isReturnFlight: false };
-
-            // Check if any segment goes from destination back to origin (BOM->DEL)
-            const hasReturnSegment = flight.Segments.some(segment => {
-              const origin = segment.Origin?.AirportCode || segment.Origin;
-              const dest = segment.Destination?.AirportCode || segment.Destination;
-              return origin === 'BOM' && dest === 'DEL';
-            });
-
-            return {
-              ...flight,
-              isReturnFlight: hasReturnSegment,
-              // Add more debug info
-              _debug: {
-                segments: flight.Segments?.map(s => ({
-                  origin: s.Origin?.AirportCode || s.Origin,
-                  dest: s.Destination?.AirportCode || s.Destination,
-                  departure: s.DepartureTime || s.DepartureDateTime || s.Departure
-                }))
-              }
-            };
-          });
-
-          // Log flight counts by type
-          const outboundFlights = flightsWithReturnInfo.filter(f => !f.isReturnFlight);
-          const returnFlights = flightsWithReturnInfo.filter(f => f.isReturnFlight);
-
-          console.log(`Processed flights: ${outboundFlights.length} outbound, ${returnFlights.length} return`);
-
-          // Return the processed data
-          return {
-            ...response,
-            data: flightsWithReturnInfo
-          };
-        }
-
-        return response;
-      } catch (error) {
-        console.error('Search request failed:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            data: error.config?.data
-          }
-        });
-        throw error;
-      }
-
-      console.group('=== FLIGHT SEARCH RESPONSE ===');
-      console.log('Status:', response.status);
-      console.log('Trip Type:', searchParams.tripType || 'oneway');
-
-      if (response.data && Array.isArray(response.data)) {
-        console.log(`Found ${response.data.length} flight options`);
-
-        // Log outbound and return flight counts
-        const outboundFlights = response.data.filter(f => !f.isReturnFlight);
-        const returnFlights = response.data.filter(f => f.isReturnFlight);
-
-        console.log(`- Outbound Flights: ${outboundFlights.length}`);
-        console.log(`- Return Flights: ${returnFlights.length}`);
-
-        // Log sample of each type
-        if (outboundFlights.length > 0) {
-          console.log('Sample Outbound Flight:', {
-            id: outboundFlights[0].id,
-            airline: outboundFlights[0].airline?.name || 'Unknown',
-            flightNumber: outboundFlights[0].flightNumber,
-            departure: outboundFlights[0].departureTime,
-            arrival: outboundFlights[0].arrivalTime,
-            price: outboundFlights[0].fare?.totalFare
-          });
-        }
-
-        if (returnFlights.length > 0) {
-          console.log('Sample Return Flight:', {
-            id: returnFlights[0].id,
-            airline: returnFlights[0].airline?.name || 'Unknown',
-            flightNumber: returnFlights[0].flightNumber,
-            departure: returnFlights[0].departureTime,
-            arrival: returnFlights[0].arrivalTime,
-            price: returnFlights[0].fare?.totalFare
-          });
-        } else if (searchParams.tripType === 'roundtrip') {
-          console.warn('No return flights found for round-trip search');
-        }
-      } else {
-        console.log('No flight data in response');
-      }
-      console.groupEnd();
+      console.log('Sending search request:', formattedParams);
+      const response = await this.api.post('/flights/search', formattedParams);
 
       // Add detailed response logging
       console.group('API Response Details');
