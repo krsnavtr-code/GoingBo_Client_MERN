@@ -250,6 +250,58 @@ class FlightService {
       try {
         const response = await this.api.post('/flights/search', formattedParams);
         console.log('Search request successful, processing response...');
+
+        // Debug: Log the raw response structure
+        console.log('Raw API response structure:', {
+          hasData: !!response.data,
+          dataKeys: response.data ? Object.keys(response.data) : [],
+          hasResults: !!(response.data?.data?.results)
+        });
+
+        // If we have nested results, flatten them
+        if (response.data?.data?.results) {
+          // Flatten the nested arrays of results
+          const allFlights = response.data.data.results.flat(2);
+          console.log(`Found ${allFlights.length} total flight options after flattening`);
+
+          // Try to identify return flights by checking segments
+          const flightsWithReturnInfo = allFlights.map(flight => {
+            if (!flight.Segments) return { ...flight, isReturnFlight: false };
+
+            // Check if any segment goes from destination back to origin (BOM->DEL)
+            const hasReturnSegment = flight.Segments.some(segment => {
+              const origin = segment.Origin?.AirportCode || segment.Origin;
+              const dest = segment.Destination?.AirportCode || segment.Destination;
+              return origin === 'BOM' && dest === 'DEL';
+            });
+
+            return {
+              ...flight,
+              isReturnFlight: hasReturnSegment,
+              // Add more debug info
+              _debug: {
+                segments: flight.Segments?.map(s => ({
+                  origin: s.Origin?.AirportCode || s.Origin,
+                  dest: s.Destination?.AirportCode || s.Destination,
+                  departure: s.DepartureTime || s.DepartureDateTime || s.Departure
+                }))
+              }
+            };
+          });
+
+          // Log flight counts by type
+          const outboundFlights = flightsWithReturnInfo.filter(f => !f.isReturnFlight);
+          const returnFlights = flightsWithReturnInfo.filter(f => f.isReturnFlight);
+
+          console.log(`Processed flights: ${outboundFlights.length} outbound, ${returnFlights.length} return`);
+
+          // Return the processed data
+          return {
+            ...response,
+            data: flightsWithReturnInfo
+          };
+        }
+
         return response;
       } catch (error) {
         console.error('Search request failed:', {
