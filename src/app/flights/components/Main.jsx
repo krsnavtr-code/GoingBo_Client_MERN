@@ -152,29 +152,60 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
         outbound: [],
         return: [],
         isRoundTrip,
+        selectedOutbound: null,
+        selectedReturn: null,
       };
 
-      // New format with outbound/return properties
-      if (results.outbound || results.return) {
-        formattedResults.outbound = Array.isArray(results.outbound)
-          ? results.outbound
-          : [];
-        formattedResults.return =
-          isRoundTrip && Array.isArray(results.return) ? results.return : [];
-      }
-      // Legacy array format
-      else if (Array.isArray(results)) {
-        formattedResults.outbound = results;
-      }
-      // Single result
-      else if (results) {
-        formattedResults.outbound = [results];
-      }
+      try {
+        console.log("Raw search results:", results); // Debug log
 
-      console.log(
-        `Found ${formattedResults.outbound.length} outbound and ${formattedResults.return.length} return flights`
-      );
-      setSearchResults(formattedResults);
+        // Handle case where results is already in the correct format
+        if (results && (results.outbound || results.return)) {
+          formattedResults.outbound = Array.isArray(results.outbound)
+            ? results.outbound
+            : [];
+          formattedResults.return =
+            isRoundTrip && Array.isArray(results.return) ? results.return : [];
+        }
+        // Handle case where results is an array (legacy format)
+        else if (Array.isArray(results)) {
+          // Check if this is a round-trip with both outbound and return in the same array
+          const hasReturnFlights = results.some(
+            (flight) =>
+              flight &&
+              flight.Segments &&
+              flight.Segments.some((segment) => segment && segment.IsReturn)
+          );
+
+          if (isRoundTrip && hasReturnFlights) {
+            // Split into outbound and return flights
+            formattedResults.outbound = results.filter(
+              (flight) =>
+                !flight.Segments ||
+                !flight.Segments.some((s) => s && s.IsReturn)
+            );
+            formattedResults.return = results.filter(
+              (flight) =>
+                flight.Segments && flight.Segments.some((s) => s && s.IsReturn)
+            );
+          } else {
+            // All flights are outbound
+            formattedResults.outbound = results;
+          }
+        }
+        // Handle single flight result
+        else if (results) {
+          formattedResults.outbound = [results];
+        }
+
+        console.log(
+          `Found ${formattedResults.outbound.length} outbound and ${formattedResults.return.length} return flights`
+        );
+        setSearchResults(formattedResults);
+      } catch (err) {
+        console.error("Error processing flight results:", err);
+        setError("Error processing flight results. Please try again.");
+      }
     } catch (err) {
       console.error("Flight search error:", {
         message: err.message,
