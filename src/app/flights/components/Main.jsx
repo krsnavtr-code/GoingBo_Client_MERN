@@ -317,34 +317,45 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : error ? (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+              role="alert"
+            >
               <strong className="font-bold">Error: </strong>
               <span className="block sm:inline">{error}</span>
             </div>
-          ) : searchResults.outbound.length > 0 || searchResults.return.length > 0 ? (
+          ) : searchResults.outbound.length > 0 ||
+            searchResults.return.length > 0 ? (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-800">
-                {searchResults.isRoundTrip ? 'Select Your Flights' : 'Available Flights'}
+                {searchResults.isRoundTrip
+                  ? "Select Your Flights"
+                  : "Available Flights"}
               </h2>
-              
+
               {/* Tab Navigation for Round Trips */}
               {searchResults.isRoundTrip && (
                 <div className="border-b border-gray-200">
                   <nav className="-mb-px flex space-x-8">
                     <button
-                      onClick={() => setActiveTab('outbound')}
-                      className={`${activeTab === 'outbound' 
-                        ? 'border-blue-500 text-blue-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} 
+                      onClick={() => setActiveTab("outbound")}
+                      className={`${
+                        activeTab === "outbound"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      } 
                         whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                     >
-                      Outbound: {searchParams.origin} → {searchParams.destination}
+                      Outbound: {searchParams.origin} →{" "}
+                      {searchParams.destination}
                     </button>
                     <button
-                      onClick={() => setActiveTab('return')}
-                      className={`${activeTab === 'return' 
-                        ? 'border-blue-500 text-blue-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} 
+                      onClick={() => setActiveTab("return")}
+                      className={`${
+                        activeTab === "return"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      } 
                         whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                     >
                       Return: {searchParams.destination} → {searchParams.origin}
@@ -352,45 +363,51 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
                   </nav>
                 </div>
               )}
-              
+
               {/* Flight List */}
               <div className="space-y-4">
                 {searchResults.isRoundTrip ? (
                   <>
-                    {activeTab === 'outbound' && (
-                      <FlightList 
-                        flights={searchResults.outbound} 
+                    {activeTab === "outbound" && (
+                      <FlightList
+                        flights={searchResults.outbound}
                         searchParams={{
                           ...searchParams,
                           isReturn: false,
-                          date: searchParams.departureDate
-                        }} 
-                        onSelectFlight={(flight) => handleSelectFlight(flight, 'outbound')} 
+                          date: searchParams.departureDate,
+                        }}
+                        onSelectFlight={(flight) =>
+                          handleSelectFlight(flight, "outbound")
+                        }
                       />
                     )}
-                    {activeTab === 'return' && (
-                      <FlightList 
-                        flights={searchResults.return} 
+                    {activeTab === "return" && (
+                      <FlightList
+                        flights={searchResults.return}
                         searchParams={{
                           ...searchParams,
                           isReturn: true,
                           date: searchParams.returnDate,
                           origin: searchParams.destination,
-                          destination: searchParams.origin
-                        }} 
-                        onSelectFlight={(flight) => handleSelectFlight(flight, 'return')} 
+                          destination: searchParams.origin,
+                        }}
+                        onSelectFlight={(flight) =>
+                          handleSelectFlight(flight, "return")
+                        }
                       />
                     )}
                   </>
                 ) : (
-                  <FlightList 
-                    flights={searchResults.outbound} 
+                  <FlightList
+                    flights={searchResults.outbound}
                     searchParams={{
                       ...searchParams,
                       isReturn: false,
-                      date: searchParams.departureDate
-                    }} 
-                    onSelectFlight={(flight) => handleSelectFlight(flight, 'outbound')} 
+                      date: searchParams.departureDate,
+                    }}
+                    onSelectFlight={(flight) =>
+                      handleSelectFlight(flight, "outbound")
+                    }
                   />
                 )}
               </div>
@@ -411,31 +428,16 @@ export default function FlightsPage({ searchParams: initialSearchParams }) {
                 </div>
               )}
             </div>
-
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <h3 className="text-lg font-medium text-blue-800 mb-2">
-                Need help with your booking?
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-900">
+                No flights found
               </h3>
-              <p className="text-blue-700 text-sm">
-                Our customer support team is available 24/7 to assist you with
-                your flight booking. Call us at{" "}
-                <a
-                  href="tel:+1234567890"
-                  className="font-semibold hover:underline"
-                >
-                  +1 (234) 567-890
-                </a>{" "}
-                or email us at{" "}
-                <a
-                  href="mailto:support@goingbo.com"
-                  className="font-semibold hover:underline"
-                >
-                  support@goingbo.com
-                </a>
-                .
+              <p className="mt-1 text-sm text-gray-500">
+                Try adjusting your search criteria
               </p>
             </div>
-          </div>
+          )}
         </div>
       )}
       {/* </div> */}
