@@ -5,8 +5,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 const USE_DEMO_ON_ERROR = true; // Set to false to disable demo data fallback
 console.log("🔥 flightService.js LOADED!!");
 
-// Helper method to format flight data
-function formatFlight(flight, segment, searchParams = {}) {
+// Helper function to format flight data - moved to top to avoid hoisting issues
+function formatFlightData(flight, segment, searchParams = {}) {
   try {
     if (!flight || !segment) return null;
 
@@ -169,55 +169,6 @@ class FlightService {
     );
   }
 
-  // Format date to YYYY-MM-DD format
-  formatDate(dateString) {
-    try {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch (e) {
-      console.error('Error formatting date:', e);
-      return '';
-    }
-  }
-
-  // Normalize segments array while preserving the outbound/return structure
-  normalizeSegments(segments, isRoundTrip = false) {
-    if (!segments) return isRoundTrip ? { outbound: [], return: [] } : [];
-
-    // If it's not an array, return empty structure based on trip type
-    if (!Array.isArray(segments)) {
-      return isRoundTrip ? { outbound: [], return: [] } : [];
-    }
-
-    // For one-way trips, flatten all segments into a single array
-    if (!isRoundTrip) {
-      // Handle nested arrays (up to 3 levels deep)
-      return segments.flat(3).filter(s => s && (s.Origin || s.Destination));
-    }
-
-    // For round-trip, expect segments to be [outboundSegments, returnSegments]
-    const normalized = { outbound: [], return: [] };
-
-    if (segments.length >= 1) {
-      normalized.outbound = Array.isArray(segments[0])
-        ? segments[0].flat(2).filter(s => s && (s.Origin || s.Destination))
-        : [segments[0]].filter(s => s && (s.Origin || s.Destination));
-    }
-
-    if (segments.length >= 2) {
-      normalized.return = Array.isArray(segments[1])
-        ? segments[1].flat(2).filter(s => s && (s.Origin || s.Destination))
-        : [segments[1]].filter(s => s && (s.Origin || s.Destination));
-    }
-
-    return normalized;
-  }
-
   async searchFlights(searchParams) {
     try {
       // Define cabin class mapping
@@ -226,6 +177,22 @@ class FlightService {
         'Premium Economy': 3,
         'Business': 4,
         'First': 6
+      };
+
+      // Format date to YYYY-MM-DD format
+      const formatDate = (dateString) => {
+        try {
+          if (!dateString) return '';
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return '';
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        } catch (e) {
+          console.error('Error formatting date:', e);
+          return '';
+        }
       };
 
       // Validate required parameters
@@ -242,7 +209,7 @@ class FlightService {
         child: parseInt(searchParams.children) || 0,
         infant: parseInt(searchParams.infants) || 0,
         travelclass: cabinClassMap[searchParams.cabinClass] || 2,
-        departureDate: this.formatDate(searchParams.departureDate),
+        departureDate: formatDate(searchParams.departureDate),
         directFlight: Boolean(searchParams.directFlight),
         oneStopFlight: Boolean(searchParams.oneStopFlight)
       };
@@ -311,90 +278,159 @@ class FlightService {
         results = results ? [results] : [];
       }
 
-      // At this point, we should have results in the 'results' variable
-      // Log the structure of the first result for debugging
-      if (results.length > 0) {
-        console.log('First result structure:',
-          JSON.stringify(results[0], (key, value) =>
-            key === 'Segments' ? '[...segments]' : value, 2).substring(0, 1000));
-      }
+      // Log the structure of the results for debugging
+      console.log('Results structure:', {
+        hasOutbound: Array.isArray(formattedFlights.outbound),
+        outboundCount: formattedFlights.outbound.length,
+        hasReturn: Array.isArray(formattedFlights.return),
+        returnCount: formattedFlights.return.length,
+        isRoundTrip,
+        responseStructure: {
+          hasOutbound: results && 'outbound' in results,
+          hasReturn: results && 'return' in results,
+          isArray: Array.isArray(results),
+          keys: results ? Object.keys(results) : []
+        }
+      });
 
       // If no results found, log the response structure for debugging
-      if (!results || results.length === 0 || (results.length === 1 && !results[0])) {
+      if ((!formattedFlights.outbound || formattedFlights.outbound.length === 0) &&
+        (!formattedFlights.return || formattedFlights.return.length === 0)) {
         console.warn('No valid flight results found in response');
         console.log('Response data structure for debugging:', JSON.stringify(responseData, null, 2).substring(0, 1000));
-        return [];
+        return isRoundTrip ? { outbound: [], return: [] } : [];
       }
 
       // Process the results
+      const formattedFlights = { outbound: [], return: [] };
       const isRoundTrip = searchParams.tripType === 'roundtrip';
-      const formattedFlights = isRoundTrip
-        ? { outbound: [], return: [] }
-        : [];
 
       try {
-        if (!results || results.length === 0) {
+        // If results is an object with outbound/return, use it directly
+        if (results && (results.outbound || results.return)) {
+          console.debug('Processing structured results with outbound/return');
+
+          // Process outbound flights
+          if (results.outbound && Array.isArray(results.outbound)) {
+            for (const flight of results.outbound) {
+              if (!flight || !flight.Segments) continue;
+
+              // Process each segment in the flight
+              const segments = Array.isArray(flight.Segments) ? flight.Segments : [flight.Segments];
+              for (const segment of segments) {
+                if (!segment) continue;
+                const formattedFlight = formatFlightData(flight, segment, searchParams);
+                if (formattedFlight) {
+                  formattedFlights.outbound.push(formattedFlight);
+                }
+              }
+            }
+          }
+
+          // Process return flights for round-trip
+          if (isRoundTrip && results.return && Array.isArray(results.return)) {
+            for (const flight of results.return) {
+              if (!flight || !flight.Segments) continue;
+
+              // Process each segment in the flight
+              const segments = Array.isArray(flight.Segments) ? flight.Segments : [flight.Segments];
+              for (const segment of segments) {
+                if (!segment) continue;
+                const formattedFlight = formatFlightData(flight, segment, searchParams);
+                if (formattedFlight) {
+                  formattedFlights.return.push(formattedFlight);
+                }
+              }
+            }
+          }
+
+          return isRoundTrip ? formattedFlights : formattedFlights.outbound;
+        }
+
+        // Handle array of results (legacy format)
+        if (!results || (Array.isArray(results) && results.length === 0)) {
           console.warn('No results returned from backend', response.data);
           return isRoundTrip ? { outbound: [], return: [] } : [];
-        } 
+        } else {
+          // Process legacy array format
+          console.debug('Processing legacy array format results');
 
-        // Log a small sample to inspect real structure
-        console.debug('Results sample (first item):', results[0]);
+          // Normalise possible segment shapes into an iterable array of segments
+          const normalizeSegments = (segments) => {
+            if (!segments) return [];
+            if (!Array.isArray(segments)) return [];
+            if (Array.isArray(segments[0])) {
+              return segments.flat(2).filter(Boolean);
+            }
+            return segments.filter(Boolean);
+          };
 
-        // Iterate over results
-        for (const resultItem of results) {
-          if (!resultItem) continue;
+          // Iterate safely over results (which itself is often nested)
+          for (const resultItem of results) {
+            if (!resultItem) continue;
 
-          // Handle both single flight and array of flights
-          const flightsArray = Array.isArray(resultItem) ? resultItem : [resultItem];
+            // resultItem sometimes itself is an array of flights
+            const flightsArray = Array.isArray(resultItem) ? resultItem : [resultItem];
 
-          for (const flight of flightsArray) {
-            if (!flight || !flight.Segments) continue;
+            for (const flight of flightsArray) {
+              if (!flight) continue;
 
-            // Normalize segments based on trip type
-            const normalizedSegments = this.normalizeSegments(flight.Segments, isRoundTrip);
+              // Normalize Segments into flat array of segment objects
+              const rawSegments = normalizeSegments(flight.Segments);
 
-            // Process segments based on trip type
-            if (isRoundTrip) {
-              // Process outbound segments
-              if (normalizedSegments.outbound && normalizedSegments.outbound.length > 0) {
-                for (const segment of normalizedSegments.outbound) {
-                  try {
-                    const formattedFlight = this.formatFlight(flight, segment, searchParams);
-                    if (formattedFlight) {
-                      formattedFlights.outbound.push(formattedFlight);
-                    }
-                  } catch (err) {
-                    console.warn('Error formatting outbound segment:', err);
-                  }
-                }
+              // If still empty, try to dig deeper (defensive)
+              if (rawSegments.length === 0 && Array.isArray(flight.Segments)) {
+                // attempt to flatten any nested arrays up to depth 3
+                const deepFlat = JSON.parse(JSON.stringify(flight.Segments)).flat(3);
+                rawSegments.push(...deepFlat.filter(s => s && s.Origin && s.Destination));
               }
 
-              // Process return segments
-              if (normalizedSegments.return && normalizedSegments.return.length > 0) {
-                for (const segment of normalizedSegments.return) {
-                  try {
-                    const formattedFlight = this.formatFlight(flight, segment, searchParams);
-                    if (formattedFlight) {
-                      formattedFlights.return.push(formattedFlight);
-                    }
-                  } catch (err) {
-                    console.warn('Error formatting return segment:', err);
+              // For each actual segment object, format
+              for (const segment of rawSegments) {
+                try {
+                  // Validate segment before processing
+                  if (!segment) {
+                    console.warn('Skipping null/undefined segment');
+                    continue;
                   }
-                }
-              }
-            } else {
-              // Process one-way segments (flat array)
-              if (Array.isArray(normalizedSegments)) {
-                for (const segment of normalizedSegments) {
-                  try {
-                    const formattedFlight = this.formatFlight(flight, segment, searchParams);
-                    if (formattedFlight) {
-                      formattedFlights.push(formattedFlight);
-                    }
-                  } catch (err) {
-                    console.warn('Error formatting segment:', err);
+
+                  // Log segment structure for debugging
+                  console.debug('Processing segment:', {
+                    segmentKeys: Object.keys(segment),
+                    hasOrigin: !!segment.Origin,
+                    hasDestination: !!segment.Destination,
+                    originType: typeof segment.Origin,
+                    destType: typeof segment.Destination
+                  });
+
+                  if (!segment.Origin || !segment.Destination) {
+                    console.warn('Skipping segment with missing origin/destination:', {
+                      origin: segment.Origin,
+                      destination: segment.Destination,
+                      segmentId: segment.SegmentId || 'unknown'
+                    });
+                    continue;
                   }
+
+                  const formattedFlight = formatFlightData(flight, segment, searchParams);
+                  if (formattedFlight) {
+                    formattedFlights.push(formattedFlight);
+                  }
+                } catch (segErr) {
+                  // Protect whole flow from one bad segment
+                  console.warn('Error formatting a segment — skipping it', {
+                    error: segErr.message,
+                    segment: segment ? {
+                      id: segment.SegmentId,
+                      origin: segment.Origin,
+                      destination: segment.Destination
+                    } : 'null/undefined',
+                    flight: flight ? {
+                      id: flight.ResultIndex || flight.id,
+                      airline: flight.Airline || flight.airline
+                    } : 'null/undefined'
+                  });
+                  continue;
                 }
               }
             }
@@ -409,12 +445,7 @@ class FlightService {
         throw new Error(errorMessage);
       }
 
-      // Log the number of flights found
-      if (isRoundTrip) {
-        console.log(`Formatted ${formattedFlights.outbound.length} outbound and ${formattedFlights.return.length} return flights`);
-      } else {
-        console.log(`Formatted ${formattedFlights.length} one-way flights`);
-      }
+      console.log(`Formatted ${formattedFlights.length} flights`);
       return formattedFlights;
     } catch (error) {
       console.error('Search flights error:', {
