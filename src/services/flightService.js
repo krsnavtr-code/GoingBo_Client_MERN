@@ -238,17 +238,24 @@ class FlightService {
 
       // Add detailed logging of the full response structure
       console.log('Full response data structure:', JSON.stringify({
+        hasResponse: !!responseData?.Response,
+        hasResponseResults: !!responseData?.Response?.Results,
         hasSuccess: !!responseData?.success,
         hasData: !!responseData?.data,
         dataKeys: responseData?.data ? Object.keys(responseData.data) : [],
         hasDataData: !!responseData?.data?.data,
         hasResults: !!responseData?.data?.data?.results,
-        resultsType: responseData?.data?.data?.results ?
-          (Array.isArray(responseData.data.data.results) ? 'array' : typeof responseData.data.data.results) : 'none'
+        resultsType: responseData?.Response?.Results ?
+          (Array.isArray(responseData.Response.Results) ? 'array' : typeof responseData.Response.Results) : 'none'
       }, null, 2));
 
+      // Check for TBO API response structure first
+      if (responseData?.Response?.Results) {
+        console.log('Found results in response.Response.Results (TBO API format)');
+        results = responseData.Response.Results;
+      }
       // Check for the server's response structure with outbound/return flights
-      if (responseData?.data?.outbound || responseData?.data?.return) {
+      else if (responseData?.data?.outbound || responseData?.data?.return) {
         console.log('Found flights in response.data.outbound/return structure');
         // We'll handle this case specially in the processing below
         results = [];
