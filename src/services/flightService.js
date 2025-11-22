@@ -204,7 +204,7 @@ class FlightService {
       const formattedParams = {
         origin: String(searchParams.origin).toUpperCase(),
         destination: String(searchParams.destination).toUpperCase(),
-        journey_type: searchParams.tripType === 'roundtrip' ? 2 : 1,
+        journeyType: searchParams.tripType === 'roundtrip' ? 2 : 1,
         adult: parseInt(searchParams.adults) || 1,
         child: parseInt(searchParams.children) || 0,
         infant: parseInt(searchParams.infants) || 0,
