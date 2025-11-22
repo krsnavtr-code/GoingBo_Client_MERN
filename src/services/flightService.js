@@ -247,12 +247,17 @@ class FlightService {
           (Array.isArray(responseData.data.data.results) ? 'array' : typeof responseData.data.data.results) : 'none'
       }, null, 2));
 
-      // Try to extract results from the deeply nested structure
-      if (responseData?.data?.data?.results) {
+      // Check for the server's response structure with outbound/return flights
+      if (responseData?.data?.outbound || responseData?.data?.return) {
+        console.log('Found flights in response.data.outbound/return structure');
+        // We'll handle this case specially in the processing below
+        results = [];
+      }
+      // Fallback to other possible structures
+      else if (responseData?.data?.data?.results) {
         console.log('Found results in response.data.data.results');
         results = responseData.data.data.results;
       }
-        // Fallback to other possible structures
       else if (responseData?.data?.results) {
         console.log('Found results in response.data.results');
         results = responseData.data.results;
@@ -286,7 +291,59 @@ class FlightService {
             key === 'Segments' ? '[...segments]' : value, 2).substring(0, 1000));
       }
 
-      // If no results found, log the response structure for debugging
+      // If we have the outbound/return structure, handle it specially
+      if (responseData?.data?.outbound || responseData?.data?.return) {
+        console.log('Processing outbound/return flight structure');
+        const outboundFlights = [];
+        const returnFlights = [];
+
+        // Process outbound flights if they exist
+        if (responseData.data.outbound && responseData.data.outbound.length > 0) {
+          console.log(`Found ${responseData.data.outbound.length} outbound flights`);
+          for (const flight of responseData.data.outbound) {
+            if (flight && flight.Segments) {
+              const segments = Array.isArray(flight.Segments) ? flight.Segments : [flight.Segments];
+              for (const segment of segments) {
+                if (segment) {
+                  const formatted = formatFlightData(flight, segment, searchParams);
+                  if (formatted) outboundFlights.push(formatted);
+                }
+              }
+            }
+          }
+        }
+
+        // Process return flights if they exist
+        if (responseData.data.return && responseData.data.return.length > 0) {
+          console.log(`Found ${responseData.data.return.length} return flights`);
+          for (const flight of responseData.data.return) {
+            if (flight && flight.Segments) {
+              const segments = Array.isArray(flight.Segments) ? flight.Segments : [flight.Segments];
+              for (const segment of segments) {
+                if (segment) {
+                  const formatted = formatFlightData(flight, segment, searchParams);
+                  if (formatted) returnFlights.push(formatted);
+                }
+              }
+            }
+          }
+        }
+
+        // For one-way trips, just return the outbound flights
+        if (searchParams.tripType !== 'roundtrip') {
+          console.log(`Returning ${outboundFlights.length} outbound flights`);
+          return outboundFlights;
+        }
+
+        // For round trips, return an object with both outbound and return flights
+        console.log(`Returning ${outboundFlights.length} outbound and ${returnFlights.length} return flights`);
+        return {
+          outbound: outboundFlights,
+          return: returnFlights
+        };
+      }
+
+      // Handle the old format if no outbound/return structure found
       if (!results || results.length === 0 || (results.length === 1 && !results[0])) {
         console.warn('No valid flight results found in response');
         console.log('Response data structure for debugging:', JSON.stringify(responseData, null, 2).substring(0, 1000));
