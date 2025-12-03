@@ -31,19 +31,24 @@ export default function ApiAuthPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/tbo/auth`
-      );
+      const response = await fetch("/api/v1/tbo/auth");
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch authentication data");
+        throw new Error(data.message || "Failed to authenticate");
       }
 
-      setAuthData(data.data);
+      // Update state with the response data
+      setAuthData({
+        token: data.TokenId,
+        status: data.Status,
+        user: data.User,
+        // Include any other data you want to display
+        ...data,
+      });
     } catch (err) {
-      console.error("Error fetching auth data:", err);
-      setError(err.message || "Something went wrong");
+      console.error("Authentication error:", err);
+      setError(err.message || "Failed to authenticate");
     } finally {
       setIsLoading(false);
     }
@@ -118,29 +123,34 @@ export default function ApiAuthPage() {
               </button>
             </div>
 
-            {authData && (
-              <div className="mt-4">
-                <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
-                  <p className="text-sm text-green-700">
-                    Authentication successful!
-                  </p>
-                </div>
-                <div className="text-sm">
-                  <p className="truncate">
-                    <span className="font-medium">Token:</span>{" "}
-                    {authData.TokenId}
-                  </p>
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-medium text-gray-700 mb-2">
+                Authentication Response:
+              </h3>
+              {authData ? (
+                <div className="space-y-2">
                   <p>
                     <span className="font-medium">Status:</span>{" "}
-                    {authData.Status === 1 ? "Success" : "Failed"}
+                    {authData.status}
                   </p>
                   <p>
-                    <span className="font-medium">User:</span>{" "}
-                    {authData.Member?.FirstName} {authData.Member?.LastName}
+                    <span className="font-medium">Token:</span> {authData.token}
+                  </p>
+                  <p>
+                    <span className="font-medium">User:</span> {authData.user}
                   </p>
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-gray-500">
+                  No authentication data available
+                </p>
+              )}
+              {error && (
+                <div className="mt-4 p-2 bg-red-50 text-red-600 rounded">
+                  Error: {error}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Flight Search Section */}
