@@ -10,7 +10,9 @@ export default function ApiAuthPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/tbo-auth');
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/tbo/auth`
+      );
       const data = await response.json();
       
       if (!response.ok) {
